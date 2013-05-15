@@ -8,7 +8,7 @@ use Data::Dumper;
 
 # read id mapping
 #my (%name2ensembl, %symbol2desc);
-#open(GENES, "/home/STANNANET/christian.frech/kamilla/results/current/gene-symbols-to-ensembl-geneid.txt") or die "ERROR: could not read gene list\n";
+#open(GENES, "/home/STANNANET/christian.frech/hdall/results/current/gene-symbols-to-ensembl-geneid.txt") or die "ERROR: could not read gene list\n";
 #<GENES>;
 #while(<GENES>)
 #{
@@ -20,7 +20,7 @@ use Data::Dumper;
 
 # read biomart id mapping
 my %name2id;
-open(GENES, "/home/STANNANET/christian.frech/kamilla/results/current/gene-id-mapping.biomart-0.7.tsv") or die "ERROR: could not read gene list\n";
+open(GENES, "/home/STANNANET/christian.frech/hdall/results/current/gene-id-mapping.biomart-0.7.tsv") or die "ERROR: could not read gene list\n";
 <GENES>;
 while(<GENES>)
 {

@@ -4,7 +4,7 @@ use strict;
 use LWP::Simple;
 
 my $url = 'http://info.biomedical-sequencing.at/DNA/Aijae5aegah6ohph2yadau/bam/';
-my $target_dir = "/data/christian/kamilla/data/current/bam/";
+my $target_dir = "/data/christian/hdall/data/current/bam/";
 
 chdir($target_dir);
 

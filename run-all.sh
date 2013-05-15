@@ -1,8 +1,8 @@
-SCRIPT=~/kamilla/scripts/filter-variants.pl
-VCF_DIR=/home/STANNANET/christian.frech/kamilla/data/current/mutect_vcf
-VCF_DIR_INDEL=/home/STANNANET/christian.frech/kamilla/data/current/somatic_indel_vcf
-RESULT_FILE=~/kamilla/results/current/filtered-variants.tsv
-LOG_FILE=~/kamilla/results/current/filtered-variants.log
+SCRIPT=~/git/hdall/filter-variants.pl
+VCF_DIR=/home/STANNANET/christian.frech/hdall/data/current/mutect_vcf
+VCF_DIR_INDEL=/home/STANNANET/christian.frech/hdall/data/current/somatic_indel_vcf
+RESULT_FILE=~/hdall/results/current/filtered-variants.tsv
+LOG_FILE=~/hdall/results/current/filtered-variants.log
 
 perl $SCRIPT 314 rem_dia $VCF_DIR/314_rem_dia_calls_snpeff.vcf 314_rem 314_dia snp 1 >$RESULT_FILE 2>$LOG_FILE
 #perl $SCRIPT 314 rem_dia $VCF_DIR_INDEL/314_rem_dia_snpeff.vcf 314_rem 314_dia indel >>$RESULT_FILE 2>$LOG_FILE
@@ -111,10 +111,10 @@ perl $SCRIPT Y rem_rel $VCF_DIR/Y_rem_rel_calls_snpeff.vcf Y3767_rem Y10284_rel 
 perl $SCRIPT Y rem_rel $VCF_DIR_INDEL/Y_rem_rel_snpeff.vcf Y3767_rem Y10284_rel indel >>$RESULT_FILE 2>>$LOG_FILE
 
 # summarize variants
-cat ~/kamilla/results/current/filtered-variants.tsv | perl ~/kamilla/scripts/impacted-genes.pl > ~/kamilla/results/current/impacted-genes-list.tsv
-cat ~/kamilla/results/current/impacted-genes-list.tsv | perl ~/kamilla/scripts/get-gene-patient-matrix.pl > ~/kamilla/results/current/gene-patient-matrix.tsv
+cat ~/hdall/results/current/filtered-variants.tsv | perl ~/git/hdall/impacted-genes.pl > ~/hdall/results/current/impacted-genes-list.tsv
+cat ~/hdall/results/current/impacted-genes-list.tsv | perl ~/git/hdall/get-gene-patient-matrix.pl > ~/hdall/results/current/gene-patient-matrix.tsv
 
 # pathway enrichment analysis
-cat ~/kamilla/results/current/gene-patient-matrix.tsv | perl ~/kamilla/scripts/get-smg.pl dia 1 | perl ~/kamilla/scripts/pathway-enrichment-david.pl | tee ~/kamilla/results/current/enriched-pathways-dia-minfreq1.david.tsv
-cat ~/kamilla/results/current/gene-patient-matrix.tsv | perl ~/kamilla/scripts/get-smg.pl dia 2 | perl ~/kamilla/scripts/pathway-enrichment-david.pl | tee ~/kamilla/results/current/enriched-pathways-dia-minfreq2.david.tsv
+cat ~/hdall/results/current/gene-patient-matrix.tsv | perl ~/git/hdall/get-smg.pl dia 1 | perl ~/git/hdall/pathway-enrichment-david.pl | tee ~/hdall/results/current/enriched-pathways-dia-minfreq1.david.tsv
+cat ~/hdall/results/current/gene-patient-matrix.tsv | perl ~/git/hdall/get-smg.pl dia 2 | perl ~/git/hdall/pathway-enrichment-david.pl | tee ~/hdall/results/current/enriched-pathways-dia-minfreq2.david.tsv
 

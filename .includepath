@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <includepath>
   <includepathentry path="/mnt/suse/home/STANNANET/christian.frech/tools/vcftools_0.1.10/lib/perl5/site_perl" />
+  <includepathentry path="/mnt/suse/home/STANNANET/christian.frech/tools/tabix-0.2.6/perl" />
 </includepath>
 

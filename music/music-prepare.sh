@@ -17,6 +17,10 @@ ROI_FILE=~/hdall/results/current/music/ucsc-genes.hg19.roi
 cat ~/hdall/results/current/ucsc-genes.hg19.sorted.merged.bed | perl ~/git/hdall/music/ucsc-exon-to-gene-symbol.pl > $ROI_FILE
 echo "Region of interest (ROI) file written to $ROI_FILE" 
 
+# compress and index it for fast access with tabix
+bgzip -c $ROI_FILE > $ROI_FILE.gz
+tabix $ROI_FILE.gz -s 1 -b 2 -e 3
+
 exit
 
 # create WIG file compatible with MuSiC

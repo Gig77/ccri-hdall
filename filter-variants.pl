@@ -3,6 +3,14 @@ use strict;
 
 use Vcf;
 use Data::Dumper;
+use Getopt::Long;
+
+my ($vcf_out, $header);
+GetOptions
+(
+	"vcf-out=s" => \$vcf_out,  # filtered VCF output file
+	"header" => \$header  # if set, write header line to output
+);
 
 my $debug = 1;
 
@@ -14,7 +22,6 @@ my $rem_sample = $ARGV[3] or die "ERROR: remission sample name not specified\n";
 my $cmp_sample = $ARGV[4] or die "ERROR: comparator sample name (diagnosis or remission) not specified\n";
 my $var_type = $ARGV[5] or die "ERROR: variant type not specified ('snp' or 'indel')\n";
 die "ERROR: invalid variant type: $var_type\n" if ($var_type ne 'snp' and $var_type ne 'indel');
-my $print_header = $ARGV[6];
 
 $| = 1; # turn on autoflush
 
@@ -30,9 +37,17 @@ my %variant_stati =
 my %genes;
 
 print STDERR "Processing file $vcf_file...\n";
+
 my $vcf = Vcf->new(file => "$vcf_file");
 $vcf->parse_header();
 my (@samples) = $vcf->get_samples();
+
+if ($vcf_out) 
+{
+	my $cmd = "grep -P '^#' $vcf_file > $vcf_out";
+	system($cmd) == 0 or die "ERROR: grep vcf header failed: $cmd\n";
+	open(VCFOUT,">>$vcf_out") or die "ERROR: could not write to file $vcf_out\n";
+}
 
 # sanity check
 die "ERROR: Sample name $rem_sample not found!\n" if ($rem_sample ne $samples[0] and $rem_sample ne $samples[1]);
@@ -41,7 +56,7 @@ die "ERROR: Sample name $cmp_sample not found!\n" if ($cmp_sample ne $samples[0]
 my ($tot_var, $filtered_qual, $filtered_gt, $filtered_alt, $filtered_germ) = (0, 0, 0, 0, 0);
 my %qual_num;
 
-if ($print_header)
+if ($header)
 {
 	print "patient\t";		
 	print "sample\t";
@@ -62,8 +77,10 @@ if ($print_header)
 	print "\n";	
 }
 	
-while (my $x = $vcf->next_data_hash())
-{	 
+while (my $line = $vcf->next_line())
+{
+	my $x = $vcf->next_data_hash($line);
+
 	$tot_var ++;
 	$qual_num{$x->{FILTER}->[0]} = $qual_num{$x->{FILTER}->[0]} ? $qual_num{$x->{FILTER}->[0]} + 1 : 1;
 	
@@ -136,6 +153,8 @@ while (my $x = $vcf->next_data_hash())
 #		print "reads_ref_rev: $reads_ref_rev\n";
 	}
 
+	print VCFOUT "$line" if ($vcf_out);
+	
 	print "$patient\t";		
 	print "$cmp_type\t";
 	print "$var_type\t";
@@ -173,6 +192,7 @@ while (my $x = $vcf->next_data_hash())
 #	print "\n"; print Dumper($x); exit;
 }
 $vcf->close();
+close(VCFOUT) if ($vcf_out);
 	
 if ($debug)
 {

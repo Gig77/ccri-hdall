@@ -9,7 +9,10 @@ my %genes;
 while(<>)
 {
 	chomp;
-	my ($patient, $sample, $var_type, $chr, $pos, $dbSNP, $ref, $alt, $gene, $impact, $variant_status, $depth_rem, $depth_leu, $freq, $effects) = split("\t");
+	my ($patient, $sample, $var_type, $chr, $pos, $dbSNP, $ref, $alt, $gene, $impact, $depth_rem, $depth_leu, $freq, $effects) = split("\t");
+
+	die "ERROR: $0: could not parse snpeff effects from following line:\n$_\n"
+		if (!$effects);
 
 	foreach my $eff (split(",", $effects))
 	{

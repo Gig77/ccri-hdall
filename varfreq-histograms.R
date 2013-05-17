@@ -1,7 +1,7 @@
 patients <- levels(data$patient)
 samples <- levels(data$sample)
 
-pdf("~/hdall/results/current/kernel-densities.allpatients.dia.pdf", height=12, paper='A4')
+pdf("~/hdall/results/kernel-densities.allpatients.dia.pdf", height=12, paper='A4')
 par(mfrow = c(6, 4), mar=c(2,0.5,2,0.5))
 for(p in patients)
 {
@@ -10,7 +10,7 @@ for(p in patients)
 }
 dev.off()
 
-pdf("~/hdall/results/current/kernel-densities.allpatients.rel.pdf", height=12, paper='A4')
+pdf("~/hdall/results/kernel-densities.allpatients.rel.pdf", height=12, paper='A4')
 par(mfrow = c(6, 4), mar=c(2,0.5,2,0.5))
 for(p in patients)
 {
@@ -19,13 +19,13 @@ for(p in patients)
 }
 dev.off()
 
-pdf("~/hdall/results/current/patient715-kernel-density.pdf", width=12, paper='A4r')
+pdf("~/hdall/results/patient715-kernel-density.pdf", width=12, paper='A4r')
 par(mfrow = c(1, 2))
 plot(density(data$freq[data$patient==715 & data$sample == "rem_dia"]), main="715_dia")
 plot(density(data$freq[data$patient==715 & data$sample == "rem_rel"]), main="715_rel")
 dev.off()
 
-pdf("~/hdall/results/current/patient545-kernel-density.pdf", width=12, paper='A4r')
+pdf("~/hdall/results/patient545-kernel-density.pdf", width=12, paper='A4r')
 par(mfrow = c(1, 2))
 plot(density(data$freq[data$patient==545 & data$sample == "rem_dia"]), main="545_dia")
 plot(density(data$freq[data$patient==545 & data$sample == "rem_rel"]), main="545_rel")

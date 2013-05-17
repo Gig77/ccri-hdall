@@ -1,14 +1,14 @@
 SCRIPT=~/git/hdall/filter-variants.pl
 VCF_DIR=/home/STANNANET/christian.frech/hdall/data/mutect_vcf
 VCF_DIR_INDEL=/home/STANNANET/christian.frech/hdall/data/somatic_indel_vcf
-VCF_OUT_FILTERED=/home/STANNANET/christian.frech/hdall/results/current/filtered_vcf
-VCF_OUT_MERGED=/home/STANNANET/christian.frech/hdall/results/current/merged_vcf
-RESULT_FILE=~/hdall/results/current/filtered-variants.tsv
-LOG_FILE=~/hdall/results/current/filtered-variants.log
+VCF_OUT_FILTERED=/home/STANNANET/christian.frech/hdall/results/filtered_vcf
+VCF_OUT_MERGED=/home/STANNANET/christian.frech/hdall/results/merged_vcf
+RESULT_FILE=/home/STANNANET/christian.frech/hdall/results/filtered-variants.tsv
+LOG_FILE=/home/STANNANET/christian.frech/hdall/results/filtered-variants.log
 
 # summarize variants
-cat ~/hdall/results/current/filtered-variants.tsv | perl ~/git/hdall/impacted-genes.pl > ~/hdall/results/current/impacted-genes-list.tsv
-cat ~/hdall/results/current/impacted-genes-list.tsv | perl ~/git/hdall/get-gene-patient-matrix.pl > ~/hdall/results/current/gene-patient-matrix.tsv
+cat ~/hdall/results/filtered-variants.tsv | perl ~/git/hdall/impacted-genes.pl > ~/hdall/results/impacted-genes-list.tsv
+cat ~/hdall/results/impacted-genes-list.tsv | perl ~/git/hdall/get-gene-patient-matrix.pl > ~/hdall/results/gene-patient-matrix.tsv
 exit
 
 perl $SCRIPT 314 rem_dia $VCF_DIR/314_rem_dia_calls_snpeff.vcf 314_rem 314_dia snp --header --vcf-out $VCF_OUT_FILTERED/314_rem_dia.snp.filtered.vcf >$RESULT_FILE 2>$LOG_FILE
@@ -123,10 +123,10 @@ perl $SCRIPT Y rem_rel $VCF_DIR/Y_rem_rel_calls_snpeff.vcf Y3767_rem Y10284_rel 
 perl $SCRIPT Y rem_rel $VCF_DIR_INDEL/Y_rem_rel_snpeff.vcf Y3767_rem Y10284_rel indel --vcf-out $VCF_OUT_FILTERED/Y_rem_rel.indel.filtered.vcf >>$RESULT_FILE 2>>$LOG_FILE
 
 # summarize variants
-cat ~/hdall/results/current/filtered-variants.tsv | perl ~/git/hdall/impacted-genes.pl > ~/hdall/results/current/impacted-genes-list.tsv
-cat ~/hdall/results/current/impacted-genes-list.tsv | perl ~/git/hdall/get-gene-patient-matrix.pl > ~/hdall/results/current/gene-patient-matrix.tsv
+cat ~/hdall/results/filtered-variants.tsv | perl ~/git/hdall/impacted-genes.pl > ~/hdall/results/impacted-genes-list.tsv
+cat ~/hdall/results/impacted-genes-list.tsv | perl ~/git/hdall/get-gene-patient-matrix.pl > ~/hdall/results/gene-patient-matrix.tsv
 
 # pathway enrichment analysis
-cat ~/hdall/results/current/gene-patient-matrix.tsv | perl ~/git/hdall/get-smg.pl dia 1 | perl ~/git/hdall/pathway-enrichment-david.pl | tee ~/hdall/results/current/enriched-pathways-dia-minfreq1.david.tsv
-cat ~/hdall/results/current/gene-patient-matrix.tsv | perl ~/git/hdall/get-smg.pl dia 2 | perl ~/git/hdall/pathway-enrichment-david.pl | tee ~/hdall/results/current/enriched-pathways-dia-minfreq2.david.tsv
+cat ~/hdall/results/gene-patient-matrix.tsv | perl ~/git/hdall/get-smg.pl dia 1 | perl ~/git/hdall/pathway-enrichment-david.pl | tee ~/hdall/results/enriched-pathways-dia-minfreq1.david.tsv
+cat ~/hdall/results/gene-patient-matrix.tsv | perl ~/git/hdall/get-smg.pl dia 2 | perl ~/git/hdall/pathway-enrichment-david.pl | tee ~/hdall/results/enriched-pathways-dia-minfreq2.david.tsv
 

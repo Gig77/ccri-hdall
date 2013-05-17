@@ -9,7 +9,7 @@ use warnings;
 #kgID	mRNA	spID	spDisplayID	geneSymbol	refseq	protAcc	description	rfamAcc	tRnaName
 #uc001aaa.3	BC032353			DDX11L1			Homo sapiens mRNA for DEAD/H box polypeptide 11 like 1 (DDX11L1 gene).		
 my %ucsc2sym;
-open(IN,"/data/christian/hdall/data/current/hg19/hg19.kgXref.txt") or die "could not open kgXref\n";
+open(IN,"/home/STANNANET/christian.frech/hdall/data/hg19/hg19.kgXref.txt") or die "could not open kgXref\n";
 while(<IN>)
 {
 	chomp;
@@ -21,7 +21,7 @@ close(IN);
 # read chromosome sizes
 my %chrsize;
 open(IN, 
-"/data/christian/hdall/data/current/hg19/ucsc.hg19.chrom.sizes") or die "could not open ucsc.hg19.chrom.sizes\n";
+"/home/STANNANET/christian.frech/hdall/data/hg19/ucsc.hg19.chrom.sizes") or die "could not open ucsc.hg19.chrom.sizes\n";
 while(<IN>)
 {
 	my ($chr, $size) = split("\t");
@@ -54,7 +54,7 @@ foreach my $line (@lines)
 	$start = $chrsize{$chr} if ($start > $chrsize{$chr}); # trim coordinate to chromosome size
 	$end = $chrsize{$chr} if ($end > $chrsize{$chr}); # trim coordinate to chromosome size
 	next if ($start >= $end);
-	next if ($chr eq "chrM" and $end == 16571); # gives music error: ERROR: Request for chrM:16572-16573 in /mnt/suse/data/christian/hdall/data/current/hg19/ucsc.hg19.fasta, but chrM has length 16571
+	next if ($chr eq "chrM" and $end == 16571); # gives music error: ERROR: Request for chrM:16572-16573 in /mnt/suse/home/STANNANET/christian.frech/hdall/data/hg19/ucsc.hg19.fasta, but chrM has length 16571
 	
 	print $chr, "\t", $start, "\t", $end, "\t"; 
 

@@ -262,7 +262,7 @@ sub get_impact
 #sub roi2gene
 #{
 #	my ($chr, $start, $end) = @_;
-#	my $cmd = "echo $'$chr\t$start\t$end' | /home/STANNA/christian.frech/tools/bedtools-2.17.0/bin/intersectBed -a ~/hdall/results/current/music/ucsc-genes.hg19.roi -b stdin 
+#	my $cmd = "echo $'$chr\t$start\t$end' | /home/STANNA/christian.frech/tools/bedtools-2.17.0/bin/intersectBed -a ~/hdall/results/music/ucsc-genes.hg19.roi -b stdin 
 #	my $result = ` 
 #	
 #}

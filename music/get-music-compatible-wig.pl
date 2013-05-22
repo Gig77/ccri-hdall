@@ -12,8 +12,9 @@ while (my $f = readdir(D))
 	next if ($f !~ /bedgraph.gz$/);
 	my $wigf = $f;
 	$wigf =~ s/bedgraph.gz/music.wig/;
-	next if (-e $wigf);
+	next if (-s $wigf);
 	
+	next if ($wigf !~ /_dia/);
 	my $cmd = "perl /home/STANNANET/christian.frech/hdall/scripts/bedgraph-to-wig.pl $f $wigf";
 	print "$cmd\n";
 	system("$cmd");

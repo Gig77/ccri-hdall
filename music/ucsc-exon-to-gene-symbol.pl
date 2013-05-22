@@ -25,52 +25,35 @@ open(IN,
 while(<IN>)
 {
 	my ($chr, $size) = split("\t");
+    $chr =~ s/^chr//;
 	$chrsize{$chr} = $size;
 }
 close(IN);
 
 #chr1	136950	139698	uc001aam.4_exon_2_2_chr1_136953_r;uc021oeg.1_exon_0_2_chr1_137841_r	2
-
-# first iteration: determine number of regions for each symbol
-my (%symbols, @lines);
 while(<>)
 {
 	chomp;
-	push(@lines, $_); # remember for second iteration
-	my ($chr, $start, $end, $region) = split("\t");
-	while($region =~ /(uc.*?)_exon/g)
-	{
-		my $sym = $ucsc2sym{$1} ? $ucsc2sym{$1} : $1;
-		$symbols{$sym} = exists $symbols{$sym} ? $symbols{$sym} + 1 : 1;
-	}
-}
 
-# second iteration: select symbol with most regions as common identifier in output ROI
-foreach my $line (@lines)
-{
-	my ($chr, $start, $end, $region) = split("\t", $line);
+	my ($chr, $start, $end, $region, $num_regions) = split("\t");
+    $chr =~ s/^chr//;
 
 	$start = $start + 1; # convert to 1-based start coordinate
 	$start = $chrsize{$chr} if ($start > $chrsize{$chr}); # trim coordinate to chromosome size
 	$end = $chrsize{$chr} if ($end > $chrsize{$chr}); # trim coordinate to chromosome size
 	next if ($start >= $end);
-	next if ($chr eq "chrM" and $end == 16571); # gives music error: ERROR: Request for chrM:16572-16573 in /mnt/suse/home/STANNANET/christian.frech/hdall/data/hg19/ucsc.hg19.fasta, but chrM has length 16571
+	next if ($chr eq "M" and $end == 16571); # gives music error: ERROR: Request for chrM:16572-16573 in /mnt/suse/home/STANNANET/christian.frech/hdall/data/hg19/ucsc.hg19.fasta, but chrM has length 16571
+
+	my @regions;
+	while($region =~ /(uc.*?)_exon/g) { push(@regions, $1) }
+	@regions = sort(@regions);
 	
-	print $chr, "\t", $start, "\t", $end, "\t"; 
-
-	# determine which of the symbols has most target regions and use this one	
-	my ($pref_symbol, $max_regions) = (undef, 0);
-	my %region_symbols;
-	while($region =~ /(uc.*?)_exon/g)
+	my %sym_written;
+	foreach my $r (@regions)
 	{
-		my $sym = $ucsc2sym{$1} ? $ucsc2sym{$1} : $1;
-		$region_symbols{$sym} = 1;
-		if ($symbols{$sym} > $max_regions)
-		{
-			$max_regions = $symbols{$sym};
-			$pref_symbol = $sym;
-		}
+		my $sym = $ucsc2sym{$r} ? $ucsc2sym{$r} : $r;
+		next if ($sym_written{$sym});
+		print "$chr\t$start\t$end\t$sym\t$num_regions\n"; 
+		$sym_written{$sym} = 1;
 	}
-
-	print "$pref_symbol\t",join(";", keys(%region_symbols)),"\n";
 }

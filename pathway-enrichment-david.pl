@@ -5,6 +5,7 @@ use warnings;
 use SOAP::Lite;
 use HTTP::Cookies;
 use Data::Dumper;
+use Carp;
 
 # read id mapping
 #my (%name2ensembl, %symbol2desc);
@@ -28,19 +29,12 @@ while(<GENES>)
 	my ($approved_symbol, $entrez_gene_id, $accession_numbers, $approved_name, 
 		$previous_symbols, $previous_names, $aliases, $name_aliases, $entrez_gene_id_ncbi) = split("\t");
 
-#	print "$entrez_gene_id\n" if ($approved_symbol eq 'PLD1');
-	if ($entrez_gene_id)
-	{
-		$name2id{$approved_symbol} = $entrez_gene_id;
-		map {$name2id{$_} = $entrez_gene_id if (!$name2id{$previous_symbols})} split(", ", $previous_symbols);
-		$name2id{$entrez_gene_id} = $approved_symbol;	
-	}	
-	else
-	{
-		$name2id{$approved_symbol} = $entrez_gene_id_ncbi;
-		map {$name2id{$_} = $entrez_gene_id_ncbi if (!$name2id{$previous_symbols})} split(", ", $previous_symbols);
-		$name2id{$entrez_gene_id_ncbi} = $approved_symbol;			
-	}
+	$entrez_gene_id = $entrez_gene_id_ncbi if (!$entrez_gene_id);
+	next if (!$entrez_gene_id);
+
+	$name2id{$approved_symbol} = $entrez_gene_id;
+	map {$name2id{$_} = $entrez_gene_id} split(", ", $previous_symbols);
+	$name2id{$entrez_gene_id} = $approved_symbol;		
 }
 close(GENES);
 
@@ -133,7 +127,7 @@ die "ERROR: could not read input gene names from STDIN\n"
 	if (@genes == 0);
 	
 print STDERR "The following genes will be tested for enrichment:\n";
-print STDERR join("\n", @genes)."\n";
+print STDERR join(",", @genes)."\n";
 
 my $soap = SOAP::Lite                             
 	-> uri('http://service.session.sample')                
@@ -157,8 +151,23 @@ my $soap = SOAP::Lite
 #	 print STDERR "\nConversion Types: \n$conversionTypes\n"; 
 	 
  #list all annotation category names
- #my $allCategoryNames= $soap ->getAllAnnotationCategoryNames()->result;	 	  	
- #print STDERR  "\nAll available annotation category names: \n$allCategoryNames\n"; 
+ # BBID,BIND,BIOCARTA,BLOCKS,CGAP_EST_QUARTILE,CGAP_SAGE_QUARTILE,CHROMOSOME,COG_NAME,COG_ONTOLOGY,CYTOBAND,DIP,EC_NUMBER,ENSEMBL_GENE_ID,ENTREZ_GENE_ID,
+ # ENTREZ_GENE_SUMMARY,GENETIC_ASSOCIATION_DB_DISEASE,GENERIF_SUMMARY,GNF_U133A_QUARTILE,GENETIC_ASSOCIATION_DB_DISEASE_CLASS,GOTERM_BP_2,GOTERM_BP_1,
+ # GOTERM_BP_4,GOTERM_BP_3,GOTERM_BP_FAT,GOTERM_BP_5,GOTERM_CC_1,GOTERM_BP_ALL,GOTERM_CC_3,GOTERM_CC_2,GOTERM_CC_5,GOTERM_CC_4,GOTERM_MF_1,GOTERM_MF_2,
+ # GOTERM_CC_FAT,GOTERM_CC_ALL,GOTERM_MF_5,GOTERM_MF_FAT,GOTERM_MF_3,GOTERM_MF_4,HIV_INTERACTION_CATEGORY,HIV_INTERACTION_PUBMED_ID,GOTERM_MF_ALL,
+ # HIV_INTERACTION,KEGG_PATHWAY,HOMOLOGOUS_GENE,INTERPRO,OFFICIAL_GENE_SYMBOL,NCICB_CAPATHWAY_INTERACTION,MINT,PANTHER_MF_ALL,PANTHER_FAMILY,
+ # PANTHER_BP_ALL,OMIM_DISEASE,PFAM,PANTHER_SUBFAMILY,PANTHER_PATHWAY,PIR_SUPERFAMILY,PIR_SUMMARY,PIR_SEQ_FEATURE,PROSITE,PUBMED_ID,REACTOME_INTERACTION,
+ # REACTOME_PATHWAY,PIR_TISSUE_SPECIFICITY,PRINTS,PRODOM,PROFILE,SMART,SP_COMMENT,SP_COMMENT_TYPE,SP_PIR_KEYWORDS,SCOP_CLASS,SCOP_FAMILY,
+ # SCOP_FOLD,SCOP_SUPERFAMILY,UP_SEQ_FEATURE,UNIGENE_EST_QUARTILE,ZFIN_ANATOMY,UP_TISSUE,TIGRFAMS,SSF,UCSC_TFBS
+ my $allCategoryNames= $soap ->getAllAnnotationCategoryNames()->result;	 	  	
+ print STDERR  "\nAll available annotation category names: \n$allCategoryNames\n";
+ 
+ my $default_categories = "KEGG_PATHWAY,OMIM_DISEASE,COG_ONTOLOGY,SP_PIR_KEYWORDS,UP_SEQ_FEATURE,GOTERM_BP_FAT,GOTERM_CC_FAT,GOTERM_MF_FAT,BBID,BIOCARTA,INTERPRO,PIR_SUPERFAMILY,SMART";
+ my $additional_categories = "UP_SEQ_FEATURE";
+ $soap->setCategories("$default_categories,$additional_categories")
+ 	or croak "ERROR: could not set categories\n";
+# print "$validated_categories[0]\n";
+# exit;
  
  #addList
  #my $inputIds = 'KRAS,WSCD1,KRT17,MLL3,CREBBP,MGC70870,PDE4DIP,DEGS2,MST1L,DNAH9,XG,HOXB9,ZNF492,PDHA1';

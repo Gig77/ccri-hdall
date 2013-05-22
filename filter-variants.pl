@@ -34,7 +34,6 @@ my %variant_stati =
 	4 => 'post-transcriptional modification',
 	5 => 'unknown'
 );
-my %genes;
 
 print STDERR "Processing file $vcf_file...\n";
 
@@ -67,8 +66,9 @@ if ($header)
 	print "ref\t";
 	print "alt\t";
 	print "gene\t";
+	print "add_genes\t";
 	print "impact\t";
-	#print "region\t";
+	print "effect\t";
 	#print "variant_status\t";
 	print "depth_rem\t";
 	print "depth_leu\t";
@@ -163,10 +163,11 @@ while (my $line = $vcf->next_line())
 	print $x->{ID},"\t";
 	print $x->{REF},"\t";
 	print $x->{ALT}->[0],"\t";
-	my ($genes, $region, $impact) = get_impact($x->{INFO}{EFF});
-	print "$genes\t";
+	my ($gene, $add_genes, $impact, $effect) = get_impact($x->{INFO}{EFF});
+	print "$gene\t";
+	print "$add_genes\t";
 	print "$impact\t";
-#	print "$region\t";
+	print "$effect\t";
 #	print join(",", @{$x->{FILTER}}),"\t";
 #	print exists $x->{gtypes}{$cmp_sample}{SS} ? $variant_stati{$x->{gtypes}{$cmp_sample}{SS}} : "n/a", "\t";
 	if ($var_type eq 'snp')
@@ -214,8 +215,8 @@ sub get_impact
 {
 	my $effs = shift or die "ERROR: effect not specified";
 
-	my %genes;
-	my $overall_impact = "n/d";
+	# determine all genes impacted by variants
+	my (%genes_by_impact, %all_genes, $combined_effect, $combined_impact);	
 	foreach my $eff (split(",", $effs))
 	{
 		my ($effect, $rest) = $eff =~ /([^\(]+)\(([^\)]+)\)/
@@ -225,35 +226,80 @@ sub get_impact
 			$coding, $transcript, $exon, $genotype_num) = split('\|', $rest)
 				or die "ERROR: could not parse SNP effect: $eff\n"; 
 
-		# determine overall impact
-		if ($overall_impact eq "n/d" or $overall_impact eq "MODIFIER")
+		# gene impacted by variant?
+		if ($gene_name)
 		{
-			$overall_impact = $impact;
-		}
-		elsif ($overall_impact eq "LOW" and $impact =~ /(MODERATE|HIGH)/)
-		{
-			$overall_impact = $impact;
-		}
-		elsif ($overall_impact eq "MODERATE" and $impact =~ /HIGH/)
-		{
-			$overall_impact = $impact;
-		}
-		elsif ($impact eq "HIGH")
-		{
-			$overall_impact = $impact;
+			$genes_by_impact{$impact}{$gene_name} = $effect;
+			$all_genes{$gene_name} = 1;
 		}
 
-		$genes{$gene_name} = $effect
-			if ($gene_name);
+		$combined_impact = $impact;		
+		$combined_effect = $effect;
 	}
 	
-#	my $impact = "";
-#	my $region = "";
-#	foreach my $g (keys(%genes))
-#	{
-#		$impact .= $g;
-#		$region .= $genes{$g}.")";
-#	}
+	# if multiple genes are affected, preferentially chose gene with the predicted higher impact
+	if ($genes_by_impact{HIGH})
+	{
+		$combined_impact = "HIGH";
+	}
+	elsif ($genes_by_impact{MODERATE})
+	{
+		$combined_impact = "MODERATE";
+	}
+	elsif ($genes_by_impact{LOW})
+	{
+		$combined_impact = "LOW";
+	}
+	elsif ($genes_by_impact{MODIFIER})
+	{
+		$combined_impact = "MODIFIER";
+	}
 	
-	return (join(",", keys(%genes)), join(",", values(%genes)), $overall_impact);
+	my ($gene, $add_genes) = ("", "");
+	if (keys(%all_genes) > 0)
+	{
+		my @sorted_genes = sort keys(%{$genes_by_impact{$combined_impact}});
+		$gene = $sorted_genes[0]; # first choice is first in alphabetically sorted list
+		if ($gene =~ /^LOC/) # if this is a generic gene name, try to find non-generic one instead
+		{
+			foreach my $g (@sorted_genes)
+			{
+				if ($g !~ /^LOC/)
+				{
+					$gene = $g;
+					last;
+				}	
+			}
+		}
+		$combined_effect = $genes_by_impact{$combined_impact}{$gene};
+		delete $all_genes{$gene};
+		$add_genes = join(",", keys(%all_genes));
+	}
+#		# determine overall impact
+#		if ($combined_impact eq "n/d" or $combined_impact eq "MODIFIER")
+#		{
+#			$gene = $gene_name;
+#			$combined_impact = $impact;
+#			$combined_effect = $effect;
+#		}
+#		elsif ($combined_impact eq "LOW" and $impact =~ /(MODERATE|HIGH)/)
+#		{
+#			$gene = $gene_name;
+#			$combined_impact = $impact;
+#			$combined_effect = $effect;
+#		}
+#		elsif ($combined_impact eq "MODERATE" and $impact =~ /HIGH/)
+#		{
+#			$gene = $gene_name;
+#			$combined_impact = $impact;
+#			$combined_effect = $effect;
+#		}
+#		elsif ($impact eq "HIGH")
+#		{
+#			$gene = $gene_name;
+#			$combined_impact = $impact;
+#			$combined_effect = $effect;
+#		}		
+
+	return ($gene, $add_genes, $combined_impact, $combined_effect);
 }

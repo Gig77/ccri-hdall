@@ -6,11 +6,6 @@ VCF_OUT_MERGED=/home/STANNANET/christian.frech/hdall/results/merged_vcf
 RESULT_FILE=/home/STANNANET/christian.frech/hdall/results/filtered-variants.tsv
 LOG_FILE=/home/STANNANET/christian.frech/hdall/results/filtered-variants.log
 
-# summarize variants
-cat ~/hdall/results/filtered-variants.tsv | perl ~/git/hdall/impacted-genes.pl > ~/hdall/results/impacted-genes-list.tsv
-cat ~/hdall/results/impacted-genes-list.tsv | perl ~/git/hdall/get-gene-patient-matrix.pl > ~/hdall/results/gene-patient-matrix.tsv
-exit
-
 perl $SCRIPT 314 rem_dia $VCF_DIR/314_rem_dia_calls_snpeff.vcf 314_rem 314_dia snp --header --vcf-out $VCF_OUT_FILTERED/314_rem_dia.snp.filtered.vcf >$RESULT_FILE 2>$LOG_FILE
 perl $SCRIPT 314 rem_dia $VCF_DIR_INDEL/314_rem_dia_snpeff.vcf 314_rem 314_dia indel --vcf-out $VCF_OUT_FILTERED/314_rem_dia.indel.filtered.vcf >>$RESULT_FILE 2>>$LOG_FILE
 perl $SCRIPT 314 rem_rel $VCF_DIR/314_rem_rel_calls_snpeff.vcf 314_rem 314_rel snp --vcf-out $VCF_OUT_FILTERED/314_rem_rel.snp.filtered.vcf >>$RESULT_FILE 2>>$LOG_FILE
@@ -122,11 +117,20 @@ perl $SCRIPT Y rem_dia $VCF_DIR_INDEL/Y_rem_dia_snpeff.vcf Y3767_rem Y3141_dia i
 perl $SCRIPT Y rem_rel $VCF_DIR/Y_rem_rel_calls_snpeff.vcf Y3767_rem Y10284_rel snp --vcf-out $VCF_OUT_FILTERED/Y_rem_rel.snp.filtered.vcf >>$RESULT_FILE 2>>$LOG_FILE
 perl $SCRIPT Y rem_rel $VCF_DIR_INDEL/Y_rem_rel_snpeff.vcf Y3767_rem Y10284_rel indel --vcf-out $VCF_OUT_FILTERED/Y_rem_rel.indel.filtered.vcf >>$RESULT_FILE 2>>$LOG_FILE
 
-# summarize variants
+# summarize variants all variants
 cat ~/hdall/results/filtered-variants.tsv | perl ~/git/hdall/impacted-genes.pl > ~/hdall/results/impacted-genes-list.tsv
 cat ~/hdall/results/impacted-genes-list.tsv | perl ~/git/hdall/get-gene-patient-matrix.pl > ~/hdall/results/gene-patient-matrix.tsv
 
-# pathway enrichment analysis
-cat ~/hdall/results/gene-patient-matrix.tsv | perl ~/git/hdall/get-smg.pl dia 1 | perl ~/git/hdall/pathway-enrichment-david.pl | tee ~/hdall/results/enriched-pathways-dia-minfreq1.david.tsv
-cat ~/hdall/results/gene-patient-matrix.tsv | perl ~/git/hdall/get-smg.pl dia 2 | perl ~/git/hdall/pathway-enrichment-david.pl | tee ~/hdall/results/enriched-pathways-dia-minfreq2.david.tsv
+# summarize tier1 variants
+cat ~/hdall/results/filtered-variants.tsv | perl -ne 'print $_ if (/(patient|HIGH|MODERATE)/ and (split/\t/)[14] >= 0.25)' | perl ~/git/hdall/impacted-genes.pl > ~/hdall/results/impacted-genes-list.tier1.tsv
+cat ~/hdall/results/impacted-genes-list.tier1.tsv | perl ~/git/hdall/get-gene-patient-matrix.pl > ~/hdall/results/gene-patient-matrix.tier1.tsv
 
+# pathway enrichment analysis
+cat ~/hdall/results/gene-patient-matrix.tsv | perl ~/git/hdall/get-smg.pl dia 1 | perl ~/git/hdall/pathway-enrichment-david.pl > ~/hdall/results/enriched-pathways-dia-minfreq1.david.tsv 2>~/hdall/results/enriched-pathways-dia-minfreq1.david.log
+cat ~/hdall/results/gene-patient-matrix.tsv | perl ~/git/hdall/get-smg.pl dia 2 | perl ~/git/hdall/pathway-enrichment-david.pl > ~/hdall/results/enriched-pathways-dia-minfreq2.david.tsv 2>~/hdall/results/enriched-pathways-dia-minfreq2.david.log
+
+cat ~/hdall/results/gene-patient-matrix.tsv | perl ~/git/hdall/get-smg.pl rel 1 | perl ~/git/hdall/pathway-enrichment-david.pl > ~/hdall/results/enriched-pathways-rel-minfreq1.david.tsv 2>~/hdall/results/enriched-pathways-rel-minfreq1.david.log
+cat ~/hdall/results/gene-patient-matrix.tsv | perl ~/git/hdall/get-smg.pl rel 2 | perl ~/git/hdall/pathway-enrichment-david.pl > ~/hdall/results/enriched-pathways-rel-minfreq2.david.tsv 2>~/hdall/results/enriched-pathways-rel-minfreq2.david.log
+
+cat ~/hdall/results/gene-patient-matrix.tier1.tsv | perl ~/git/hdall/get-smg.pl dia 1 | perl ~/git/hdall/pathway-enrichment-david.pl > ~/hdall/results/enriched-pathways-dia-tier1.david.tsv 2>~/hdall/results/enriched-pathways-dia-tier1.david.log
+cat ~/hdall/results/gene-patient-matrix.tier1.tsv | perl ~/git/hdall/get-smg.pl rel 1 | perl ~/git/hdall/pathway-enrichment-david.pl > ~/hdall/results/enriched-pathways-rel-tier1.david.tsv 2>~/hdall/results/enriched-pathways-rel-tier1.david.log

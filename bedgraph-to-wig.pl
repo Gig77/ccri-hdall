@@ -22,7 +22,7 @@ while(<IN>){
    next if (/^track/);
    #chr1    3000403 3000404 2
    my ($chr,$start,$end,$data) = split(/\t/);
-#  $chr =~ s/^chr//;
+   $chr =~ s/^chr//;
    #fixedStep chrom=chr1 start=3016975 step=1 span=1
    #1
    #1

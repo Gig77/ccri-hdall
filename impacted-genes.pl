@@ -9,26 +9,16 @@ my %genes;
 while(<>)
 {
 	chomp;
-	my ($patient, $sample, $var_type, $chr, $pos, $dbSNP, $ref, $alt, $gene, $impact, $depth_rem, $depth_leu, $freq, $effects) = split("\t");
+	my ($patient, $sample, $var_type, $chr, $pos, $dbSNP, $ref, $alt, $gene, $add_genes, $impact, $effect, $depth_rem, $depth_leu, $freq, $snpeff) = split("\t");
 
-	die "ERROR: $0: could not parse snpeff effects from following line:\n$_\n"
-		if (!$effects);
+	die "ERROR: $0: snpeff annotation missing from following line:\n$_\n"
+		if (!$snpeff);
 
-	foreach my $eff (split(",", $effects))
-	{
-		my ($effect, $rest) = $eff =~ /([^\(]+)\(([^\)]+)\)/
-			or die "could not parse SNP effect: $chr:$pos:$eff\n";
-		next if ($effect =~ /(DOWNSTREAM|INTERGENIC|INTRON|UPSTREAM)/);
-
-		my ($impact, $class, $codon_change, $aa_change, $aa_length, $gene_name, $gene_biotype, 
-			$coding, $transcript, $exon, $genotype_num) = split('\|', $rest)
-				or die "could not parse SNP effect: $chr:$pos:$rest\n";
-
-#		print "$patient\t$sample\t$gene_name\t$chr:$pos:$ref->$alt\n";
-		$genes{$patient}{$sample}{$gene_name}{"$chr:$pos:$ref->$alt"} = $genes{$patient}{$sample}{$gene_name}{"$chr:$pos:$ref->$alt"} 
-			? $genes{$patient}{$sample}{$gene_name}{"$chr:$pos:$ref->$alt"}.",$eff"
-			: $eff;
-	}
+	next if ($effect =~ /(DOWNSTREAM|INTERGENIC|INTRON|UPSTREAM)/);
+	
+	$genes{$patient}{$sample}{$gene}{"$chr:$pos:$ref->$alt"} = $genes{$patient}{$sample}{$gene}{"$chr:$pos:$ref->$alt"} 
+		? $genes{$patient}{$sample}{$gene}{"$chr:$pos:$ref->$alt"}.",$snpeff"
+		: $snpeff;
 }
 
 print "patient\tcomparison\tgene\tnum_mut\tmut_effects\n";

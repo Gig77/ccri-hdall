@@ -216,43 +216,26 @@ my $chartReport = $soap->getChartReport($thd,$ct);
 	#print "@chartRecordKeys\n";
 	
 	my @chartRecordValues = values %{$chartReport->result};
-	
-	my %chartRecord = %{$chartReport->result};
-	my $categoryName = $chartRecord{"categoryName"};
-	my $termName = $chartRecord{"termName"};
-	my $listHits = $chartRecord{"listHits"};
-	my $percent = $chartRecord{"percent"};
-	my $ease = $chartRecord{"ease"};
-	my $Genes = $chartRecord{"geneIds"};
-	my $listTotals = $chartRecord{"listTotals"};
-	my $popHits = $chartRecord{"popHits"};
-	my $popTotals = $chartRecord{"popTotals"};
-	my $foldEnrichment = $chartRecord{"foldEnrichment"};
-	my $bonferroni = $chartRecord{"bonferroni"};
-	my $benjamini = $chartRecord{"benjamini"};
-	my $FDR = $chartRecord{"afdr"};
-	
-	print "$categoryName\t$termName\t$listHits\t$percent\t$ease\t$Genes\t$listTotals\t$popHits\t$popTotals\t$foldEnrichment\t$bonferroni\t$benjamini\t$FDR\n";
-	
-	
+		
 	for my $j (0 .. (@chartRecords-1))
 	{			
-		%chartRecord = %{$chartRecords[$j]};
-		$categoryName = $chartRecord{"categoryName"};
-		$termName = $chartRecord{"termName"};
-		$listHits = $chartRecord{"listHits"};
-		$percent = $chartRecord{"percent"};
-		$ease = $chartRecord{"ease"};
-		$Genes = $chartRecord{"geneIds"};
+		my %chartRecord = %{$chartRecords[$j]};
+		my $categoryName = $chartRecord{"categoryName"};
+		my $termName = $chartRecord{"termName"};
+		my $listHits = $chartRecord{"listHits"};
+		my $percent = $chartRecord{"percent"};
+		my $ease = $chartRecord{"ease"};
+		my $Genes = $chartRecord{"geneIds"};
 		my @gene_symbols;
 		map { push(@gene_symbols, $name2id{$_} ? $name2id{$_} : $_) } (split(", ", $Genes)); # back translate entrez gene id to gene symbol
-		$listTotals = $chartRecord{"listTotals"};
-		$popHits = $chartRecord{"popHits"};
-		$popTotals = $chartRecord{"popTotals"};
-		$foldEnrichment = $chartRecord{"foldEnrichment"};
-		$bonferroni = $chartRecord{"bonferroni"};
-		$benjamini = $chartRecord{"benjamini"};
-		$FDR = $chartRecord{"afdr"};			
+		my $listTotals = $chartRecord{"listTotals"};
+		my $popHits = $chartRecord{"popHits"};
+		my $popTotals = $chartRecord{"popTotals"};
+		my $foldEnrichment = $chartRecord{"foldEnrichment"};
+		my $bonferroni = $chartRecord{"bonferroni"};
+		my $benjamini = $chartRecord{"benjamini"};
+		my $FDR = $chartRecord{"afdr"};
+					
 		print "$categoryName\t$termName\t$listHits\t$percent\t$ease\t",join(",", @gene_symbols),"\t$listTotals\t$popHits\t$popTotals\t$foldEnrichment\t$bonferroni\t$benjamini\t$FDR\n";				 
 	}		  	
 	

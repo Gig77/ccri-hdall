@@ -2,5 +2,6 @@
 <includepath>
   <includepathentry path="/mnt/suse/home/STANNANET/christian.frech/tools/vcftools_0.1.10/lib/perl5/site_perl" />
   <includepathentry path="/mnt/suse/home/STANNANET/christian.frech/tools/tabix-0.2.6/perl" />
+  <includepathentry path="/mnt/suse/home/STANNANET/christian.frech/git/gms-core/lib/perl" />
 </includepath>
 

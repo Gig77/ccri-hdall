@@ -9,7 +9,8 @@ my %genes;
 while(<>)
 {
 	chomp;
-	my ($patient, $sample, $var_type, $chr, $pos, $dbSNP, $ref, $alt, $gene, $add_genes, $impact, $effect, $depth_rem, $depth_leu, $freq, $snpeff) = split("\t");
+	my ($patient, $sample, $var_type, $chr, $pos, $dbSNP, $ref, $alt, $gene, $add_genes, $impact, $effect, 
+		$dp_rem_tot, $dp_rem_ref, $dp_rem_var, $dp_leu_tot, $dp_leu_ref, $dp_leu_var, $freq, $snpeff) = split("\t");
 
 	die "ERROR: $0: snpeff annotation missing from following line:\n$_\n"
 		if (!$snpeff);

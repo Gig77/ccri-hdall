@@ -4,6 +4,7 @@ use strict;
 use Vcf;
 use Data::Dumper;
 use Getopt::Long;
+use Carp;
 
 my ($vcf_out, $header);
 GetOptions
@@ -70,8 +71,12 @@ if ($header)
 	print "impact\t";
 	print "effect\t";
 	#print "variant_status\t";
-	print "depth_rem\t";
-	print "depth_leu\t";
+	print "dp_rem_tot\t";
+	print "dp_rem_ref\t";
+	print "dp_rem_var\t";
+	print "dp_leu_tot\t";
+	print "dp_leu_ref\t";
+	print "dp_leu_var\t";
 	print "freq\t";
 	print "effect\t";
 	print "\n";	
@@ -89,7 +94,7 @@ while (my $line = $vcf->next_line())
 		$filtered_gt ++;
 		next;
 	}
-			
+	
 	my $gt_rem = $x->{gtypes}{$rem_sample}{GT};
 	die "ERROR: Could not determine genotype of sample $rem_sample in file $vcf_file\n" if (!defined $gt_rem or $gt_rem eq "");
 
@@ -109,15 +114,51 @@ while (my $line = $vcf->next_line())
 		$filtered_qual ++;
 		next;
 	}
+
+	my ($dp_tum, $dp_rem, $var_freq, $ad_tum_ref, $ad_tum_alt, $ad_rem_ref, $ad_rem_alt);
 	
-	if ($var_type eq 'indel') # indel
+#	print Dumper($x);
+#	exit;		
+	
+	if ($var_type eq 'snp')
 	{
+		##FORMAT=<ID=AD,Number=.,Type=Integer,Description="Allelic depths for the ref and alt alleles in the order listed">
+		($ad_tum_ref, $ad_tum_alt) = split(",", $x->{gtypes}{$cmp_sample}{AD});
+		($ad_rem_ref, $ad_rem_alt) = split(",", $x->{gtypes}{$rem_sample}{AD});
+		
+		##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Approximate read depth (reads with MQ=255 or with bad mates are filtered)">
+		($dp_tum, $dp_rem) = ($x->{gtypes}{$cmp_sample}{DP}, $x->{gtypes}{$rem_sample}{DP});
+		
+		##FORMAT=<ID=FA,Number=A,Type=Float,Description="Allele fraction of the alternate allele with regard to reference">
+		$var_freq = $x->{gtypes}{$cmp_sample}{FA};
+	}
+	elsif ($var_type eq 'indel') # indel
+	{
+		##INFO=<ID=T_DP,Number=1,Type=Integer,Description="In TUMOR: total coverage at the site">
+		##INFO=<ID=N_DP,Number=1,Type=Integer,Description="In NORMAL: total coverage at the site">
+		($dp_tum, $dp_rem) = ($x->{INFO}{T_DP}, $x->{INFO}{N_DP});
+		
+		##INFO=<ID=T_AC,Number=2,Type=Integer,Description="In TUMOR: # of reads supporting consensus indel/any indel at the site">
+		##INFO=<ID=N_AC,Number=2,Type=Integer,Description="In NORMAL: # of reads supporting consensus indel/any indel at the site">
+		my ($ad_tum_any_indel, $ad_rem_any_indel);
+		($ad_tum_alt, $ad_tum_any_indel) = split(",", $x->{INFO}{T_AC}); 		
+		($ad_rem_alt, $ad_rem_any_indel) = split(",", $x->{INFO}{N_AC});
+		($ad_tum_ref, $ad_rem_ref) = ($dp_tum - $ad_tum_any_indel, $dp_rem - $ad_rem_any_indel); 		
+		$var_freq = $ad_tum_alt / $dp_tum;
+
 		# insufficient read depth
-		if ($x->{INFO}{T_DP} < 10)
+		if ($dp_tum < 10)
 		{
-			print STDERR "REJECT: READ DEPTH < 10: ", $x->{INFO}{T_DP},"\n";
+			print STDERR "REJECT: READ DEPTH < 10: $dp_tum\n";
 			next;			
 		}
+
+		# require high consensus call for indel
+		if ($ad_tum_alt/$ad_tum_any_indel < 0.7)
+		{
+			print STDERR "REJECT: BAD CONSENSUS: ",$x->{CHROM},":",$x->{POS},"\n";
+			next;
+		}		
 		
 		# require support from both strands
 		##INFO=<ID=T_SC,Number=4,Type=Integer,Description="In TUMOR: strandness: counts of forward-/reverse-aligned indel-supporting reads / forward-/reverse-aligned reference supporting reads">
@@ -125,15 +166,6 @@ while (my $line = $vcf->next_line())
 		if ($reads_indel_fwd == 0 or $reads_indel_rev == 0)
 		{
 			print STDERR "REJECT: STRAND BIAS: ",$x->{CHROM},":",$x->{POS},"\t","reads_indel_fwd: $reads_indel_fwd\treads_indel_rev: $reads_indel_rev\n";
-			next;
-		}
-		
-		# require high consensus call for indel
-		##INFO=<ID=T_AC,Number=2,Type=Integer,Description="In TUMOR: # of reads supporting consensus indel/any indel at the site">
-		my ($num_reads_cons_indel, $num_reads_any_indel) = split(",", $x->{INFO}{T_AC});
-		if ($num_reads_cons_indel/$num_reads_any_indel < 0.7)
-		{
-			print STDERR "REJECT: BAD CONSENSUS: ",$x->{CHROM},":",$x->{POS},"\n";
 			next;
 		}
 		
@@ -151,6 +183,10 @@ while (my $line = $vcf->next_line())
 #		print "reads_indel_rev: $reads_indel_rev\n";
 #		print "reads_ref_fwd: $reads_ref_fwd\n";
 #		print "reads_ref_rev: $reads_ref_rev\n";
+	}
+	else
+	{
+		croak "ERROR: Invalid variant type: $var_type\n";
 	}
 
 	print VCFOUT "$line" if ($vcf_out);
@@ -170,23 +206,13 @@ while (my $line = $vcf->next_line())
 	print "$effect\t";
 #	print join(",", @{$x->{FILTER}}),"\t";
 #	print exists $x->{gtypes}{$cmp_sample}{SS} ? $variant_stati{$x->{gtypes}{$cmp_sample}{SS}} : "n/a", "\t";
-	if ($var_type eq 'snp')
-	{
-		print exists $x->{gtypes}{$rem_sample}{DP} ? $x->{gtypes}{$rem_sample}{DP} : "n/a", "\t";
-		print exists $x->{gtypes}{$cmp_sample}{DP} ? $x->{gtypes}{$cmp_sample}{DP} : "n/a", "\t";
-		print exists $x->{gtypes}{$cmp_sample}{FA} ? $x->{gtypes}{$cmp_sample}{FA} : "n/a", "\t";	
-	}
-	else
-	{
-		my ($depth_rem, $depth_leu) = ($x->{INFO}{N_DP}, $x->{INFO}{T_DP});
-		print defined $depth_rem ? $depth_rem : "n/a", "\t";
-		print defined $depth_leu ? $depth_leu : "n/a", "\t";
-		
-		##INFO=<ID=T_AC,Number=2,Type=Integer,Description="In TUMOR: # of reads supporting consensus indel/any indel at the site">
-		my ($num_reads_cons_indel, $num_reads_any_indel) = split(",", $x->{INFO}{T_AC});
-		my $all_frac = $depth_leu ? $num_reads_cons_indel / $depth_leu : "n/d";
-		print "$all_frac\t";
-	}
+	print "$dp_rem\t";
+	print "$ad_rem_ref\t";
+	print "$ad_rem_alt\t";
+	print "$dp_tum\t";
+	print "$ad_tum_ref\t";
+	print "$ad_tum_alt\t";
+	print "$var_freq\t";
 	print "EFF=",$x->{INFO}{EFF},"\t";
 	print "\n";
 		

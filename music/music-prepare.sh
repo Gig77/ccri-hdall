@@ -19,7 +19,6 @@ mv ensembl_67_cds_ncrna_and_splice_sites_hg19 ensembl_67_cds_ncrna_and_splice_si
 # download human reference genome (hg19) from ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/2.3/hg19/ucsc.hg19.fasta.gz
 
 # filter and sort UCSC bed file
-#grep -vP '^(\S+random|chrUn)' ~/hdall/results/ucsc-genes.hg19.bed > ~/hdall/results/ucsc-genes.hg19.filtered.bed 
 ~/tools/lh3-sort/sort -k 1,1N -k 2,2n ~/hdall/results/ucsc-genes.hg19.bed > ~/hdall/results/ucsc-genes.hg19.sorted.bed
 
 # merge overlapping exons using bedtools

@@ -1,3 +1,9 @@
+# download required tables from UCSC genome browser:
+# mysql -h genome-mysql.cse.ucsc.edu -u genome -D hg19 -N -A -e 'select * from knownGene' > ~/hdall/data/hg19/hg19.knownGene.txt
+# mysql -h genome-mysql.cse.ucsc.edu -u genome -D hg19 -N -A -e 'select * from knownCanonical' > ~/hdall/data/hg19/hg19.knownCanonical.txt
+# mysql -h genome-mysql.cse.ucsc.edu -u genome -D hg19 -N -A -e 'select * from kgXref' > ~/hdall/data/hg19/hg19.kgXref.txt
+# perl ~/hdall/scripts/get-id-mapping.pl > ~/hdall/results/id-mappings.tsv
+
 SCRIPT=~/git/hdall/filter-variants.pl
 VCF_DIR=/home/STANNANET/christian.frech/hdall/data/mutect_vcf
 VCF_DIR_INDEL=/home/STANNANET/christian.frech/hdall/data/somatic_indel_vcf
@@ -121,7 +127,9 @@ exit
 
 # summarize variants all variants
 cat ~/hdall/results/filtered-variants.tsv | perl ~/git/hdall/impacted-genes.pl > ~/hdall/results/impacted-genes-list.tsv
-cat ~/hdall/results/impacted-genes-list.tsv | perl ~/git/hdall/get-gene-patient-matrix.pl > ~/hdall/results/gene-patient-matrix.tsv
+cat ~/hdall/results/impacted-genes-list.tsv | perl ~/git/hdall/get-gene-patient-matrix.pl --mut-count > ~/hdall/results/gene-patient-matrix.tsv
+cat ~/hdall/results/impacted-genes-list.tsv | perl ~/git/hdall/get-gene-patient-matrix.pl --mut-max-freq > ~/hdall/results/gene-patient-matrix.maxfreq.tsv
+cat ~/hdall/results/impacted-genes-list.tsv | perl ~/git/hdall/get-gene-patient-matrix.pl --mut-details > ~/hdall/results/gene-patient-matrix.details.tsv
 
 # summarize tier1 variants
 cat ~/hdall/results/filtered-variants.tsv | perl -ne 'print $_ if (/(patient|HIGH|MODERATE)/ and (split/\t/)[18] >= 0.25)' | perl ~/git/hdall/impacted-genes.pl > ~/hdall/results/impacted-genes-list.tier1.tsv

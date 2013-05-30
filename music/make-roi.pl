@@ -3,20 +3,18 @@
 use strict;
 use warnings;
 
-# read translation table
-
-#FORMAT:
-#kgID	mRNA	spID	spDisplayID	geneSymbol	refseq	protAcc	description	rfamAcc	tRnaName
-#uc001aaa.3	BC032353			DDX11L1			Homo sapiens mRNA for DEAD/H box polypeptide 11 like 1 (DDX11L1 gene).		
-my %ucsc2sym;
-open(IN,"/home/STANNANET/christian.frech/hdall/data/hg19/hg19.kgXref.txt") or die "could not open kgXref\n";
-while(<IN>)
+use Carp;
+ 
+# read translation table (id mappings)
+my %sym;
+open(M, "$ENV{HOME}/hdall/results/id-mappings.tsv") or croak "ERROR: could not read id mappings\n";
+while(<M>)
 {
 	chomp;
-	my ($kgID, $mRNA, $spID, $spDisplayID, $geneSymbol, $refseq, $protAcc, $description, $rfamAcc, $tRnaName) = split("\t");
-	$ucsc2sym{$kgID} = $geneSymbol;
+	my ($symbol, $id) = split(/\t/);
+	$sym{$id} = $symbol;
 }
-close(IN);
+close(M);
 
 # read chromosome sizes
 my %chrsize;
@@ -51,9 +49,9 @@ while(<>)
 	my %sym_written;
 	foreach my $r (@regions)
 	{
-		my $sym = $ucsc2sym{$r} ? $ucsc2sym{$r} : $r;
-		next if ($sym_written{$sym});
-		print "$chr\t$start\t$end\t$sym\t$num_regions\n"; 
-		$sym_written{$sym} = 1;
+		my $symbol = $sym{$r} ? $sym{$r} : $r;
+		next if ($sym_written{$symbol});
+		print "$chr\t$start\t$end\t$symbol\t$num_regions\n"; 
+		$sym_written{$symbol} = 1;
 	}
 }

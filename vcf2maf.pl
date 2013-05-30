@@ -22,38 +22,6 @@ die "ERROR: --mapping-entrez not specified\n" if (!$entrez_mapping);
 die "ERROR: --sample-tumor not specified\n" if (!$sample_tumor);
 die "ERROR: --sample-normal not specified\n" if (!$sample_normal);
 
-# manually remap a few gene identifiers that do not match between SnpEff and UCSC ROI, 
-# presumably because minor version differences
-my %remap = (
-	'MST1L' => 'MST1P9',
-	'SUPT20HL1' => 'FAM48B1',
-	'MROH2B' => 'HEATR7B2',
-	'TENM4' => 'ODZ4',
-	'TENM1' => 'ODZ1',
-	'USP17L15' => 'USP17',
-	'SOGA2' => 'CCDC165',
-	'MAATS1' => 'C3orf15',
-	'SKIDA1' => 'C10orf140',
-	'DNAAF3' => 'C19orf51',
-	'HELZ2' => 'PRIC285',
-	'MVB12B' => 'FAM125B',
-	'BOD1L1' => 'BOD1L',
-	'KDM4E' => 'KDM4DL',
-	'AMER1' => 'FAM123B',
-	'ZNF815P' => 'ZNF815',
-	'ZFHX4-AS1' => 'LOC100192378',
-	'SNRK-AS1' => 'SNRK',
-	'HNRNPA1P10' => 'HNRNPA1',
-	'CCDC13-AS1' => 'CCDC13',
-	'CSAG4' => 'MAGEA12',
-	'BLOC1S5-TXNDC5' => 'TXNDC5',
-	'PGM5-AS1' => 'PGM5',
-	'GATA3-AS1' => 'FLJ45983',
-	'ZNF733P' => 'LOC643955',
-	'BEND3P3' => 'LOC650623'
-);
-
-
 my $roi = Tabix->new(-data => "$music_roi");
 
 # read biomart id mapping
@@ -92,6 +60,20 @@ while (my $x = $vcf->next_data_hash())
 
 	my $snpeff_genes = get_impacted_genes($x->{INFO}{EFF});
 
+	my $var_type;
+	if (length($ref_allele) == length($alt_allele_2))
+	{
+		$var_type = 'snp';
+	}
+	elsif (length($ref_allele) < length($alt_allele_2))
+	{
+		$var_type = 'ins';
+	}
+	else
+	{
+		$var_type = 'del';
+	}
+	
 	if (keys(%$snpeff_genes) == 0)
 	{
 		print STDERR "WARNING: $sample_tumor: Variant $chr:$pos NOT written: not impacting gene.\n";
@@ -111,7 +93,7 @@ while (my $x = $vcf->next_data_hash())
 	{
 #		next if (exists $written{$gene});
 		
-		my $effect = get_variant_classification($snpeff_genes->{$gene}, "snp");
+		my $effect = get_variant_classification($snpeff_genes->{$gene}, $var_type);
 		
 		if ($effect eq 'Intron')
 		{
@@ -119,16 +101,9 @@ while (my $x = $vcf->next_data_hash())
 			next;
 		}
 		
-		if (exists $remap{$gene})
-		{
-			print STDERR "WARNING: $sample_tumor: Variant $chr:$pos: Gene identifier $gene remapped to ", $remap{$gene}, "\n";
-			$gene = $remap{$gene};
-		}
-		
 		if (!exists $rois->{$gene})
 		{
 			#my $roi = (keys(%$rois))[0];
-			#print STDERR "WARNING: Variant $chr:$pos: SnpEff gene $gene remapped to ROI $roi\n";
 			print STDERR "WARNING: $sample_tumor: Variant $chr:$pos NOT written: not mapping to ROI [SnpEff=$gene(", $snpeff_genes->{$gene}, ")]\n";
 			next;
 		}
@@ -144,10 +119,10 @@ while (my $x = $vcf->next_data_hash())
 		print "$pos\t"; #7 End_Position
 		print "+\t"; #8 Strand
 		print "$effect\t"; #9 Variant_Classification
-		print "SNP\t"; #10 Variant_Type
-		print "$ref_allele\t"; #11 Reference_Allele
-		print "$alt_allele_1\t"; #12 Tumor_Seq_Allele1
-		print "$alt_allele_2\t"; #13 Tumor_Seq_Allele2
+		print uc($var_type)."\t"; #10 Variant_Type
+		print "".($var_type eq "ins" ? "-" : $ref_allele)."\t"; #11 Reference_Allele
+		print "".($var_type eq "ins" ? "-" : $ref_allele)."\t"; #12 Tumor_Seq_Allele1
+		print "".($var_type eq "del" ? "-" : $alt_allele_2)."\t"; #13 Tumor_Seq_Allele2
 		print "$dbSNP\t"; #14 dbSNP_RS
 		print "\t"; #15 dbSNP_Val_Status
 		print "$sample_tumor\t"; #16 Tumor_Sample_Barcode
@@ -331,7 +306,7 @@ sub get_variant_classification
 
 	if (!$maf_effect)
 	{
-		print STDERR "Could not map snpEff effect to MAF effect: $snpEff_effect\n";
+		print STDERR "ERROR: Could not map snpEff effect to MAF effect: $snpEff_effect\n";
 		$maf_effect = $snpEff_effect;
 	}
 		

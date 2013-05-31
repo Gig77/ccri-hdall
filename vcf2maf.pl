@@ -2,25 +2,62 @@ use warnings;
 use strict;
 use Carp;
 
+use lib "$ENV{HOME}/generic/scripts";
+use Generic;
+use Log::Log4perl qw(:easy);
 use Vcf;
 use Tabix;
 use Getopt::Long;
 use Data::Dumper;
 
-my ($music_roi, $keep_variants_file, $entrez_mapping, $sample_tumor, $sample_normal, $header);
+Log::Log4perl->get_logger()->level($ERROR);
+
+my ($music_roi, $keep_variants_file, $entrez_mapping, $sample, $header);
 GetOptions
 (
 	"music-roi=s" => \$music_roi,  # MuSiC region of interest (ROI) file (must be tabix accessible, i.e. compressed and indexed)
 #	"keep-variants-file=s" => \$keep_variants_file,  # tab-separated file with variants to keep (chr, start)
 	"mapping-entrez=s" => \$entrez_mapping,  # file with mappings from gene symbol to entrez ids
-	"sample-tumor=s" => \$sample_tumor,  # sample id of tumor (e.g. 314_dia)
-	"sample-normal=s" => \$sample_normal,  # sample id of normal (e.g. 314_rem)
+	"sample=s" => \$sample,  # e.g. 314_rem_dia
 	"header" => \$header  # output header yes/no
 );
+
+if ($header)
+{
+	print_header();
+	exit;
+}
+
 die "ERROR: --music-roi not specified (.gz file)\n" if (!$music_roi);
 die "ERROR: --mapping-entrez not specified\n" if (!$entrez_mapping);
-die "ERROR: --sample-tumor not specified\n" if (!$sample_tumor);
-die "ERROR: --sample-normal not specified\n" if (!$sample_normal);
+die "ERROR: --sample not specified\n" if (!$sample);
+
+my %patient2sample = (
+	'A_rem' => 'A13324_rem',
+	'A_dia' => 'A12642_dia',
+	'A_rel' => 'A12886_rel',
+	'B_rem' => 'B20946_rem',
+	'B_dia' => 'B19668_dia',
+	'B_rel' => 'B15010_rel',
+	'C_rem' => 'C20499_rem',
+	'C_dia' => 'C19797_dia',
+	'C_rel' => 'C15050_rel',
+	'D_rem' => 'D4502_rem',
+	'D_dia' => 'D3826_dia',
+	'D_rel' => 'D10183_rel',
+	'E_rem' => 'E13861_rem',
+	'E_dia' => 'E13174_dia',
+	'E_rel' => 'E13479_rel',
+	'X_rem' => 'X1847_rem',
+	'X_dia' => 'X1286_dia',
+	'X_rel' => 'X12831_rel',
+	'Y_rem' => 'Y3767_rem',
+	'Y_dia' => 'Y3141_dia',
+	'Y_rel' => 'Y10284_rel'
+);
+my ($patient, $sample_normal, $sample_tumor) = split("_", $sample) or die "ERROR: invalid sample\n";
+$sample_normal = $patient2sample{$patient."_$sample_normal"} ? $patient2sample{$patient."_$sample_normal"} : $patient."_$sample_normal"; 
+$sample_tumor = $patient2sample{$patient."_$sample_tumor"} ? $patient2sample{$patient."_$sample_tumor"} : $patient."_$sample_tumor"; 
 
 my $roi = Tabix->new(-data => "$music_roi");
 
@@ -45,8 +82,6 @@ close(GENES);
 my $vcf = Vcf->new(file => "-");
 $vcf->parse_header();
 my (@samples) = $vcf->get_samples();
-
-print_header() if ($header);
 
 while (my $x = $vcf->next_data_hash())
 {
@@ -76,16 +111,16 @@ while (my $x = $vcf->next_data_hash())
 	
 	if (keys(%$snpeff_genes) == 0)
 	{
-		print STDERR "WARNING: $sample_tumor: Variant $chr:$pos NOT written: not impacting gene.\n";
+		INFO("$sample_tumor: Variant $chr:$pos NOT written: not impacting gene.");
 		next;
 	}
 
-	print STDERR "INFO: $sample_tumor: Variant $chr:$pos impacting multiple genes: ", join(",", keys(%$snpeff_genes)), "\n"
+	INFO("$sample_tumor: Variant $chr:$pos impacting multiple genes: ".join(",", keys(%$snpeff_genes)))
 		if (keys(%$snpeff_genes) > 1);
 
 	my $rois = get_rois($chr, $pos, $pos+1);
 
-	print STDERR "INFO: $sample_tumor: Variant $chr:$pos mapping to multiple ROIs: ", join(",", keys(%$rois)), "\n"
+	INFO("$sample_tumor: Variant $chr:$pos mapping to multiple ROIs: ".join(",", keys(%$rois)))
 		if (keys(%$rois) > 1);
 		
 #	my %written;
@@ -97,14 +132,14 @@ while (my $x = $vcf->next_data_hash())
 		
 		if ($effect eq 'Intron')
 		{
-			print STDERR "WARNING: $sample_tumor: Variant $chr:$pos NOT written: mapping to intron [SnpEff=$gene(", $snpeff_genes->{$gene}, ")]\n";
+			INFO("$sample_tumor: Variant $chr:$pos NOT written: mapping to intron [SnpEff=$gene(".$snpeff_genes->{$gene}, ")]");
 			next;
 		}
 		
 		if (!exists $rois->{$gene})
 		{
 			#my $roi = (keys(%$rois))[0];
-			print STDERR "WARNING: $sample_tumor: Variant $chr:$pos NOT written: not mapping to ROI [SnpEff=$gene(", $snpeff_genes->{$gene}, ")]\n";
+			INFO("$sample_tumor: Variant $chr:$pos NOT written: not mapping to ROI [SnpEff=$gene(".$snpeff_genes->{$gene}, ")]");
 			next;
 		}
 
@@ -152,6 +187,7 @@ while (my $x = $vcf->next_data_hash())
 }
 $vcf->close();
 
+print STDERR "\n"; # avoid grep exit code
 
 ## ------------------------------------------
 
@@ -306,7 +342,7 @@ sub get_variant_classification
 
 	if (!$maf_effect)
 	{
-		print STDERR "ERROR: Could not map snpEff effect to MAF effect: $snpEff_effect\n";
+		ERROR("Could not map snpEff effect to MAF effect: $snpEff_effect");
 		$maf_effect = $snpEff_effect;
 	}
 		

@@ -1,4 +1,11 @@
-t <- read.csv("~/hdall/results/music/dia/sm_pathways.annotated.tsv", sep="\t", as.is=c(1, 9))
+jacc <- function(a, b)
+{
+	i <- intersect(a, b)
+	u <- union(a, b)
+	length(i) / length(u)
+}
+
+t <- read.csv("~/hdall/results/music/rel/sm_pathways.annotated.tsv", sep="\t", as.is=c(1, 9))
 
 t2 <- t[t$Class=="KEGG_PATHWAY" | t$Class == "BBID" | t$Class == "BIOCARTA",]
 
@@ -27,11 +34,22 @@ for (i in 1:nrow(pairs))
 	m[p2,p2] <- 1		
 }
 
-write.csv(m, file="~/hdall/results/pathway-distance-matrix.tsv")
+# write distance matrix
+write.csv(m, file="~/hdall/results/music/rel/sm_pathways.distance-matrix.tsv")
 
-jacc <- function(a, b)
-{
-	i <- intersect(a, b)
-	u <- union(a, b)
-	length(i) / length(u)
-}
+# hierarchical clustering
+d <- as.dist(1-m)
+hc <- hclust(d, method="average")
+pdf("~/hdall/results/music/rel/sm_pathways.hclust.pdf")
+plot(hc, hang=-1, cex=0.2, xlab="Pathways", main="Pathways clustered by shared genes")
+dev.off()
+
+# cut tree and output clusters
+c <- cutree(hc, h=c(0.2,0.4,0.6,0.8))
+c <- cbind(rownames(c), c)
+colnames(c)[1] <- "Pathway"
+merged <- merge(t, c, all.x=T)
+
+write.csv(merged, file="~/hdall/results/music/rel/sm_pathways.annotated.clustered.tsv")
+
+

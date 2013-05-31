@@ -1,6 +1,9 @@
 use warnings;
 use strict;
 
+use lib "$ENV{HOME}/generic/scripts";
+use Generic;
+use Log::Log4perl qw(:easy);
 use Vcf;
 use Data::Dumper;
 use Getopt::Long;
@@ -12,49 +15,6 @@ GetOptions
 	"vcf-out=s" => \$vcf_out,  # filtered VCF output file
 	"header" => \$header  # if set, write header line to output
 );
-
-my $debug = 1;
-
-my $patient = $ARGV[0] or die "ERROR: patient not specified\n";
-my $cmp_type = $ARGV[1] or die "ERROR: Comparison type ('rem_dia' or 'rem_rel') not specified\n";
-die "ERROR: invalid comparison type: $cmp_type\n" if ($cmp_type ne 'rem_dia' and $cmp_type ne 'rem_rel');
-my $vcf_file = $ARGV[2] or die "ERROR: VCF file not specified\n";
-my $rem_sample = $ARGV[3] or die "ERROR: remission sample name not specified\n";
-my $cmp_sample = $ARGV[4] or die "ERROR: comparator sample name (diagnosis or remission) not specified\n";
-my $var_type = $ARGV[5] or die "ERROR: variant type not specified ('snp' or 'indel')\n";
-die "ERROR: invalid variant type: $var_type\n" if ($var_type ne 'snp' and $var_type ne 'indel');
-
-$| = 1; # turn on autoflush
-
-my %variant_stati = 
-(
-	0 => 'wildtype',
-	1 => 'germline',
-	2 => 'somatic',
-	3 => 'LOH',
-	4 => 'post-transcriptional modification',
-	5 => 'unknown'
-);
-
-print STDERR "Processing file $vcf_file...\n";
-
-my $vcf = Vcf->new(file => "$vcf_file");
-$vcf->parse_header();
-my (@samples) = $vcf->get_samples();
-
-if ($vcf_out) 
-{
-	my $cmd = "grep -P '^#' $vcf_file > $vcf_out";
-	system($cmd) == 0 or die "ERROR: grep vcf header failed: $cmd\n";
-	open(VCFOUT,">>$vcf_out") or die "ERROR: could not write to file $vcf_out\n";
-}
-
-# sanity check
-die "ERROR: Sample name $rem_sample not found!\n" if ($rem_sample ne $samples[0] and $rem_sample ne $samples[1]);
-die "ERROR: Sample name $cmp_sample not found!\n" if ($cmp_sample ne $samples[0] and $cmp_sample ne $samples[1]);
-
-my ($tot_var, $filtered_qual, $filtered_gt, $filtered_alt, $filtered_germ) = (0, 0, 0, 0, 0);
-my %qual_num;
 
 if ($header)
 {
@@ -79,9 +39,78 @@ if ($header)
 	print "dp_leu_var\t";
 	print "freq\t";
 	print "effect\t";
-	print "\n";	
+	print "\n";
+	exit;	
 }
-	
+
+my $debug = 1;
+
+my ($patient, $rem_sample, $cmp_sample) = split("_", $ARGV[0]) or die "ERROR: comparison type not specified\n";
+my $vcf_file = $ARGV[1] or die "ERROR: VCF file not specified\n";
+my $var_type = $ARGV[2] or die "ERROR: variant type not specified ('snp' or 'indel')\n";
+die "ERROR: invalid variant type: $var_type\n" if ($var_type ne 'snp' and $var_type ne 'indel');
+
+my %patient2sample = (
+	'A_rem' => 'A13324_rem',
+	'A_dia' => 'A12642_dia',
+	'A_rel' => 'A12886_rel',
+	'B_rem' => 'B20946_rem',
+	'B_dia' => 'B19668_dia',
+	'B_rel' => 'B15010_rel',
+	'C_rem' => 'C20499_rem',
+	'C_dia' => 'C19797_dia',
+	'C_rel' => 'C15050_rel',
+	'D_rem' => 'D4502_rem',
+	'D_dia' => 'D3826_dia',
+	'D_rel' => 'D10183_rel',
+	'E_rem' => 'E13861_rem',
+	'E_dia' => 'E13174_dia',
+	'E_rel' => 'E13479_rel',
+	'X_rem' => 'X1847_rem',
+	'X_dia' => 'X1286_dia',
+	'X_rel' => 'X12831_rel',
+	'Y_rem' => 'Y3767_rem',
+	'Y_dia' => 'Y3141_dia',
+	'Y_rel' => 'Y10284_rel'
+);
+my $cmp_type = $rem_sample."_".$cmp_sample;
+die "ERROR: invalid comparison type: $cmp_type\n" if ($cmp_type ne 'rem_dia' and $cmp_type ne 'rem_rel');
+
+$rem_sample = $patient2sample{$patient."_$rem_sample"} ? $patient2sample{$patient."_$rem_sample"} : $patient."_$rem_sample"; 
+$cmp_sample = $patient2sample{$patient."_$cmp_sample"} ? $patient2sample{$patient."_$cmp_sample"} : $patient."_$cmp_sample"; 
+
+$| = 1; # turn on autoflush
+
+my %variant_stati = 
+(
+	0 => 'wildtype',
+	1 => 'germline',
+	2 => 'somatic',
+	3 => 'LOH',
+	4 => 'post-transcriptional modification',
+	5 => 'unknown'
+);
+
+INFO("Processing file $vcf_file...");
+
+my $vcf = Vcf->new(file => "$vcf_file");
+$vcf->parse_header();
+my (@samples) = $vcf->get_samples();
+
+if ($vcf_out) 
+{
+	my $cmd = "grep -P '^#' $vcf_file > $vcf_out";
+	system($cmd) == 0 or die "ERROR: grep vcf header failed: $cmd\n";
+	open(VCFOUT,">>$vcf_out") or die "ERROR: could not write to file $vcf_out\n";
+}
+
+# sanity check
+die "ERROR: Sample name $rem_sample not found!\n" if ($rem_sample ne $samples[0] and $rem_sample ne $samples[1]);
+die "ERROR: Sample name $cmp_sample not found!\n" if ($cmp_sample ne $samples[0] and $cmp_sample ne $samples[1]);
+
+my ($tot_var, $filtered_qual, $filtered_gt, $filtered_alt, $filtered_germ) = (0, 0, 0, 0, 0);
+my %qual_num;
+
 while (my $line = $vcf->next_line())
 {
 	my $x = $vcf->next_data_hash($line);
@@ -149,14 +178,14 @@ while (my $line = $vcf->next_line())
 		# insufficient read depth
 		if ($dp_tum < 10)
 		{
-			print STDERR "REJECT: READ DEPTH < 10: $dp_tum\n";
+			INFO("REJECT: READ DEPTH < 10: $dp_tum");
 			next;			
 		}
 
 		# require high consensus call for indel
 		if ($ad_tum_alt/$ad_tum_any_indel < 0.7)
 		{
-			print STDERR "REJECT: BAD CONSENSUS: ",$x->{CHROM},":",$x->{POS},"\n";
+			INFO("REJECT: BAD CONSENSUS: ",$x->{CHROM},":",$x->{POS},"");
 			next;
 		}		
 		
@@ -165,7 +194,7 @@ while (my $line = $vcf->next_line())
 		my ($reads_indel_fwd, $reads_indel_rev, $reads_ref_fwd, $reads_ref_rev) = split(",", $x->{INFO}{T_SC});
 		if ($reads_indel_fwd == 0 or $reads_indel_rev == 0)
 		{
-			print STDERR "REJECT: STRAND BIAS: ",$x->{CHROM},":",$x->{POS},"\t","reads_indel_fwd: $reads_indel_fwd\treads_indel_rev: $reads_indel_rev\n";
+			INFO("REJECT: STRAND BIAS: ",$x->{CHROM},":",$x->{POS},"\t","reads_indel_fwd: $reads_indel_fwd\treads_indel_rev: $reads_indel_rev");
 			next;
 		}
 		
@@ -174,7 +203,7 @@ while (my $line = $vcf->next_line())
 		my ($frac_mm_reads_indel, $frac_mm_reads_ref) = split(",", $x->{INFO}{T_NQSMM});
 		if ($frac_mm_reads_indel > $frac_mm_reads_ref)
 		{
-			print STDERR "REJECT: POOR ALIGNMENT: ",$x->{CHROM},":",$x->{POS},"\t","frac_mm_reads_indel: $frac_mm_reads_indel\tfrac_mm_reads_ref: $frac_mm_reads_ref\n";
+			INFO("REJECT: POOR ALIGNMENT: ",$x->{CHROM},":",$x->{POS},"\t","frac_mm_reads_indel: $frac_mm_reads_indel\tfrac_mm_reads_ref: $frac_mm_reads_ref");
 			next;
 		}
 		
@@ -223,16 +252,16 @@ close(VCFOUT) if ($vcf_out);
 	
 if ($debug)
 {
-	print STDERR "  Total number of variants: $tot_var\n";
-	print STDERR "  Variants by quality:\n";
+	INFO("  Total number of variants: $tot_var");
+	INFO("  Variants by quality:");
 	foreach my $k (keys(%qual_num))
 	{
-		print STDERR "    $k: ", $qual_num{$k},"\n";
+		INFO("    $k: ", $qual_num{$k});
 	}
-	print STDERR "  Excluded due to quality: $filtered_qual\n";
-	print STDERR "  Excluded due to equal genotype: $filtered_gt\n";
-	print STDERR "  Excluded due to missing alternative allele: $filtered_alt\n";
-	print STDERR "  Excluded germline variants: $filtered_germ\n";
+	INFO("  Excluded due to quality: $filtered_qual");
+	INFO("  Excluded due to equal genotype: $filtered_gt");
+	INFO("  Excluded due to missing alternative allele: $filtered_alt");
+	INFO("  Excluded germline variants: $filtered_germ");
 }
 
 # ------------------------------------------

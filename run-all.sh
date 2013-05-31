@@ -7,7 +7,7 @@
 SCRIPT=~/git/hdall/filter-variants.pl
 VCF_DIR=/home/STANNANET/christian.frech/hdall/data/mutect_vcf
 VCF_DIR_INDEL=/home/STANNANET/christian.frech/hdall/data/somatic_indel_vcf
-VCF_OUT_FILTERED=/home/STANNANET/christian.frech/hdall/results/filtered_vcf
+VCF_OUT_FILTERED=/home/STANNANET/christian.frech/hdall/results/filtered_variants
 VCF_OUT_MERGED=/home/STANNANET/christian.frech/hdall/results/merged_vcf
 RESULT_FILE=/home/STANNANET/christian.frech/hdall/results/filtered-variants.tsv
 LOG_FILE=/home/STANNANET/christian.frech/hdall/results/filtered-variants.log

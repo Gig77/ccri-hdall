@@ -28,12 +28,12 @@ my %impact2flag =
 die "ERROR: invalid or missing list type\n"
 	if (!$mut_count and !$mut_max_freq and !$mut_details);
 
-my (%case_freq, %mut_total, %mut_gene_patient, %patients, %variants, %gene_info);
+my (%case_freq, %case_freq_ns, %mut_total, %mut_total_ns, %mut_gene_patient, %patients, %variants, %gene_info);
 <>; # skip header
 while(<>)
 {
 	chomp;
-	my ($patient, $comp, $gene, $tr_len, $cds_len, $exons, $desc, $num_mutations, $mutations) = split/\t/;
+	my ($patient, $comp, $gene, $tr_len, $cds_len, $exons, $desc, $num_mutations, $num_mutations_nonsyn, $mutations) = split/\t/;
 	
 	$gene_info{$gene}{'tr_len'} = $tr_len;
 	$gene_info{$gene}{'cds_len'} = $cds_len;
@@ -71,6 +71,27 @@ while(<>)
 	{
 		$mut_total{$comp}{$gene} = $num_mutations;
 	}
+
+	if ($num_mutations_nonsyn > 0)
+	{
+		if ($case_freq_ns{$comp}{$gene})
+		{
+			$case_freq_ns{$comp}{$gene} ++;
+		}
+		else
+		{
+			$case_freq_ns{$comp}{$gene} = 1;
+		}
+	
+		if ($mut_total_ns{$comp}{$gene})
+		{
+			$mut_total_ns{$comp}{$gene} += $num_mutations_nonsyn;
+		}
+		else
+		{
+			$mut_total_ns{$comp}{$gene} = $num_mutations_nonsyn;
+		}		
+	}
 }
 
 #my (%freq_cons, %mut_cons);
@@ -107,12 +128,11 @@ foreach my $g (keys(%{$case_freq{'rem_rel'}}))
 
 my @sorted = sort { ($case_freq{'cons'}{$b} ? $case_freq{'cons'}{$b} : 0) <=> ($case_freq{'cons'}{$a} ? $case_freq{'cons'}{$a} : 0) } keys(%all_genes);
 
-print "gene\tdescr\texons\ttr_len\tcds_len\tfreq-dia\t";
-print "tot-dia\t";
+print "gene\tdescr\texons\ttr_len\tcds_len\t";
+print "freq-dia\ttot-dia\tfreq-dia-ns\ttot-dia-ns\t";
 map { print "$_-dia\t" } keys(%patients);
 
-print "freq-rel\t";
-print "tot-rel\t";
+print "freq-rel\ttot-rel\tfreq-rel-ns\ttot-rel-ns\t";
 map { print "$_-rel\t" } keys(%patients);
 
 print "freq-cons\t";
@@ -127,6 +147,9 @@ foreach my $g (@sorted)
 
 	print $case_freq{'rem_dia'}{$g} ? $case_freq{'rem_dia'}{$g} : "0", "\t";
 	print $mut_total{'rem_dia'}{$g} ? $mut_total{'rem_dia'}{$g} : "0", "\t";
+	print $case_freq_ns{'rem_dia'}{$g} ? $case_freq_ns{'rem_dia'}{$g} : "0", "\t";
+	print $mut_total_ns{'rem_dia'}{$g} ? $mut_total_ns{'rem_dia'}{$g} : "0", "\t";
+
 	foreach my $p (keys(%patients))
 	{
 		if ($mut_count)
@@ -145,6 +168,9 @@ foreach my $g (@sorted)
 
 	print $case_freq{'rem_rel'}{$g} ? $case_freq{'rem_rel'}{$g} : "0", "\t";
 	print $mut_total{'rem_rel'}{$g} ? $mut_total{'rem_rel'}{$g} : "0", "\t";
+	print $case_freq_ns{'rem_rel'}{$g} ? $case_freq_ns{'rem_rel'}{$g} : "0", "\t";
+	print $mut_total_ns{'rem_rel'}{$g} ? $mut_total_ns{'rem_rel'}{$g} : "0", "\t";
+
 	foreach my $p (keys(%patients))
 	{
 		if ($mut_count)

@@ -125,17 +125,7 @@ perl $SCRIPT Y rem_rel $VCF_DIR_INDEL/Y_rem_rel_snpeff.vcf Y3767_rem Y10284_rel 
 
 exit
 
-# summarize variants all variants
-cat ~/hdall/results/filtered-variants.tsv | perl ~/git/hdall/impacted-genes.pl > ~/hdall/results/impacted-genes-list.tsv
-cat ~/hdall/results/impacted-genes-list.tsv | perl ~/git/hdall/get-gene-patient-matrix.pl --mut-count > ~/hdall/results/gene-patient-matrix.tsv
-cat ~/hdall/results/impacted-genes-list.tsv | perl ~/git/hdall/get-gene-patient-matrix.pl --mut-max-freq > ~/hdall/results/gene-patient-matrix.maxfreq.tsv
-cat ~/hdall/results/impacted-genes-list.tsv | perl ~/git/hdall/get-gene-patient-matrix.pl --mut-details > ~/hdall/results/gene-patient-matrix.details.tsv
-
-# summarize tier1 variants
-cat ~/hdall/results/filtered-variants.tsv | perl -ne 'print $_ if (/(patient|HIGH|MODERATE)/ and (split/\t/)[18] >= 0.25)' | perl ~/git/hdall/impacted-genes.pl > ~/hdall/results/impacted-genes-list.tier1.tsv
-cat ~/hdall/results/impacted-genes-list.tier1.tsv | perl ~/git/hdall/get-gene-patient-matrix.pl > ~/hdall/results/gene-patient-matrix.tier1.tsv
-
-# pathway enrichment analysis
+# DAVID pathway enrichment analysis
 cat ~/hdall/results/gene-patient-matrix.tsv | perl ~/git/hdall/get-smg.pl dia 1 | perl ~/git/hdall/pathway-enrichment-david.pl > ~/hdall/results/enriched-pathways-dia-minfreq1.david.tsv 2>~/hdall/results/enriched-pathways-dia-minfreq1.david.log
 cat ~/hdall/results/gene-patient-matrix.tsv | perl ~/git/hdall/get-smg.pl dia 2 | perl ~/git/hdall/pathway-enrichment-david.pl > ~/hdall/results/enriched-pathways-dia-minfreq2.david.tsv 2>~/hdall/results/enriched-pathways-dia-minfreq2.david.log
 

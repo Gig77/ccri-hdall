@@ -1,4 +1,4 @@
-use warnings;
+use warnings FATAL => qw( all );
 use strict;
 
 use List::Util qw(min max);
@@ -28,17 +28,18 @@ my %impact2flag =
 die "ERROR: invalid or missing list type\n"
 	if (!$mut_count and !$mut_max_freq and !$mut_details);
 
-my (%case_freq, %case_freq_ns, %mut_total, %mut_total_ns, %mut_gene_patient, %patients, %variants, %gene_info);
+my (%case_freq, %case_freq_ns, %mut_total, %mut_total_ns, %mut_gene_patient, %patients, %variants, %gene_info, %max_afs, %imp_exons);
 <>; # skip header
 while(<>)
 {
 	chomp;
-	my ($patient, $comp, $gene, $tr_len, $cds_len, $exons, $desc, $num_mutations, $num_mutations_nonsyn, $mutations) = split/\t/;
+	my ($patient, $comp, $gene, $tr_len, $cds_len, $exons, $cosmic, $desc, $num_mutations, $num_mutations_nonsyn, $max_af, $max_af_ns, $ex, $ex_ns, $mutations) = split/\t/;
 	
 	$gene_info{$gene}{'tr_len'} = $tr_len;
 	$gene_info{$gene}{'cds_len'} = $cds_len;
 	$gene_info{$gene}{'exons'} = $exons;
 	$gene_info{$gene}{'desc'} = $desc;
+	$gene_info{$gene}{'cosmic'} = $cosmic;
 
 	$patients{$patient} = 1;
 	map { 
@@ -52,7 +53,19 @@ while(<>)
 		{
 			$variants{$comp}{$gene}{$patient}{"$chr:$start:$change"} = sprintf("%d", $freq*100); 			
 		}
+		
+		$max_af_ns = 0 if ($max_af_ns eq "");
+		$max_afs{$comp}{$gene}{'all'} = $max_afs{$comp}{$gene}{'all'}
+			? $max_afs{$comp}{$gene}{'all'} < $max_af ? $max_af : $max_afs{$comp}{$gene}{'all'}
+			: $max_af;
+		$max_afs{$comp}{$gene}{'ns'} = $max_afs{$comp}{$gene}{'ns'}
+			? $max_afs{$comp}{$gene}{'ns'} < $max_af_ns ? $max_af_ns : $max_afs{$comp}{$gene}{'ns'}
+			: $max_af_ns;
+			
 	} split(";", $mutations);
+	
+	map { $imp_exons{$comp}{$gene}{'all'}{$_} = 1 } split(",", $ex);  # impacted exons, all variants
+	map { $imp_exons{$comp}{$gene}{'ns'}{$_} = 1 } split(",", $ex_ns); # impacted exons, only nonsynonymous variants
 	
 	if ($case_freq{$comp}{$gene})
 	{
@@ -128,11 +141,11 @@ foreach my $g (keys(%{$case_freq{'rem_rel'}}))
 
 my @sorted = sort { ($case_freq{'cons'}{$b} ? $case_freq{'cons'}{$b} : 0) <=> ($case_freq{'cons'}{$a} ? $case_freq{'cons'}{$a} : 0) } keys(%all_genes);
 
-print "gene\tdescr\texons\ttr_len\tcds_len\t";
-print "freq-dia\ttot-dia\tfreq-dia-ns\ttot-dia-ns\t";
+print "gene\tdescr\texons\ttr_len\tcds_len\tcosmic\t";
+print "freq-dia\ttot-dia\tfreq-dia-ns\ttot-dia-ns\tmax-af-dia\tmax-af-dia-ns\timp-ex-dia\timp-ex-dia-ns\t";
 map { print "$_-dia\t" } keys(%patients);
 
-print "freq-rel\ttot-rel\tfreq-rel-ns\ttot-rel-ns\t";
+print "freq-rel\ttot-rel\tfreq-rel-ns\ttot-rel-ns\tmax-af-rel\tmax-af-rel-ns\timp-ex-rel\timp-ex-rel-ns\t";
 map { print "$_-rel\t" } keys(%patients);
 
 print "freq-cons\t";
@@ -143,12 +156,18 @@ print "\n";
 foreach my $g (@sorted)
 {
 	print "$g\t";
-	print $gene_info{$g}{'desc'},"\t",$gene_info{$g}{'exons'},"\t",$gene_info{$g}{'tr_len'},"\t",$gene_info{$g}{'cds_len'},"\t";
+	print $gene_info{$g}{'desc'},"\t",$gene_info{$g}{'exons'},"\t",$gene_info{$g}{'tr_len'},"\t",$gene_info{$g}{'cds_len'},"\t",$gene_info{$g}{'cosmic'},"\t";
 
 	print $case_freq{'rem_dia'}{$g} ? $case_freq{'rem_dia'}{$g} : "0", "\t";
 	print $mut_total{'rem_dia'}{$g} ? $mut_total{'rem_dia'}{$g} : "0", "\t";
 	print $case_freq_ns{'rem_dia'}{$g} ? $case_freq_ns{'rem_dia'}{$g} : "0", "\t";
 	print $mut_total_ns{'rem_dia'}{$g} ? $mut_total_ns{'rem_dia'}{$g} : "0", "\t";
+
+	print $max_afs{'rem_dia'}{$g}{'all'} ? sprintf("%d", $max_afs{'rem_dia'}{$g}{'all'} * 100) : "", "\t";
+	print $max_afs{'rem_dia'}{$g}{'ns'} ? sprintf("%d", $max_afs{'rem_dia'}{$g}{'ns'} * 100) : "", "\t";
+
+	print join(",", sort { $a <=> $b } keys(%{$imp_exons{'rem_dia'}{$g}{'all'}})), "\t";
+	print join(",", sort { $a <=> $b } keys(%{$imp_exons{'rem_dia'}{$g}{'ns'}})), "\t";
 
 	foreach my $p (keys(%patients))
 	{
@@ -170,6 +189,12 @@ foreach my $g (@sorted)
 	print $mut_total{'rem_rel'}{$g} ? $mut_total{'rem_rel'}{$g} : "0", "\t";
 	print $case_freq_ns{'rem_rel'}{$g} ? $case_freq_ns{'rem_rel'}{$g} : "0", "\t";
 	print $mut_total_ns{'rem_rel'}{$g} ? $mut_total_ns{'rem_rel'}{$g} : "0", "\t";
+
+	print $max_afs{'rem_rel'}{$g}{'all'} ? sprintf("%d", $max_afs{'rem_rel'}{$g}{'all'} * 100) : "", "\t";
+	print $max_afs{'rem_rel'}{$g}{'ns'} ? sprintf("%d", $max_afs{'rem_rel'}{$g}{'ns'} * 100) : "", "\t";
+
+	print join(",", sort { $a <=> $b } keys(%{$imp_exons{'rem_rel'}{$g}{'all'}})), "\t";
+	print join(",", sort { $a <=> $b } keys(%{$imp_exons{'rem_rel'}{$g}{'ns'}})), "\t";
 
 	foreach my $p (keys(%patients))
 	{

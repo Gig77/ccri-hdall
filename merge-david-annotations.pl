@@ -1,7 +1,7 @@
 # takes results from the two david runs (using different input order of genes) and merges them into a final result
 # necessarry because david web interface appears to not output annotations for the first gene of the list
 
-use warnings;
+use warnings FATAL => qw( all );
 use strict;
 
 use Carp;

@@ -1,4 +1,5 @@
 export SHELLOPTS:=errexit:pipefail
+SHELL=/bin/bash  # required to make pipefail work
 
 all: dia rel ../gene-patient-matrix.annotated.tsv
 dia: ucsc-genes.hg19.roi dia/rem_dia.maf dia/gene_mrs dia/smg.tsv dia/sm_pathways.tsv dia/sm_pathways.annotated.tsv
@@ -20,8 +21,6 @@ ucsc-genes.hg19.roi: ~/hdall/results/id-mappings.tsv ~/hdall/results/ucsc-genes.
 
 #---
 
-dia/rem_dia.maf: ~/hdall/results/filtered_variants/314_rem_dia.snp.filtered.vcf ucsc-genes.hg19.roi 
-
 PATIENTS = 314 1021247 399 430 446 460 545 592 715 786 792 818 842 A B C D E X Y
 
 dia/rem_dia.maf: $(foreach P, $(PATIENTS), maf/$P_rem_dia.maf)
@@ -34,7 +33,7 @@ rel/rem_rel.maf: $(foreach P, $(PATIENTS), maf/$P_rem_rel.maf)
 	cat maf/*rem_rel.maf >> rel/rem_rel.maf.part
 	mv rel/rem_rel.maf.part rel/rem_rel.maf
 
-maf/%.maf: ../filtered_variants/%.snp.filtered.vcf ../filtered_variants/%.indel.filtered.vcf ucsc-genes.hg19.roi ~/hdall/results/gene-id-mapping.biomart-0.7.tsv
+maf/%.maf: ../filtered_variants/%.snp.filtered.vcf ../filtered_variants/%.indel.filtered.vcf ucsc-genes.hg19.roi ~/hdall/results/gene-id-mapping.biomart-0.7.tsv ~/hdall/scripts/vcf2maf.pl
 	mkdir -p maf
 	cat ../filtered_variants/$*.snp.filtered.vcf | perl ~/hdall/scripts/vcf2maf.pl \
 		--sample $* \

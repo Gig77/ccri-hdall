@@ -1,5 +1,5 @@
 use strict;
-use warnings;
+use warnings FATAL => qw( all );
 
 use lib "$ENV{HOME}/generic/scripts";
 use Generic;

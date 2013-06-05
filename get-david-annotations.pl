@@ -1,6 +1,6 @@
 #!perl
 use strict;
-use warnings;
+use warnings FATAL => qw( all );
 
 use SOAP::Lite;
 use HTTP::Cookies;

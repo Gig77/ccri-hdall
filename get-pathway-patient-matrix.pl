@@ -1,4 +1,4 @@
-use warnings;
+use warnings FATAL => qw( all );
 use strict;
 
 use Carp;

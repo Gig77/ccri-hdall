@@ -1,4 +1,4 @@
-use warnings;
+use warnings FATAL => qw( all );
 use strict;
 use Carp;
 
@@ -10,7 +10,9 @@ use Tabix;
 use Getopt::Long;
 use Data::Dumper;
 
-Log::Log4perl->get_logger()->level($ERROR);
+#Log::Log4perl->get_logger()->level($ERROR);
+
+INFO("START: ", join(" ", @ARGV));
 
 my ($music_roi, $keep_variants_file, $entrez_mapping, $sample, $header);
 GetOptions
@@ -32,32 +34,9 @@ die "ERROR: --music-roi not specified (.gz file)\n" if (!$music_roi);
 die "ERROR: --mapping-entrez not specified\n" if (!$entrez_mapping);
 die "ERROR: --sample not specified\n" if (!$sample);
 
-my %patient2sample = (
-	'A_rem' => 'A13324_rem',
-	'A_dia' => 'A12642_dia',
-	'A_rel' => 'A12886_rel',
-	'B_rem' => 'B20946_rem',
-	'B_dia' => 'B19668_dia',
-	'B_rel' => 'B15010_rel',
-	'C_rem' => 'C20499_rem',
-	'C_dia' => 'C19797_dia',
-	'C_rel' => 'C15050_rel',
-	'D_rem' => 'D4502_rem',
-	'D_dia' => 'D3826_dia',
-	'D_rel' => 'D10183_rel',
-	'E_rem' => 'E13861_rem',
-	'E_dia' => 'E13174_dia',
-	'E_rel' => 'E13479_rel',
-	'X_rem' => 'X1847_rem',
-	'X_dia' => 'X1286_dia',
-	'X_rel' => 'X12831_rel',
-	'Y_rem' => 'Y3767_rem',
-	'Y_dia' => 'Y3141_dia',
-	'Y_rel' => 'Y10284_rel'
-);
 my ($patient, $sample_normal, $sample_tumor) = split("_", $sample) or die "ERROR: invalid sample\n";
-$sample_normal = $patient2sample{$patient."_$sample_normal"} ? $patient2sample{$patient."_$sample_normal"} : $patient."_$sample_normal"; 
-$sample_tumor = $patient2sample{$patient."_$sample_tumor"} ? $patient2sample{$patient."_$sample_tumor"} : $patient."_$sample_tumor"; 
+$sample_normal = $patient."_$sample_normal";
+$sample_tumor = $patient."_$sample_tumor";
 
 my $roi = Tabix->new(-data => "$music_roi");
 
@@ -187,7 +166,7 @@ while (my $x = $vcf->next_data_hash())
 }
 $vcf->close();
 
-print STDERR "\n"; # avoid grep exit code
+INFO("END");
 
 ## ------------------------------------------
 

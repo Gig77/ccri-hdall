@@ -1,4 +1,4 @@
-use warnings;
+use warnings FATAL => qw( all );
 use strict;
 
 my $sample = $ARGV[0] or die "ERROR: sample type not specified ('dia' or 'rel')\n";

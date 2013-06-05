@@ -2,7 +2,7 @@
 # script adapted from http://davetang.org/wiki/tiki-index.php?page=wig
 
 use strict;
-use warnings;
+use warnings FATAL => qw( all );
 
 my $usage = "Usage: $0 <infile.bedgraph> <outfile.wig>\n";
 my $infile = shift or die $usage;

@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 use strict;
-use warnings;
+use warnings FATAL => qw( all );
 
 my $dir = "/home/STANNANET/christian.frech/hdall/data/bam";
 

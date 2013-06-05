@@ -1,4 +1,4 @@
-use warnings;
+use warnings FATAL => qw( all );
 use strict;
 
 use lib "$ENV{HOME}/generic/scripts";
@@ -30,7 +30,7 @@ if ($header)
 	print "add_genes\t";
 	print "impact\t";
 	print "effect\t";
-	#print "variant_status\t";
+	print "exons\t";
 	print "dp_rem_tot\t";
 	print "dp_rem_ref\t";
 	print "dp_rem_var\t";
@@ -78,6 +78,32 @@ die "ERROR: invalid comparison type: $cmp_type\n" if ($cmp_type ne 'rem_dia' and
 
 $rem_sample = $patient2sample{$patient."_$rem_sample"} ? $patient2sample{$patient."_$rem_sample"} : $patient."_$rem_sample"; 
 $cmp_sample = $patient2sample{$patient."_$cmp_sample"} ? $patient2sample{$patient."_$cmp_sample"} : $patient."_$cmp_sample"; 
+
+# read kgXref, knownCanonical to determine UCSC canonical transcripts affected by variant
+my %kgID2refSeq;
+open(G,"$ENV{HOME}/hdall/data/hg19/hg19.kgXref.txt") or die "could not open file $ENV{HOME}/hdall/data/hg19/hg19.kgXref.txt";
+while(<G>)
+{
+	chomp;
+	my ($kgID, $mRNA, $spID, $spDisplayID, $geneSymbol, $refSeq, $protAcc, $description, $rfamAcc, $tRnaName) = split(/\t/);
+
+	$kgID2refSeq{$kgID} = $refSeq if ($refSeq);
+}
+close(G);
+INFO(scalar(keys(%kgID2refSeq))." gene descriptions read from file $ENV{HOME}/hdall/data/hg19/hg19.kgXref.txt");
+
+my %canonical;
+open(G,"$ENV{HOME}/hdall/data/hg19/hg19.knownCanonical.txt") or die "could not open file $ENV{HOME}/hdall/data/hg19/hg19.knownCanonical.txt";
+<G>; # skip header
+while(<G>)
+{
+	chomp;
+	my ($chrom, $chromStart, $chromEnd, $clusterId, $transcript, $protein) = split(/\t/);
+	
+	$canonical{$kgID2refSeq{$transcript}} = 1 if ($kgID2refSeq{$transcript});
+}
+close(G);
+INFO(scalar(keys(%canonical))." canonical genes read from file $ENV{HOME}/hdall/data/hg19/hg19.knownCanonical.txt");
 
 $| = 1; # turn on autoflush
 
@@ -228,11 +254,12 @@ while (my $line = $vcf->next_line())
 	print $x->{ID},"\t";
 	print $x->{REF},"\t";
 	print $x->{ALT}->[0],"\t";
-	my ($gene, $add_genes, $impact, $effect) = get_impact($x->{INFO}{EFF});
+	my ($gene, $add_genes, $impact, $effect, $affected_exon) = get_impact($x->{INFO}{EFF});
 	print "$gene\t";
 	print "$add_genes\t";
 	print "$impact\t";
 	print "$effect\t";
+	print "$affected_exon\t";
 #	print join(",", @{$x->{FILTER}}),"\t";
 #	print exists $x->{gtypes}{$cmp_sample}{SS} ? $variant_stati{$x->{gtypes}{$cmp_sample}{SS}} : "n/a", "\t";
 	print "$dp_rem\t";
@@ -271,7 +298,7 @@ sub get_impact
 	my $effs = shift or die "ERROR: effect not specified";
 
 	# determine all genes impacted by variants
-	my (%genes_by_impact, %all_genes, $combined_effect, $combined_impact);	
+	my (%genes_by_impact, %all_genes, $combined_effect, $combined_impact, %affected_exons);
 	foreach my $eff (split(",", $effs))
 	{
 		my ($effect, $rest) = $eff =~ /([^\(]+)\(([^\)]+)\)/
@@ -281,6 +308,17 @@ sub get_impact
 			$coding, $transcript, $exon, $genotype_num) = split('\|', $rest)
 				or die "ERROR: could not parse SNP effect: $eff\n"; 
 
+		if ($exon and $transcript and $gene_name)
+		{
+			$transcript =~ s/\.\d+$//; # remove version number from accession
+			$transcript =~ s/\.\d+$//; 
+			$affected_exons{$gene_name}{$exon}{$transcript} = 1;
+			if ($canonical{$transcript})
+			{
+				$affected_exons{$gene_name}{'canonical'}{$exon}{$transcript} = 1;
+			}
+		}
+			
 		# gene impacted by variant?
 		if ($gene_name)
 		{
@@ -356,5 +394,38 @@ sub get_impact
 #			$combined_effect = $effect;
 #		}		
 
-	return ($gene, $add_genes, $combined_impact, $combined_effect);
+	my @aff_exons;
+	foreach my $g (keys(%affected_exons))
+	{
+		if (exists $affected_exons{$g}{'canonical'}) # known canonical transcript for this gene?
+		{
+			foreach my $e (keys(%{$affected_exons{$g}{'canonical'}}))
+			{
+				my @transcripts;
+				foreach my $t (keys(%{$affected_exons{$g}{'canonical'}{$e}}))
+				{
+					push(@transcripts, "$g:$t");
+				}
+				push(@aff_exons, "$e (".join(";", @transcripts).")");
+			}
+		}
+		else
+		{
+			foreach my $e (keys(%{$affected_exons{$g}}))
+			{
+				next if ($e eq 'canonical');
+
+				my @transcripts;
+				foreach my $t (keys(%{$affected_exons{$g}{$e}}))
+				{
+					push(@transcripts, "$g:$t");
+				}
+				push(@aff_exons, "$e (".join(";", @transcripts).")");
+			}
+			
+		}
+	}
+
+	return ($gene, $add_genes, $combined_impact, $combined_effect, 
+			@aff_exons > 0 ? join(",", @aff_exons) : "");
 }

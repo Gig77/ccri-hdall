@@ -1,5 +1,5 @@
 use strict;
-use warnings;
+use warnings FATAL => qw( all );
 
 my %remap = (
 	'SNRK-AS1' => 'SNRK',

@@ -1,5 +1,5 @@
 use strict;
-use warnings;
+use warnings FATAL => qw( all );
 
 use lib '/mnt/suse/home/STANNANET/christian.frech/git/gms-core/lib/perl';
 

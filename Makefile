@@ -1,4 +1,5 @@
 export SHELLOPTS:=errexit:pipefail
+SHELL=/bin/bash
 
 all: filtered-variants.tsv gene-patient-matrix.tsv gene-patient-matrix.tier1.tsv
 
@@ -6,18 +7,21 @@ PATIENTS = 314 1021247 399 430 446 460 545 592 715 786 792 818 842 A B C D E X Y
 filtered-variants.tsv:	$(foreach P, $(PATIENTS), filtered_variants/$P_rem_dia.snp.filtered.tsv) \
 						$(foreach P, $(PATIENTS), filtered_variants/$P_rem_dia.indel.filtered.tsv) \
 						$(foreach P, $(PATIENTS), filtered_variants/$P_rem_rel.snp.filtered.tsv) \
-						$(foreach P, $(PATIENTS), filtered_variants/$P_rem_rel.indel.filtered.tsv)
+						$(foreach P, $(PATIENTS), filtered_variants/$P_rem_rel.indel.filtered.tsv) \
+						~/hdall/scripts/filter-variants.pl 
 	perl  ~/hdall/scripts/filter-variants.pl --header 2>&1 1>filtered-variants.tsv.part | tee -a make.log
 	cat filtered_variants/*.filtered.tsv >> filtered-variants.tsv.part
 	mv filtered-variants.tsv.part filtered-variants.tsv
 	
-filtered_variants/%.snp.filtered.tsv: ~/hdall/data/mutect_vcf/%_calls_snpeff.vcf
+filtered_variants/%.snp.filtered.tsv: ~/hdall/data/mutect_vcf/%_calls_snpeff.vcf ~/hdall/scripts/filter-variants.pl
 	perl ~/hdall/scripts/filter-variants.pl $* $< snp --vcf-out filtered_variants/$*.snp.filtered.vcf \
-		2>&1 1>$@ | grep -v -P '(Leading or trailing space|variant.Format)' | tee -a make.log
+		2>&1 1>$@.part | grep -v -P '(Leading or trailing space|variant.Format)' | tee -a make.log
+	mv $@.part $@
 
-filtered_variants/%.indel.filtered.tsv: ~/hdall/data/somatic_indel_vcf/%_snpeff.vcf
+filtered_variants/%.indel.filtered.tsv: ~/hdall/data/somatic_indel_vcf/%_snpeff.vcf ~/hdall/scripts/filter-variants.pl
 	perl ~/hdall/scripts/filter-variants.pl $* $< indel --vcf-out filtered_variants/$*.indel.filtered.vcf \
-		2>&1 1>$@ | grep -v -P '(Leading or trailing space|variant.Format)' | tee -a make.log
+		2>&1 1>$@.part | grep -v -P '(Leading or trailing space|variant.Format)' | tee -a make.log
+	mv $@.part $@	
 
 impacted-genes-list.tsv: filtered-variants.tsv ~/hdall/scripts/impacted-genes.pl
 	cat filtered-variants.tsv | perl ~/hdall/scripts/impacted-genes.pl \
@@ -39,7 +43,7 @@ gene-patient-matrix.tsv: impacted-genes-list.tsv ~/hdall/scripts/get-gene-patien
 
 impacted-genes-list.tier1.tsv: filtered-variants.tsv ~/hdall/scripts/impacted-genes.pl
 	cat filtered-variants.tsv \
-		| perl -ne 'print $$_ if (/(patient|HIGH|MODERATE)/ and (split/\t/)[18] >= 0.25)' \
+		| perl -ne 'print $$_ if (/(patient|HIGH|MODERATE)/ and (split/\t/)[19] >= 0.25)' \
 		| perl ~/hdall/scripts/impacted-genes.pl \
 		2>&1 1>impacted-genes-list.tier1.tsv.part | tee -a make.log
 	mv impacted-genes-list.tier1.tsv.part impacted-genes-list.tier1.tsv

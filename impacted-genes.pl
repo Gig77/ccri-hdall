@@ -1,4 +1,4 @@
-use warnings;
+use warnings FATAL => qw( all );
 use strict;
 
 use lib "$ENV{HOME}/generic/scripts";
@@ -37,9 +37,28 @@ while(<G>)
 close(G);
 INFO(scalar(keys(%sym2info))." gene descriptions read from file $ENV{HOME}/hdall/data/hg19/hg19.kgXref.txt");
 
+# read cosmic
+my $cosmic_file = "$ENV{HOME}/hdall/data/cosmic/v65/cancer_gene_census.tsv"; 
+my %cosmic;
+open(C, $cosmic_file) or die "could not open file $cosmic_file\n";
+<C>; # skip header
+while(<C>)
+{
+	chomp;
+	my ($symbol, $name, $gene_id, $chr, $chr_band, $cancer_somatic_mut, $cancer_germline_mut, $tumour_types_somatic, $tumour_types_germline, 
+	$cancer_syndrome, $tissue_type, $cancer_molecular_genetic, $mutation_type, $translocation_partner, $other_germline_mut, $other_syndrome_disease) = split (/\t/);
+
+	my $tumour_types = $tumour_types_somatic;
+	$tumour_types .= ", " if ($tumour_types_somatic and $tumour_types_germline);
+	$tumour_types .= $tumour_types_germline;
+	
+	$cosmic{$symbol} = $tumour_types;
+}
+close(C);
+INFO(scalar(keys(%cosmic))." cancer census genes read from file $cosmic_file");
+
 my (%canonical, %sym2size);
 open(G,"$ENV{HOME}/hdall/data/hg19/hg19.knownCanonical.txt") or die "could not open file $ENV{HOME}/hdall/data/hg19/hg19.knownCanonical.txt";
-<G>; # skip header
 while(<G>)
 {
 	chomp;
@@ -114,7 +133,7 @@ my $written = 0;
 while(<>)
 {
 	chomp;
-	my ($patient, $sample, $var_type, $chr, $pos, $dbSNP, $ref, $alt, $gene, $add_genes, $impact, $effect, 
+	my ($patient, $sample, $var_type, $chr, $pos, $dbSNP, $ref, $alt, $gene, $add_genes, $impact, $effect, $exons, 
 		$dp_rem_tot, $dp_rem_ref, $dp_rem_var, $dp_leu_tot, $dp_leu_ref, $dp_leu_var, $freq, $snpeff) = split("\t");
 
 	die "ERROR: $0: snpeff annotation missing from following line:\n$_\n"
@@ -127,14 +146,34 @@ while(<>)
 		$genes{$patient}{$sample}{$gene}{'nonsyn'}{"$chr:$pos:$ref->$alt:$freq:$impact:$effect"} = $genes{$patient}{$sample}{$gene}{'nonsyn'}{"$chr:$pos:$ref->$alt:$freq:$impact:$effect"} 
 			? $genes{$patient}{$sample}{$gene}{'nonsyn'}{"$chr:$pos:$ref->$alt:$freq:$impact:$effect"}.",$snpeff"
 			: $snpeff;		
+
+		$genes{$patient}{$sample}{$gene}{'max_af_ns'} = exists $genes{$patient}{$sample}{$gene}{'max_af_ns'} 
+			? $genes{$patient}{$sample}{$gene}{'max_af_ns'} < $freq ? $freq : $genes{$patient}{$sample}{$gene}{'max_af_ns'}
+			: $freq;
+		
+		if ($exons)
+		{
+			my $exno = get_exon_no($exons, $gene);
+			$genes{$patient}{$sample}{$gene}{'exons_ns'}{$exno} = 1;
+		}
 	}
 	
 	$genes{$patient}{$sample}{$gene}{'all'}{"$chr:$pos:$ref->$alt:$freq:$impact:$effect"} = $genes{$patient}{$sample}{$gene}{'all'}{"$chr:$pos:$ref->$alt:$freq:$impact:$effect"} 
 		? $genes{$patient}{$sample}{$gene}{'all'}{"$chr:$pos:$ref->$alt:$freq:$impact:$effect"}.",$snpeff"
 		: $snpeff;
+
+	$genes{$patient}{$sample}{$gene}{'max_af'} = exists $genes{$patient}{$sample}{$gene}{'max_af'} 
+		? $genes{$patient}{$sample}{$gene}{'max_af'} < $freq ? $freq : $genes{$patient}{$sample}{$gene}{'max_af'}
+		: $freq;
+
+	if ($exons)
+	{
+		my $exno = get_exon_no($exons, $gene);
+		$genes{$patient}{$sample}{$gene}{'exons'}{$exno} = 1;
+	}
 }
 
-print "patient\tcomparison\tgene\ttr_len\tcds_len\texons\tdesc\tnum_mut\tnum_mut_nonsyn\tmut_effects\n";
+print "patient\tcomparison\tgene\ttr_len\tcds_len\texons\tcosmic\tdesc\tnum_mut\tnum_mut_nonsyn\tmax_af\tmax_af_ns\timp_exons\timp_exons_ns\tmut_effects\n";
 foreach my $p (keys(%genes))
 {
 	foreach my $s (keys(%{$genes{$p}}))
@@ -149,10 +188,18 @@ foreach my $p (keys(%genes))
 			print "".($info->{'trlen'} ? $info->{'trlen'} : "")."\t";
 			print "".($info->{'cdslen'} ? $info->{'cdslen'} : "")."\t";
 			print "".($info->{'exons'} ? $info->{'exons'} : "")."\t";
+			print $cosmic{$g} ? $cosmic{$g} : "", "\t"; 
 			print "".($info->{'description'} ? $info->{'description'} : "")."\t";
 			
 			print scalar(values(%{$genes{$p}{$s}{$g}{'all'}})), "\t";
 			print scalar(values(%{$genes{$p}{$s}{$g}{'nonsyn'}})), "\t";
+
+			print $genes{$p}{$s}{$g}{'max_af'} ? $genes{$p}{$s}{$g}{'max_af'} : "", "\t";
+			print $genes{$p}{$s}{$g}{'max_af_ns'} ? $genes{$p}{$s}{$g}{'max_af_ns'} : "", "\t";
+
+			print $genes{$p}{$s}{$g}{'exons'} ? join(",", keys(%{$genes{$p}{$s}{$g}{'exons'}})) : "", "\t";
+			print $genes{$p}{$s}{$g}{'exons_ns'} ? join(",", keys(%{$genes{$p}{$s}{$g}{'exons_ns'}})) : "", "\t";
+			 
 			my $first = 1;
 			foreach my $v (keys(%{$genes{$p}{$s}{$g}{'all'}}))
 			{
@@ -167,3 +214,33 @@ foreach my $p (keys(%genes))
 	}
 }
 INFO("$written output lines written.");
+
+my %chosen_transcript;
+sub get_exon_no
+{
+	my $exons = shift or die "exon string not specified\n";
+	my $gene = shift or die "gene not specified\n";
+
+	my $exon_difftrans;	
+	while($exons =~ /(\d+) \(([^,]+)\),?/g)
+	{
+		my ($exno, $genes) = ($1, $2);
+
+		while ($genes =~ /([^:]+):([^;]+);?/g)
+		{
+			next if ($1 ne $gene);
+#			print STDERR "EXNO: $exno, GENE: $1, TRANSCRIPT: $2\n" if ($gene eq "ATXN7");	
+			if (exists $chosen_transcript{$gene} and $chosen_transcript{$gene} ne $2)
+			{
+				$exon_difftrans = $exno;
+				next;
+			}
+
+			$chosen_transcript{$gene} = $2;
+			return $exno;
+		}
+	}
+	
+	# this is actually a fallback if we could not find the chosen transcript for this gene
+	return $exon_difftrans;
+}

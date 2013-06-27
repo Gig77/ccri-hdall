@@ -14,14 +14,15 @@ use Data::Dumper;
 
 INFO("START: ", join(" ", @ARGV));
 
-my ($music_roi, $keep_variants_file, $entrez_mapping, $sample, $header);
+my ($music_roi, $keep_variants_file, $entrez_mapping, $sample, $header, $min_af);
 GetOptions
 (
 	"music-roi=s" => \$music_roi,  # MuSiC region of interest (ROI) file (must be tabix accessible, i.e. compressed and indexed)
 #	"keep-variants-file=s" => \$keep_variants_file,  # tab-separated file with variants to keep (chr, start)
 	"mapping-entrez=s" => \$entrez_mapping,  # file with mappings from gene symbol to entrez ids
 	"sample=s" => \$sample,  # e.g. 314_rem_dia
-	"header" => \$header  # output header yes/no
+	"header" => \$header,  # output header yes/no
+	"min-af=s" => \$min_af  # minimum allelic frequency
 );
 
 if ($header)
@@ -34,11 +35,39 @@ die "ERROR: --music-roi not specified (.gz file)\n" if (!$music_roi);
 die "ERROR: --mapping-entrez not specified\n" if (!$entrez_mapping);
 die "ERROR: --sample not specified\n" if (!$sample);
 
+my %patient2sample = (
+	'A_rem' => 'A13324_rem',
+	'A_dia' => 'A12642_dia',
+	'A_rel' => 'A12886_rel',
+	'B_rem' => 'B20946_rem',
+	'B_dia' => 'B19668_dia',
+	'B_rel' => 'B15010_rel',
+	'C_rem' => 'C20499_rem',
+	'C_dia' => 'C19797_dia',
+	'C_rel' => 'C15050_rel',
+	'D_rem' => 'D4502_rem',
+	'D_dia' => 'D3826_dia',
+	'D_rel' => 'D10183_rel',
+	'E_rem' => 'E13861_rem',
+	'E_dia' => 'E13174_dia',
+	'E_rel' => 'E13479_rel',
+	'X_rem' => 'X1847_rem',
+	'X_dia' => 'X1286_dia',
+	'X_rel' => 'X12831_rel',
+	'Y_rem' => 'Y3767_rem',
+	'Y_dia' => 'Y3141_dia',
+	'Y_rel' => 'Y10284_rel'
+);
+
 my ($patient, $sample_normal, $sample_tumor) = split("_", $sample) or die "ERROR: invalid sample\n";
 $sample_normal = $patient."_$sample_normal";
 $sample_tumor = $patient."_$sample_tumor";
 
+my $sample_normal_vcf = $patient2sample{$sample_normal} ? $patient2sample{$sample_normal} : $sample_normal; 
+my $sample_tumor_vcf = $patient2sample{$sample_tumor} ? $patient2sample{$sample_tumor} : $sample_tumor; 
+
 my $roi = Tabix->new(-data => "$music_roi");
+
 
 # read biomart id mapping
 my %sym2entrez;
@@ -48,7 +77,8 @@ while(<GENES>)
 {
 	chomp;
 	my ($approved_symbol, $entrez_gene_id, $accession_numbers, $approved_name, 
-		$previous_symbols, $previous_names, $aliases, $name_aliases, $entrez_gene_id_ncbi) = split("\t");
+		$previous_symbols, $previous_names, $aliases, $name_aliases, $entrez_gene_id_ncbi,
+		$ensembl_id, $uniprot_id, $refseq_id, $ucsc_id) = split("\t");
 
 	$entrez_gene_id = $entrez_gene_id_ncbi if (!$entrez_gene_id);
 	next if (!$entrez_gene_id);
@@ -57,6 +87,47 @@ while(<GENES>)
 	map {$sym2entrez{$_} = $entrez_gene_id } split(", ", $previous_symbols);
 }
 close(GENES);
+
+# read id mapping
+my %id2sym;
+open(M, "$ENV{HOME}/hdall/results/id-mappings.tsv") or croak "ERROR: could not read id mappings\n";
+while(<M>)
+{
+	chomp;
+	my ($sym, $id) = split(/\t/);
+	$id2sym{$id} = $sym;
+}
+close(M);
+
+my (%canonical, %sym2size);
+open(G,"$ENV{HOME}/hdall/data/hg19/hg19.knownCanonical.txt") or die "could not open file $ENV{HOME}/hdall/data/hg19/hg19.knownCanonical.txt";
+while(<G>)
+{
+	chomp;
+	my ($chrom, $chromStart, $chromEnd, $clusterId, $transcript, $protein) = split(/\t/);
+	
+	my $geneSymbol = $id2sym{$transcript};
+	my $size = $chromEnd-$chromStart;
+	
+	# if multiple canonical transcripts for this gene symbol, use larger one
+	next if ($canonical{$geneSymbol} and $sym2size{$geneSymbol} > $size); 
+	
+	$canonical{$geneSymbol} = $transcript;
+	$sym2size{$geneSymbol} = $size;
+}
+close(G);
+
+# next kgXref
+my %refseq2ucsc;
+open(G,"$ENV{HOME}/hdall/data/hg19/hg19.kgXref.txt") or die "could not open file $ENV{HOME}/hdall/data/hg19/hg19.kgXref.txt";
+while(<G>)
+{
+	chomp;
+	my ($kgID, $mRNA, $spID, $spDisplayID, $geneSymbol, $refSeq, $protAcc, $description, $rfamAcc, $tRnaName) = split(/\t/);
+	next if ($refseq2ucsc{$refSeq} and $canonical{$geneSymbol} and $canonical{$geneSymbol} ne $kgID); # only map canonical transcripts
+	$refseq2ucsc{$refSeq} = $kgID;
+}
+close(G);
 
 my $vcf = Vcf->new(file => "-");
 $vcf->parse_header();
@@ -94,6 +165,29 @@ while (my $x = $vcf->next_data_hash())
 		next;
 	}
 
+	my $af;
+	if ($var_type eq 'snp')
+	{
+		$af = $x->{gtypes}{$sample_tumor_vcf}{FA};
+	}
+	else # indel
+	{
+		##INFO=<ID=T_DP,Number=1,Type=Integer,Description="In TUMOR: total coverage at the site">
+		##INFO=<ID=N_DP,Number=1,Type=Integer,Description="In NORMAL: total coverage at the site">
+		my ($dp_tum, $dp_rem) = ($x->{INFO}{T_DP}, $x->{INFO}{N_DP});
+		
+		##INFO=<ID=T_AC,Number=2,Type=Integer,Description="In TUMOR: # of reads supporting consensus indel/any indel at the site">
+		##INFO=<ID=N_AC,Number=2,Type=Integer,Description="In NORMAL: # of reads supporting consensus indel/any indel at the site">
+		my ($ad_tum_alt, $ad_tum_any_indel) = split(",", $x->{INFO}{T_AC}); 		
+		$af = $ad_tum_alt / $dp_tum;
+	}
+	
+	if ($min_af and $af < $min_af)
+	{
+		INFO("$sample_tumor: Skipped variant $chr:$pos: allelic frequency $af < $min_af");
+		next;
+	}
+	
 	INFO("$sample_tumor: Variant $chr:$pos impacting multiple genes: ".join(",", keys(%$snpeff_genes)))
 		if (keys(%$snpeff_genes) > 1);
 
@@ -107,18 +201,18 @@ while (my $x = $vcf->next_data_hash())
 	{
 #		next if (exists $written{$gene});
 		
-		my $effect = get_variant_classification($snpeff_genes->{$gene}, $var_type);
+		my $effect = get_variant_classification($snpeff_genes->{$gene}{'effect'}, $var_type);
 		
 		if ($effect eq 'Intron')
 		{
-			INFO("$sample_tumor: Variant $chr:$pos NOT written: mapping to intron [SnpEff=$gene(".$snpeff_genes->{$gene}, ")]");
+			INFO("$sample_tumor: Variant $chr:$pos NOT written: mapping to intron [SnpEff=$gene(".$snpeff_genes->{$gene}{'effect'}, ")]");
 			next;
 		}
 		
 		if (!exists $rois->{$gene})
 		{
 			#my $roi = (keys(%$rois))[0];
-			INFO("$sample_tumor: Variant $chr:$pos NOT written: not mapping to ROI [SnpEff=$gene(".$snpeff_genes->{$gene}, ")]");
+			INFO("$sample_tumor: Variant $chr:$pos NOT written: not mapping to ROI [SnpEff=$gene(".$snpeff_genes->{$gene}{'effect'}, ")]");
 			next;
 		}
 
@@ -158,7 +252,10 @@ while (my $x = $vcf->next_data_hash())
 		print "Illumina HiSeq\t"; #32 Sequencer
 		print "$sample_tumor\t"; #33 Tumor_Sample_UUID
 		print "$sample_normal\t"; #34 Matched_Norm_Sample_UUID
-		print "\n";
+		
+		print $snpeff_genes->{$gene}{'transcript'} ? $snpeff_genes->{$gene}{'transcript'} : "", "\t";
+		print $snpeff_genes->{$gene}{'aa_change'} ? $snpeff_genes->{$gene}{'aa_change'} : "", "\t";
+		print $snpeff_genes->{$gene}{'nt_pos'} ? $snpeff_genes->{$gene}{'nt_pos'} : "", "\n";
 		
 #		$written{$gene} = 1;
 	}
@@ -207,14 +304,19 @@ sub print_header
 	print "BAM_File\t";
 	print "Sequencer\t";
 	print "Tumor_Sample_UUID\t";
-	print "Matched_Norm_Sample_UUID\n";	
+	print "Matched_Norm_Sample_UUID\t";
+	
+	# append additional columns required by 'genome music proximity'
+	print "transcript_name\t"; # the transcript name, such as NM_000028
+	print "amino_acid_change\t"; #  the amino acid change, such as p.R290H
+	print "c_position\n"; # the nucleotide position changed, such as c.869
 }
 
 sub get_impacted_genes
 {
 	my $effs = shift or die "ERROR: effect not specified";
 
-	my %genes;
+	my (%genes, %tmp);
 	foreach my $eff (split(",", $effs))
 	{
 		my ($effect, $rest) = $eff =~ /([^\(]+)\(([^\)]+)\)/
@@ -224,10 +326,43 @@ sub get_impacted_genes
 			$coding, $transcript, $exon, $genotype_num) = split('\|', $rest)
 				or croak "ERROR: could not parse SNP effect: $eff"; 
 
-		$genes{$gene_name} = $effect
-			if ($gene_name);
+		next if (!$gene_name);
+		
+		$transcript =~ s/\.\d+$//;
+		
+		# figure out nucleotide coordinate of this variant
+		my ($aa_pos) = $aa_change =~ /(\d+)/;
+		$codon_change =~ /[ATGC]/; # find first uppercase character
+		my $codon_pos = $-[0];
+		my $nt_pos = ($aa_pos-1)*3+$codon_pos+1 if (defined $aa_pos and defined $codon_pos);
+		
+		# remember for this gene
+		$tmp{$gene_name}{'effect'} = $effect;
+		$tmp{$gene_name}{'transcript'} = $transcript;
+		$tmp{$gene_name}{'aa_change'} = "p.$aa_change" if ($aa_change);
+		$tmp{$gene_name}{'nt_pos'} = "c.$nt_pos" if ($nt_pos);
+				
+		# remember also for canonical transcript
+		if ($transcript and $refseq2ucsc{$transcript} and $canonical{$gene_name} and $canonical{$gene_name} eq $refseq2ucsc{$transcript})
+		{
+			$genes{$gene_name}{'effect'} = $effect;
+			$genes{$gene_name}{'transcript'} = $transcript;
+			$genes{$gene_name}{'aa_change'} = "p.$aa_change" if ($aa_change);
+			$genes{$gene_name}{'nt_pos'} = "c.$nt_pos" if ($nt_pos);			
+		}
 	}
-	
+
+	# return effect of last transcript if no canonical transcript found
+	foreach my $g (keys(%tmp))
+	{
+		next if ($genes{$g}{'effect'} or !$tmp{$g}{'effect'});
+		
+		$genes{$g}{'effect'} = $tmp{$g}{'effect'};
+		$genes{$g}{'transcript'} = $tmp{$g}{'transcript'};
+		$genes{$g}{'aa_change'} = $tmp{$g}{'aa_change'};
+		$genes{$g}{'nt_pos'} = $tmp{$g}{'nt_pos'};
+	}
+
 	return \%genes;
 }
 

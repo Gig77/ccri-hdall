@@ -1,3 +1,5 @@
+options(warn=1)
+
 jacc <- function(a, b)
 {
 	i <- intersect(a, b)
@@ -5,9 +7,14 @@ jacc <- function(a, b)
 	length(i) / length(u)
 }
 
-t <- read.csv("~/hdall/results/music/rel/sm_pathways.annotated.tsv", sep="\t", as.is=c(1, 9))
+args <- commandArgs(trailingOnly = TRUE)
+if (is.na(args[1])) stop("input file not specified")
+if (is.na(args[2])) stop("output file not specified")
 
-t2 <- t[t$Class=="KEGG_PATHWAY" | t$Class == "BBID" | t$Class == "BIOCARTA",]
+t <- read.csv(args[1], sep="\t", as.is=TRUE)
+#t <- read.csv("~/hdall/results/music/sm_pathways.tsv.part", sep="\t", as.is=TRUE)
+t2 <- t[t$Class=="KEGG_PATHWAY" | t$Class == "BBID" | t$Class == "BIOCARTA" | t$Class == "PIR_SUPERFAMILY" | t$Class == "COG_ONTOLOGY",]
+#t2 <- t[t$Class=="KEGG_PATHWAY",]
 
 pairs <- t(combn(rownames(t2),2))
 
@@ -23,10 +30,13 @@ for (i in 1:nrow(pairs))
 	p1 <- t$Pathway[index1]
 	p2 <- t$Pathway[index2]
 	
-	g1 <- strsplit(t$Genes[index1], ",")[[1]]
-	g2 <- strsplit(t$Genes[index2], ",")[[1]]
+#	g1 <- strsplit(t$Genes.rel[index1], ",")[[1]]
+#	g2 <- strsplit(t$Genes.rel[index2], ",")[[1]]
+	g1 <- union(strsplit(t$Genes.dia[index1], ",")[[1]], strsplit(t$Genes.rel[index1], ",")[[1]])
+	g2 <- union(strsplit(t$Genes.dia[index2], ",")[[1]], strsplit(t$Genes.rel[index2], ",")[[1]])
 	
-	j <- jacc(g1, g2)
+	j <- jacc(g1[!is.na(g1)], g2[!is.na(g2)])
+#	j <- jacc(g1, g2)
 	
 	m[p1,p2] <- j		
 	m[p2,p1] <- j		
@@ -35,21 +45,24 @@ for (i in 1:nrow(pairs))
 }
 
 # write distance matrix
-write.csv(m, file="~/hdall/results/music/rel/sm_pathways.distance-matrix.tsv")
+#write.csv(m, file="~/hdall/results/music/rel/sm_pathways.distance-matrix.tsv")
 
 # hierarchical clustering
 d <- as.dist(1-m)
 hc <- hclust(d, method="average")
-pdf("~/hdall/results/music/rel/sm_pathways.hclust.pdf")
-plot(hc, hang=-1, cex=0.2, xlab="Pathways", main="Pathways clustered by shared genes")
-dev.off()
+#pdf("~/hdall/results/music/rel/sm_pathways.hclust.pdf", width=20)
+#plot(hc, hang=-1, cex=0.05, xlab="Pathways", main="Pathways clustered by shared genes")
+#dev.off()
 
-# cut tree and output clusters
-c <- cutree(hc, h=c(0.2,0.4,0.6,0.8))
-c <- cbind(rownames(c), c)
-colnames(c)[1] <- "Pathway"
-merged <- merge(t, c, all.x=T)
+# cut tree and output concatenated string of cluster ids for sorting
+c <- cutree(hc, h=seq(0.18,0.98,by=0.1))
+c <- c[hc$order,] # reorder pathways based on hierarchical tree
+c <- cbind(1:nrow(c), c)
+m <- as.data.frame(apply(matrix(sprintf("%04d", c), ncol=10), 1, paste, collapse="-"))
+m <- cbind(rownames(c), m)
+colnames(m) <- c("Pathway", "cluster")
+merged <- merge(t, m, all.x=T)
 
-write.csv(merged, file="~/hdall/results/music/rel/sm_pathways.annotated.clustered.tsv")
+write.csv(merged, file=args[2])
 
 

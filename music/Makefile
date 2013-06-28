@@ -1,7 +1,7 @@
 export SHELLOPTS:=errexit:pipefail
 SHELL=/bin/bash  # required to make pipefail work
 
-all: dia rel ../gene-patient-matrix.annotated.tsv ../gene-patient-matrix.high-af.annotated.tsv sm_pathways.tsv sm_pathways.high-af.tsv MSigDB
+all: dia rel ../gene-patient-matrix.annotated.tsv ../gene-patient-matrix.high-af.annotated.tsv sm_pathways.tsv sm_pathways.high-af.tsv MSigDB rel/mutation-relation.tsv
 dia: ucsc-genes.hg19.roi dia/rem_dia.maf dia/gene_mrs dia/smg.tsv dia/sm_pathways.tsv dia/sm_pathways.annotated.tsv
 rel: ucsc-genes.hg19.roi rel/rem_rel.maf rel/gene_mrs rel/smg.tsv rel/sm_pathways.tsv rel/sm_pathways.annotated.tsv
 dia-high-af: ucsc-genes.hg19.roi dia-high-af/rem_dia.maf dia-high-af/gene_mrs dia-high-af/smg.tsv dia-high-af/sm_pathways.tsv dia-high-af/sm_pathways.annotated.tsv
@@ -358,6 +358,36 @@ rel/sm_pathways.msigdb.annotated.tsv: rel/sm_pathways.msigdb.tsv
 		--sm-pathways-detail rel/sm_pathways.msigdb.tsv_detailed \
 		> rel/sm_pathways.msigdb.annotated.tsv.part
 	mv rel/sm_pathways.msigdb.annotated.tsv.part rel/sm_pathways.msigdb.annotated.tsv
+
+#--- MUSIC MUTATION-RELATION ANALYSIS
+
+rel/mutation-relation.tsv: ../gene-patient-matrix.tsv rel/wig-list.tsv rel/rem_rel.maf
+	rm -f rel/mutation-relation.gene-list-recrel2-maxaf20.txt
+	python ~/hdall/scripts/query-text.py \
+		--file ../gene-patient-matrix.tsv \
+		--sql "select gene,data.'max-af-rel-ns' AS m,data.'freq-rel-ns' AS f from data where m >= 20 and m <> '' and f >= 2" \
+		> rel/mutation-relation.gene-list-recrel2-maxaf20.txt
+	genome music mutation-relation \
+		--bam-list=rel/wig-list.tsv \
+		--maf-file=rel/rem_rel.maf \
+		--permutations 1000 \
+		--gene-list rel/mutation-relation.gene-list-recrel2-maxaf20.txt \
+		--output-file rel/mutation-relation.tsv.part
+	mv rel/mutation-relation.tsv.part rel/mutation-relation.tsv
+
+dia/mutation-relation.tsv: ../gene-patient-matrix.tsv dia/wig-list.tsv dia/rem_dia.maf
+	rm -f dia/mutation-relation.gene-list-recdia2-maxaf20.txt
+	python ~/hdall/scripts/query-text.py \
+		--file ../gene-patient-matrix.tsv \
+		--sql "select gene,data.'max-af-dia-ns' AS m,data.'freq-dia-ns' AS f from data where m >= 20 and m <> '' and f >= 2" \
+		> dia/mutation-relation.gene-list-recdia2-maxaf20.txt
+	genome music mutation-relation \
+		--bam-list=dia/wig-list.tsv \
+		--maf-file=dia/rem_dia.maf \
+		--permutations 1000 \
+		--gene-list dia/mutation-relation.gene-list-recdia2-maxaf20.txt \
+		--output-file dia/mutation-relation.tsv.part
+	mv dia/mutation-relation.tsv.part dia/mutation-relation.tsv
 
 #--- COMBINE ALL RESULTS INTO FINAL LIST
 

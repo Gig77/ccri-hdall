@@ -213,20 +213,21 @@ foreach my $g (@sorted)
 	}
 
 	print $case_freq{'cons'}{$g} ? $case_freq{'cons'}{$g} : "0", "\t";
-	print $mut_total{'cons'}{$g} ? $mut_total{'cons'}{$g} : "0", "\t";
+	print $mut_total{'cons'}{$g} ? $mut_total{'cons'}{$g} : "0";
 	foreach my $p (keys(%patients))
 	{
+		print "\t";
 		if ($mut_count)
 		{
-			print keys(%{$variants{'cons'}{$g}{$p}}) > 0 ? scalar(keys(%{$variants{'cons'}{$g}{$p}})) : " ", "\t";
+			print keys(%{$variants{'cons'}{$g}{$p}}) > 0 ? scalar(keys(%{$variants{'cons'}{$g}{$p}})) : " ";
 		}
 		elsif ($mut_max_freq)
 		{
-			print values(%{$variants{'cons'}{$g}{$p}}) > 0 ? max(values(%{$variants{'cons'}{$g}{$p}})) : " ", "\t";
+			print values(%{$variants{'cons'}{$g}{$p}}) > 0 ? max(values(%{$variants{'cons'}{$g}{$p}})) : " ";
 		}
 		else
 		{
-			print values(%{$variants{'cons'}{$g}{$p}}) > 0 ? join("\|", values(%{$variants{'cons'}{$g}{$p}})) : " ", "\t";
+			print values(%{$variants{'cons'}{$g}{$p}}) > 0 ? join("\|", values(%{$variants{'cons'}{$g}{$p}})) : " ";
 		}
 	}
 	print "\n";

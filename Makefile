@@ -1,7 +1,7 @@
 export SHELLOPTS:=errexit:pipefail
 SHELL=/bin/bash
 
-all: filtered-variants.tsv gene-patient-matrix.tsv gene-patient-matrix.tier1.tsv
+all: filtered-variants.tsv gene-patient-matrix.tsv gene-patient-matrix.high-af.tsv gene-patient-matrix.tier1.tsv
 
 nextera:
 	cat kamilla/candidate\ genes\ for\ targeted\ sequencing.tsv | perl ~/hdall/scripts/get-nextera-exons.pl --density Standard > kamilla/nextera-exons.standard.csv
@@ -34,18 +34,22 @@ impacted-genes-list.tsv: filtered-variants.tsv ~/hdall/scripts/impacted-genes.pl
 		2>&1 1>impacted-genes-list.tsv.part | tee -a make.log
 	mv impacted-genes-list.tsv.part impacted-genes-list.tsv
 
+impacted-genes-list.high-af.tsv: filtered-variants.tsv ~/hdall/scripts/impacted-genes.pl
+	cat filtered-variants.tsv \
+		| perl -ne 'print $$_ if ((split/\t/)[19] >= 0.25)' \
+		| perl ~/hdall/scripts/impacted-genes.pl \
+		2>&1 1>impacted-genes-list.high-af.tsv.part | tee -a make.log
+	mv impacted-genes-list.high-af.tsv.part impacted-genes-list.high-af.tsv
+
 gene-patient-matrix.tsv: impacted-genes-list.tsv ~/hdall/scripts/get-gene-patient-matrix.pl
-	cat impacted-genes-list.tsv | perl ~/hdall/scripts/get-gene-patient-matrix.pl --mut-count \
+	cat impacted-genes-list.tsv | perl ~/hdall/scripts/get-gene-patient-matrix.pl --mut-details \
 		2>&1 1>gene-patient-matrix.tsv.part | tee -a make.log
 	mv gene-patient-matrix.tsv.part gene-patient-matrix.tsv
 
-	cat impacted-genes-list.tsv | perl ~/hdall/scripts/get-gene-patient-matrix.pl --mut-max-freq \
-		2>&1 1>gene-patient-matrix.maxfreq.tsv.part | tee -a make.log
-	mv gene-patient-matrix.maxfreq.tsv.part gene-patient-matrix.maxfreq.tsv
-		
-	cat impacted-genes-list.tsv | perl ~/hdall/scripts/get-gene-patient-matrix.pl --mut-details \
-		2>&1 1>gene-patient-matrix.details.tsv.part | tee -a make.log
-	mv gene-patient-matrix.details.tsv.part gene-patient-matrix.details.tsv
+gene-patient-matrix.high-af.tsv: impacted-genes-list.high-af.tsv ~/hdall/scripts/get-gene-patient-matrix.pl
+	cat impacted-genes-list.high-af.tsv | perl ~/hdall/scripts/get-gene-patient-matrix.pl --mut-details \
+		2>&1 1>gene-patient-matrix.high-af.tsv.part | tee -a make.log
+	mv gene-patient-matrix.high-af.tsv.part gene-patient-matrix.high-af.tsv
 
 impacted-genes-list.tier1.tsv: filtered-variants.tsv ~/hdall/scripts/impacted-genes.pl
 	cat filtered-variants.tsv \

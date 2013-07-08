@@ -22,9 +22,10 @@ open(DIA,"$enriched_pathways_dia") or croak "ERROR: could not open file $enriche
 while(<DIA>)
 {
 	chomp;
-	my ($category, $term, $count, $count_perc, $p_value, $genes, $list_total, $pop_hits, $pop_total, $fold_enrichment, $bonferroni, $benjamini, $fdr) = split /\t/;
+	my ($pathway, $name, $class, $samples, $tot_var, $p_value, $fdr, $num_genes, $genes) = split /\t/;
 
-	$enriched_pathways{"$category\t$term"}{dia} = "$p_value\t$genes";
+	croak "ERROR: Could not parse pathway entry: $_\n" if (!$pathway or !$name or !$class or !$genes);
+	$enriched_pathways{"$pathway\t$name\t$class"}{dia} = "$p_value\t$genes";
 }
 close(DIA);
 
@@ -33,9 +34,10 @@ open(REL,"$enriched_pathways_rel") or croak "ERROR: could not open file $enriche
 while(<REL>)
 {
 	chomp;
-	my ($category, $term, $count, $count_perc, $p_value, $genes, $list_total, $pop_hits, $pop_total, $fold_enrichment, $bonferroni, $benjamini, $fdr) = split /\t/;
+	my ($pathway, $name, $class, $samples, $tot_var, $p_value, $fdr, $num_genes, $genes) = split /\t/;
 
-	$enriched_pathways{"$category\t$term"}{rel} = "$p_value\t$genes";
+	croak "ERROR: Could not parse pathway entry: $_\n" if (!$pathway or !$name or !$class or !$genes);
+	$enriched_pathways{"$pathway\t$name\t$class"}{rel} = "$p_value\t$genes";
 }
 close(REL);
 
@@ -46,8 +48,11 @@ my (@patients_dia, @patients_rel);
 my $header = <MATRIX>;
 chomp($header);
 my @hfields = split("\t", $header);
-for (my $d = 3; $d <= 22; $d ++) { push(@patients_dia, $hfields[$d]); }
-for (my $d = 25; $d <= 44; $d ++) { push(@patients_rel, $hfields[$d]); }
+print STDERR "Patients diagnosis:";
+for (my $d = 14; $d <= 33; $d ++) { print STDERR " $hfields[$d]"; push(@patients_dia, $hfields[$d]); }
+print STDERR "\nPatients relapse:";
+for (my $d = 42; $d <= 61; $d ++) { print STDERR " $hfields[$d]"; push(@patients_rel, $hfields[$d]); }
+print STDERR "\n";
 
 while(<MATRIX>)
 {
@@ -55,23 +60,23 @@ while(<MATRIX>)
 	my @fields = split /\t/;
 	my $gene = $fields[0];
 	
-	for (my $d = 3; $d <= 22; $d ++) { $gene_patient{$gene}{$patients_dia[$d-3]} = $fields[$d]; }
-	for (my $d = 25; $d <= 44; $d ++) { $gene_patient{$gene}{$patients_rel[$d-25]} = $fields[$d]; }
+	for (my $d = 14; $d <= 33; $d ++) { $gene_patient{$gene}{$patients_dia[$d-14]} = $fields[$d]; }
+	for (my $d = 42; $d <= 61; $d ++) { $gene_patient{$gene}{$patients_rel[$d-42]} = $fields[$d]; }
 }
 close(MATRIX);
 
 # output header
-print "category\tterm\tp-dia\tfreq-dia";
+print "Pathway\tName\tClass\tp-dia\tfreq-dia";
 map { print "\t$_" } (@patients_dia);
 print "\tp-rel\tfreq-rel";
 map { print "\t$_" } (@patients_rel);
-print "\tgenes-dia\tgenes-rel\n";
+print "\tGenes.dia\tGenes.rel\n";
 
 foreach my $p (keys(%enriched_pathways))
 {
-	my ($category, $term) = split("\t", $p);
+	my ($pathway, $name, $class) = split("\t", $p);
 
-	print "$category\t$term\t";
+	print "$pathway\t$name\t$class\t";
 
 	my ($genes_dia, $genes_rel) = ("", "");
 	if ($enriched_pathways{$p}{dia})
@@ -81,13 +86,16 @@ foreach my $p (keys(%enriched_pathways))
 		my ($line, $tot_num_mut) = ("", 0);
 		foreach my $pd (@patients_dia)
 		{
-			my $num_mut = 0;
+			my @mut_genes;
 			foreach my $g (split(",", $genes))
 			{
-				$num_mut ++ if ($gene_patient{$g}{$pd});
+				if ($gene_patient{$g}{$pd} and $gene_patient{$g}{$pd} ne " ")
+				{
+					push(@mut_genes, $g);
+				}
 			}
-			$line .= "\t".($num_mut > 0 ? $num_mut : "");
-			$tot_num_mut ++ if ($num_mut > 0);
+			$line .= "\t".(@mut_genes > 0 ? join(",", @mut_genes) : " ");
+			$tot_num_mut ++ if (@mut_genes > 0);
 		}
 		print "$p_value\t$tot_num_mut$line"
 	}
@@ -105,13 +113,16 @@ foreach my $p (keys(%enriched_pathways))
 		my ($line, $tot_num_mut) = ("", 0);
 		foreach my $pr (@patients_rel)
 		{
-			my $num_mut = 0;
+			my @mut_genes;
 			foreach my $g (split(",", $genes))
 			{
-				$num_mut ++ if ($gene_patient{$g}{$pr});
+				if ($gene_patient{$g}{$pr} and $gene_patient{$g}{$pr} ne " ")
+				{
+					push(@mut_genes, $g);					
+				}
 			}
-			$line .= "\t".($num_mut > 0 ? $num_mut : "");
-			$tot_num_mut ++ if ($num_mut > 0);
+			$line .= "\t".(@mut_genes > 0 ? join(",", @mut_genes) : " ");
+			$tot_num_mut ++ if (@mut_genes > 0);
 		}
 		print "$p_value\t$tot_num_mut$line"		
 	}

@@ -55,10 +55,10 @@ hc <- hclust(d, method="average")
 #dev.off()
 
 # cut tree and output concatenated string of cluster ids for sorting
-c <- cutree(hc, h=seq(0.18,0.98,by=0.1))
+c <- cutree(hc, h=seq(0.18,0.98,by=0.2))
 c <- c[hc$order,] # reorder pathways based on hierarchical tree
 c <- cbind(1:nrow(c), c)
-m <- as.data.frame(apply(matrix(sprintf("%04d", c), ncol=10), 1, paste, collapse="-"))
+m <- as.data.frame(apply(matrix(sprintf("%04d", c), ncol=6), 1, paste, collapse="-"))
 m <- cbind(rownames(c), m)
 colnames(m) <- c("Pathway", "cluster")
 merged <- merge(t, m, all.x=T)

@@ -1,7 +1,8 @@
 export SHELLOPTS:=errexit:pipefail
 SHELL=/bin/bash  # required to make pipefail work
 
-all: dia rel ../gene-patient-matrix.annotated.tsv ../gene-patient-matrix.high-af.annotated.tsv sm_pathways.tsv sm_pathways.high-af.tsv MSigDB rel/mutation-relation.tsv
+all: dia rel ../gene-patient-matrix.annotated.tsv ../gene-patient-matrix.high-af.annotated.tsv sm_pathways.tsv sm_pathways.high-af.tsv MSigDB rel/mutation-relation.tsv ../pathway-patient-matrix.tsv ../pathway-patient-matrix.high-af.tsv
+
 dia: ucsc-genes.hg19.roi dia/rem_dia.maf dia/gene_mrs dia/smg.tsv dia/sm_pathways.tsv dia/sm_pathways.annotated.tsv
 rel: ucsc-genes.hg19.roi rel/rem_rel.maf rel/gene_mrs rel/smg.tsv rel/sm_pathways.tsv rel/sm_pathways.annotated.tsv
 dia-high-af: ucsc-genes.hg19.roi dia-high-af/rem_dia.maf dia-high-af/gene_mrs dia-high-af/smg.tsv dia-high-af/sm_pathways.tsv dia-high-af/sm_pathways.annotated.tsv
@@ -243,6 +244,7 @@ dia-high-af/sm_pathways.tsv: dia-high-af/smg.tsv pathways-david-complete.tsv
 		--bam-list dia/wig-list.tsv \
 		--gene-covg-dir dia-high-af/gene_covgs/ \
 		--maf-file dia-high-af/rem_dia.maf \
+		--genes-to-ignore TTN,PTPN11,NF1,TBP,KRAS,NRAS,CREBBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1 \
 		--output-file dia-high-af/sm_pathways.tsv.part \
 		--pathway-file pathways-david-complete.tsv
 	mv dia-high-af/sm_pathways.tsv.part dia-high-af/sm_pathways.tsv
@@ -260,6 +262,7 @@ rel-high-af/sm_pathways.tsv: rel-high-af/smg.tsv pathways-david-complete.tsv
 		--bam-list rel/wig-list.tsv \
 		--gene-covg-dir rel-high-af/gene_covgs/ \
 		--maf-file rel-high-af/rem_rel.maf \
+		--genes-to-ignore TTN,PTPN11,NF1,TBP,KRAS,NRAS,CREBBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1 \
 		--output-file rel-high-af/sm_pathways.tsv.part \
 		--pathway-file pathways-david-complete.tsv
 	mv rel-high-af/sm_pathways.tsv.part rel-high-af/sm_pathways.tsv
@@ -278,13 +281,17 @@ sm_pathways.tsv: dia/sm_pathways.annotated.tsv rel/sm_pathways.annotated.tsv ~/h
 	R --no-save --quiet --slave -f ~/hdall/scripts/cluster-pathways.R \
 		--args sm_pathways.tsv.part sm_pathways.clustered.tsv.part \
 		2>&1 | tee -a make.log
-	rm sm_pathways.tsv.part
 	mv sm_pathways.clustered.tsv.part sm_pathways.tsv
+	rm sm_pathways.tsv.part
 
-sm_pathways.high-af.tsv: dia-high-af/sm_pathways.annotated.tsv rel-high-af/sm_pathways.annotated.tsv
+sm_pathways.high-af.tsv: dia-high-af/sm_pathways.annotated.tsv rel-high-af/sm_pathways.annotated.tsv ~/hdall/scripts/cluster-pathways.R ~/hdall/scripts/music/merge-sm-pathways.R
 	R --no-save --quiet --slave -f ~/hdall/scripts/music/merge-sm-pathways.R \
 		2>&1 1>sm_pathways.high-af.tsv.part | tee -a make.log
-	mv sm_pathways.high-af.tsv.part sm_pathways.high-af.tsv
+	R --no-save --quiet --slave -f ~/hdall/scripts/cluster-pathways.R \
+		--args sm_pathways.high-af.tsv.part sm_pathways.high-af.clustered.tsv.part \
+		2>&1 | tee -a make.log
+	mv sm_pathways.high-af.clustered.tsv.part sm_pathways.high-af.tsv
+	rm sm_pathways.high-af.tsv.part
 
 #--- MSigDB gene set enrichment
 	
@@ -391,9 +398,9 @@ dia/mutation-relation.tsv: ../gene-patient-matrix.tsv dia/wig-list.tsv dia/rem_d
 
 #--- COMBINE ALL RESULTS INTO FINAL LIST
 
-../gene-patient-matrix.annotated.tsv: ../gene-patient-matrix.details.tsv dia/smg.tsv rel/smg.tsv dia/sm_pathways.annotated.tsv rel/sm_pathways.annotated.tsv ~/hdall/scripts/annotate-gene-patient-matrix.pl
+../gene-patient-matrix.annotated.tsv: ../gene-patient-matrix.tsv dia/smg.tsv rel/smg.tsv dia/sm_pathways.annotated.tsv rel/sm_pathways.annotated.tsv ~/hdall/scripts/annotate-gene-patient-matrix.pl
 	perl ~/hdall/scripts/annotate-gene-patient-matrix.pl \
-		--gene-patient-matrix ../gene-patient-matrix.details.tsv \
+		--gene-patient-matrix ../gene-patient-matrix.tsv \
 		--smg-dia dia/smg.tsv \
 		--smg-rel rel/smg.tsv \
 		--smp-dia dia/sm_pathways.annotated.tsv \
@@ -401,12 +408,34 @@ dia/mutation-relation.tsv: ../gene-patient-matrix.tsv dia/wig-list.tsv dia/rem_d
 		2>&1 1>../gene-patient-matrix.annotated.tsv.part | tee -a make.log
 	mv ../gene-patient-matrix.annotated.tsv.part ../gene-patient-matrix.annotated.tsv	
 	
-../gene-patient-matrix.high-af.annotated.tsv: ../gene-patient-matrix.details.tsv dia-high-af/smg.tsv rel-high-af/smg.tsv dia-high-af/sm_pathways.annotated.tsv rel-high-af/sm_pathways.annotated.tsv ~/hdall/scripts/annotate-gene-patient-matrix.pl
+../gene-patient-matrix.high-af.annotated.tsv: ../gene-patient-matrix.high-af.tsv dia-high-af/smg.tsv rel-high-af/smg.tsv dia-high-af/sm_pathways.annotated.tsv rel-high-af/sm_pathways.annotated.tsv ~/hdall/scripts/annotate-gene-patient-matrix.pl
 	perl ~/hdall/scripts/annotate-gene-patient-matrix.pl \
-		--gene-patient-matrix ../gene-patient-matrix.details.tsv \
+		--gene-patient-matrix ../gene-patient-matrix.high-af.tsv \
 		--smg-dia dia-high-af/smg.tsv \
 		--smg-rel rel-high-af/smg.tsv \
 		--smp-dia dia-high-af/sm_pathways.annotated.tsv \
 		--smp-rel rel-high-af/sm_pathways.annotated.tsv \
 		2>&1 1>../gene-patient-matrix.high-af.annotated.tsv.part | tee -a make.log
-	mv ../gene-patient-matrix.high-af.annotated.tsv.part ../gene-patient-matrix.high-af.annotated.tsv	
+	mv ../gene-patient-matrix.high-af.annotated.tsv.part ../gene-patient-matrix.high-af.annotated.tsv
+	
+../pathway-patient-matrix.tsv: dia/sm_pathways.annotated.tsv rel/sm_pathways.annotated.tsv ../gene-patient-matrix.tsv ~/hdall/scripts/get-pathway-patient-matrix.pl ~/hdall/scripts/cluster-pathways.R
+	perl ~/hdall/scripts/get-pathway-patient-matrix.pl \
+		--enriched-pathways-dia dia/sm_pathways.annotated.tsv \
+		--enriched-pathways-rel rel/sm_pathways.annotated.tsv \
+		--gene-patient-matrix ../gene-patient-matrix.tsv \
+		2>&1 1>../pathway-patient-matrix.tsv.part | tee -a make.log
+	R --no-save --quiet --slave -f ~/hdall/scripts/cluster-pathways.R \
+		--args ../pathway-patient-matrix.tsv.part ../pathway-patient-matrix.clustered.tsv
+	mv ../pathway-patient-matrix.clustered.tsv ../pathway-patient-matrix.tsv
+
+../pathway-patient-matrix.high-af.tsv: dia-high-af/sm_pathways.annotated.tsv rel-high-af/sm_pathways.annotated.tsv ../gene-patient-matrix.high-af.tsv ~/hdall/scripts/get-pathway-patient-matrix.pl ~/hdall/scripts/cluster-pathways.R
+	perl ~/hdall/scripts/get-pathway-patient-matrix.pl \
+		--enriched-pathways-dia dia-high-af/sm_pathways.annotated.tsv \
+		--enriched-pathways-rel rel-high-af/sm_pathways.annotated.tsv \
+		--gene-patient-matrix ../gene-patient-matrix.high-af.tsv \
+		2>&1 1>../pathway-patient-matrix.high-af.tsv.part | tee -a make.log
+	R --no-save --quiet --slave -f ~/hdall/scripts/cluster-pathways.R \
+		--args ../pathway-patient-matrix.high-af.tsv.part ../pathway-patient-matrix.high-af.clustered.tsv
+	mv ../pathway-patient-matrix.high-af.clustered.tsv ../pathway-patient-matrix.high-af.tsv
+	
+	

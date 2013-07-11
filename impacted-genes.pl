@@ -91,6 +91,9 @@ while(<G>)
 		
 	#$sym2info{$prev2sym{$geneSymbol}}{'exons'} = $exonCount if ($prev2sym{$geneSymbol});
 	$sym2info{$geneSymbol}{'exons'} = $exonCount;
+	$sym2info{$geneSymbol}{'chr'} = $chrom;
+	$sym2info{$geneSymbol}{'start'} = $txStart;
+	$sym2info{$geneSymbol}{'end'} = $txEnd;
 
 	my @es = split(",", $exonStarts);
 	my @ee = split(",", $exonEnds);
@@ -173,7 +176,7 @@ while(<>)
 	}
 }
 
-print "patient\tcomparison\tgene\ttr_len\tcds_len\texons\tcosmic\tdesc\tnum_mut\tnum_mut_nonsyn\tmax_af\tmax_af_ns\timp_exons\timp_exons_ns\tmut_effects\n";
+print "patient\tcomparison\tgene\tchr\tstart\tend\ttr_len\tcds_len\texons\tcosmic\tdesc\tnum_mut\tnum_mut_nonsyn\tmax_af\tmax_af_ns\timp_exons\timp_exons_ns\tmut_effects\n";
 foreach my $p (keys(%genes))
 {
 	foreach my $s (keys(%{$genes{$p}}))
@@ -185,6 +188,9 @@ foreach my $p (keys(%genes))
 				or WARN("Could not map gene $g");
 						
 			print $p, "\t", $s, "\t", $g, "\t";
+			print "".($info->{'chr'} ? $info->{'chr'} : "")."\t";
+			print "".($info->{'start'} ? $info->{'start'} : "")."\t";
+			print "".($info->{'end'} ? $info->{'end'} : "")."\t";
 			print "".($info->{'trlen'} ? $info->{'trlen'} : "")."\t";
 			print "".($info->{'cdslen'} ? $info->{'cdslen'} : "")."\t";
 			print "".($info->{'exons'} ? $info->{'exons'} : "")."\t";

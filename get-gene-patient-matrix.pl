@@ -29,12 +29,15 @@ die "ERROR: invalid or missing list type\n"
 	if (!$mut_count and !$mut_max_freq and !$mut_details);
 
 my (%case_freq, %case_freq_ns, %mut_total, %mut_total_ns, %mut_gene_patient, %patients, %variants, %gene_info, %max_afs, %imp_exons);
-<>; # skip header
+<>; # skip header: patient\tcomparison\tgene\tchr\tstart\tend\ttr_len\tcds_len\texons\tcosmic\tdesc\tnum_mut\tnum_mut_nonsyn\tmax_af\tmax_af_ns\timp_exons\timp_exons_ns\tmut_effects\n
 while(<>)
 {
 	chomp;
-	my ($patient, $comp, $gene, $tr_len, $cds_len, $exons, $cosmic, $desc, $num_mutations, $num_mutations_nonsyn, $max_af, $max_af_ns, $ex, $ex_ns, $mutations) = split/\t/;
+	my ($patient, $comp, $gene, $chr, $start, $end, $tr_len, $cds_len, $exons, $cosmic, $desc, $num_mutations, $num_mutations_nonsyn, $max_af, $max_af_ns, $ex, $ex_ns, $mutations) = split/\t/;
 	
+	$gene_info{$gene}{'chr'} = $chr;
+	$gene_info{$gene}{'start'} = $start;
+	$gene_info{$gene}{'end'} = $end;
 	$gene_info{$gene}{'tr_len'} = $tr_len;
 	$gene_info{$gene}{'cds_len'} = $cds_len;
 	$gene_info{$gene}{'exons'} = $exons;
@@ -141,7 +144,8 @@ foreach my $g (keys(%{$case_freq{'rem_rel'}}))
 
 my @sorted = sort { ($case_freq{'cons'}{$b} ? $case_freq{'cons'}{$b} : 0) <=> ($case_freq{'cons'}{$a} ? $case_freq{'cons'}{$a} : 0) } keys(%all_genes);
 
-print "gene\tdescr\texons\ttr_len\tcds_len\tcosmic\t";
+# TABLE: gene-patient-matrix
+print "gene\tdescr\tchr\tstart\tend\texons\ttr_len\tcds_len\tcosmic\t";
 print "freq-dia\ttot-dia\tfreq-dia-ns\ttot-dia-ns\tmax-af-dia\tmax-af-dia-ns\timp-ex-dia\timp-ex-dia-ns\t";
 map { print "$_-dia\t" } keys(%patients);
 
@@ -156,7 +160,7 @@ print "\n";
 foreach my $g (@sorted)
 {
 	print "$g\t";
-	print $gene_info{$g}{'desc'},"\t",$gene_info{$g}{'exons'},"\t",$gene_info{$g}{'tr_len'},"\t",$gene_info{$g}{'cds_len'},"\t",$gene_info{$g}{'cosmic'},"\t";
+	print $gene_info{$g}{'desc'},"\t",$gene_info{$g}{'chr'},"\t",$gene_info{$g}{'start'},"\t",$gene_info{$g}{'end'},"\t",$gene_info{$g}{'exons'},"\t",$gene_info{$g}{'tr_len'},"\t",$gene_info{$g}{'cds_len'},"\t",$gene_info{$g}{'cosmic'},"\t";
 
 	print $case_freq{'rem_dia'}{$g} ? $case_freq{'rem_dia'}{$g} : "0", "\t";
 	print $mut_total{'rem_dia'}{$g} ? $mut_total{'rem_dia'}{$g} : "0", "\t";

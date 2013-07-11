@@ -405,6 +405,7 @@ dia/mutation-relation.tsv: ../gene-patient-matrix.tsv dia/wig-list.tsv dia/rem_d
 		--smg-rel rel/smg.tsv \
 		--smp-dia dia/sm_pathways.annotated.tsv \
 		--smp-rel rel/sm_pathways.annotated.tsv \
+		--cnv ../cnv/impacted-genes-list.cnv.tsv \
 		2>&1 1>../gene-patient-matrix.annotated.tsv.part | tee -a make.log
 	mv ../gene-patient-matrix.annotated.tsv.part ../gene-patient-matrix.annotated.tsv	
 	
@@ -415,6 +416,7 @@ dia/mutation-relation.tsv: ../gene-patient-matrix.tsv dia/wig-list.tsv dia/rem_d
 		--smg-rel rel-high-af/smg.tsv \
 		--smp-dia dia-high-af/sm_pathways.annotated.tsv \
 		--smp-rel rel-high-af/sm_pathways.annotated.tsv \
+		--cnv ../cnv/impacted-genes-list.cnv.tsv \
 		2>&1 1>../gene-patient-matrix.high-af.annotated.tsv.part | tee -a make.log
 	mv ../gene-patient-matrix.high-af.annotated.tsv.part ../gene-patient-matrix.high-af.annotated.tsv
 	
@@ -427,6 +429,7 @@ dia/mutation-relation.tsv: ../gene-patient-matrix.tsv dia/wig-list.tsv dia/rem_d
 	R --no-save --quiet --slave -f ~/hdall/scripts/cluster-pathways.R \
 		--args ../pathway-patient-matrix.tsv.part ../pathway-patient-matrix.clustered.tsv
 	mv ../pathway-patient-matrix.clustered.tsv ../pathway-patient-matrix.tsv
+	rm ../pathway-patient-matrix.tsv.part
 
 ../pathway-patient-matrix.high-af.tsv: dia-high-af/sm_pathways.annotated.tsv rel-high-af/sm_pathways.annotated.tsv ../gene-patient-matrix.high-af.tsv ~/hdall/scripts/get-pathway-patient-matrix.pl ~/hdall/scripts/cluster-pathways.R
 	perl ~/hdall/scripts/get-pathway-patient-matrix.pl \
@@ -437,5 +440,6 @@ dia/mutation-relation.tsv: ../gene-patient-matrix.tsv dia/wig-list.tsv dia/rem_d
 	R --no-save --quiet --slave -f ~/hdall/scripts/cluster-pathways.R \
 		--args ../pathway-patient-matrix.high-af.tsv.part ../pathway-patient-matrix.high-af.clustered.tsv
 	mv ../pathway-patient-matrix.high-af.clustered.tsv ../pathway-patient-matrix.high-af.tsv
+	rm ../pathway-patient-matrix.high-af.tsv.part
 	
 	

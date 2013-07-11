@@ -41,6 +41,7 @@ while(<REL>)
 }
 close(REL);
 
+# TABLE: gene-patient-matrix
 my %gene_patient;
 open(MATRIX, "$gene_patient_matrix") or croak "ERROR: could not open file $gene_patient_matrix\n";
 
@@ -49,9 +50,9 @@ my $header = <MATRIX>;
 chomp($header);
 my @hfields = split("\t", $header);
 print STDERR "Patients diagnosis:";
-for (my $d = 14; $d <= 33; $d ++) { print STDERR " $hfields[$d]"; push(@patients_dia, $hfields[$d]); }
+for (my $d = 17; $d <= 36; $d ++) { print STDERR " $hfields[$d]"; push(@patients_dia, $hfields[$d]); }
 print STDERR "\nPatients relapse:";
-for (my $d = 42; $d <= 61; $d ++) { print STDERR " $hfields[$d]"; push(@patients_rel, $hfields[$d]); }
+for (my $d = 45; $d <= 64; $d ++) { print STDERR " $hfields[$d]"; push(@patients_rel, $hfields[$d]); }
 print STDERR "\n";
 
 while(<MATRIX>)
@@ -60,8 +61,8 @@ while(<MATRIX>)
 	my @fields = split /\t/;
 	my $gene = $fields[0];
 	
-	for (my $d = 14; $d <= 33; $d ++) { $gene_patient{$gene}{$patients_dia[$d-14]} = $fields[$d]; }
-	for (my $d = 42; $d <= 61; $d ++) { $gene_patient{$gene}{$patients_rel[$d-42]} = $fields[$d]; }
+	for (my $d = 17; $d <= 36; $d ++) { $gene_patient{$gene}{$patients_dia[$d-17]} = $fields[$d]; }
+	for (my $d = 45; $d <= 64; $d ++) { $gene_patient{$gene}{$patients_rel[$d-45]} = $fields[$d]; }
 }
 close(MATRIX);
 

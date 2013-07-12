@@ -1,7 +1,7 @@
 export SHELLOPTS:=errexit:pipefail
 SHELL=/bin/bash  # required to make pipefail work
 
-all: dia rel ../gene-patient-matrix.annotated.tsv ../gene-patient-matrix.high-af.annotated.tsv sm_pathways.tsv sm_pathways.high-af.tsv MSigDB rel/mutation-relation.tsv ../pathway-patient-matrix.tsv ../pathway-patient-matrix.high-af.tsv
+all: dia rel ../gene-patient-matrix.annotated.tsv ../gene-patient-matrix.high-af.annotated.tsv sm_pathways.tsv sm_pathways.high-af.tsv MSigDB rel/mutation-relation.tsv rel/mutation-relation.KRAS-PTPN11.tsv ../pathway-patient-matrix.tsv ../pathway-patient-matrix.high-af.tsv 
 
 dia: ucsc-genes.hg19.roi dia/rem_dia.maf dia/gene_mrs dia/smg.tsv dia/sm_pathways.tsv dia/sm_pathways.annotated.tsv
 rel: ucsc-genes.hg19.roi rel/rem_rel.maf rel/gene_mrs rel/smg.tsv rel/sm_pathways.tsv rel/sm_pathways.annotated.tsv
@@ -381,6 +381,15 @@ rel/mutation-relation.tsv: ../gene-patient-matrix.tsv rel/wig-list.tsv rel/rem_r
 		--gene-list rel/mutation-relation.gene-list-recrel2-maxaf20.txt \
 		--output-file rel/mutation-relation.tsv.part
 	mv rel/mutation-relation.tsv.part rel/mutation-relation.tsv
+
+rel/mutation-relation.KRAS-PTPN11.tsv: ../gene-patient-matrix.tsv rel/wig-list.tsv rel/rem_rel.KRAS-PTPN11.maf rel/mutation-relation.gene-list-recrel2-maxaf20.KRAS-PTPN11.txt
+	genome music mutation-relation \
+		--bam-list=rel/wig-list.tsv \
+		--maf-file=rel/rem_rel.KRAS-PTPN11.maf \
+		--permutations 1000 \
+		--gene-list rel/mutation-relation.gene-list-recrel2-maxaf20.KRAS-PTPN11.txt \
+		--output-file rel/mutation-relation.KRAS-PTPN11.tsv.part
+	mv rel/mutation-relation.KRAS-PTPN11.tsv.part rel/mutation-relation.KRAS-PTPN11.tsv
 
 dia/mutation-relation.tsv: ../gene-patient-matrix.tsv dia/wig-list.tsv dia/rem_dia.maf
 	rm -f dia/mutation-relation.gene-list-recdia2-maxaf20.txt

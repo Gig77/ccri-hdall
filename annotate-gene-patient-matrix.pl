@@ -119,10 +119,10 @@ while(<M>)
 	my $g = $fields[0];
 
 	$gene_info{$g}{'desc'} = $fields[1];
-	$gene_info{$g}{'exons'} = $fields[2];
-	$gene_info{$g}{'chr'} = $fields[3];
-	$gene_info{$g}{'start'} = $fields[4];
-	$gene_info{$g}{'end'} = $fields[5];
+	$gene_info{$g}{'chr'} = $fields[2];
+	$gene_info{$g}{'start'} = $fields[3];
+	$gene_info{$g}{'end'} = $fields[4];
+	$gene_info{$g}{'exons'} = $fields[5];
 	$gene_info{$g}{'tr_len'} = $fields[6];
 	$gene_info{$g}{'cds_len'} = $fields[7];
 	$gene_info{$g}{'cosmic'} = $fields[8];

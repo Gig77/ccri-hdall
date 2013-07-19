@@ -16,6 +16,7 @@ GetOptions
 	"header" => \$header  # if set, write header line to output
 );
 
+# TABLE: filtered-variants
 if ($header)
 {
 	print "patient\t";		
@@ -39,7 +40,12 @@ if ($header)
 	print "dp_leu_var\t";
 	print "freq\t";
 	print "effect\t";
-	print "\n";
+	print "Polyphen2\t";
+	print "SIFT\t";
+	print "GERP++\t";
+	print "SiPhy\t";
+	print "InterPro\t";
+	print "AF_1000G\n";
 	exit;	
 }
 
@@ -270,6 +276,22 @@ while (my $line = $vcf->next_line())
 	print "$ad_tum_alt\t";
 	print "$var_freq\t";
 	print "EFF=",$x->{INFO}{EFF},"\t";
+	print defined $x->{INFO}{'dbNSFP_Polyphen2_HVAR_pred'} ? $x->{INFO}{'dbNSFP_Polyphen2_HVAR_pred'} : "", "\t"; # Polyphen2 prediction based on HumVar, 'D' ('porobably damaging'), 'P' ('possibly damaging') and 'B' ('benign'). Multiple entries separated by ';' 
+	print defined $x->{INFO}{'dbNSFP_SIFT_score'} ? $x->{INFO}{'dbNSFP_SIFT_score'} : "", "\t"; # SIFT score, If a score is smaller than 0.05 the corresponding NS is predicted as 'D(amaging)'; otherwise it is predicted as 'T(olerated)'
+	print defined $x->{INFO}{'dbNSFP_GERP++_RS'} ? $x->{INFO}{'dbNSFP_GERP++_RS'} : "", "\t"; # GERP++ RS score, the larger the score, the more conserved the site 
+	print defined $x->{INFO}{'dbNSFP_29way_logOdds'} ? $x->{INFO}{'dbNSFP_29way_logOdds'} : "", "\t"; # SiPhy score based on 29 mammals genomes. The larger the score, the more conserved the site.
+	my $domains = $x->{INFO}{'dbNSFP_Interpro_domain'}; # domain or conserved site on which the variant locates. Domain annotations come from Interpro database. The number in the brackets following a specific domain is the count of times Interpro assigns the variant position to that domain, typically coming from different predicting databases
+	if ($domains)
+	{
+		$domains =~ s/\),/\)\|/g;
+		$domains =~ s/\|$//;
+		print "$domains\t";
+	}
+	else
+	{
+		print "\t";
+	}
+	print defined $x->{INFO}{'dbNSFP_1000Gp1_AF'} ? $x->{INFO}{'dbNSFP_1000Gp1_AF'} : "";  # Alternative allele frequency in the whole 1000Gp1 data
 	print "\n";
 		
 #	print "\n"; print Dumper($x); exit;

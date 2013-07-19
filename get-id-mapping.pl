@@ -106,7 +106,7 @@ while(<G>)
 {
 	chomp;
 	my ($approved_symbol, $entrez_gene_id, $accession_numbers, $approved_name, 
-		$previous_symbols, $previous_names, $aliases, $name_aliases, $entrez_gene_id_ncbi, $uniprot, $refseq, $ucsc) = split("\t");
+		$previous_symbols, $previous_names, $aliases, $name_aliases, $entrez_gene_id_ncbi, $ensembl_id, $uniprot, $refseq, $ucsc) = split("\t");
 
 	$approved_symbol = $remap{$approved_symbol} if ($remap{$approved_symbol});
 	map { $mapping{$approved_symbol}{$_} = 1 if (!exists $approved_symbols{$_}) } split(", ", $previous_symbols);

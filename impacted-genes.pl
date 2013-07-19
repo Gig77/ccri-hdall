@@ -130,6 +130,7 @@ while(<G>)
 close(G);
 INFO("$lines genes read from file $ENV{HOME}/hdall/data/hg19/hg19.knownGene.txt");
 
+# TABLE: filtered-variants
 my %genes;
 my $written = 0;
 <>; # skip header
@@ -137,7 +138,8 @@ while(<>)
 {
 	chomp;
 	my ($patient, $sample, $var_type, $chr, $pos, $dbSNP, $ref, $alt, $gene, $add_genes, $impact, $effect, $exons, 
-		$dp_rem_tot, $dp_rem_ref, $dp_rem_var, $dp_leu_tot, $dp_leu_ref, $dp_leu_var, $freq, $snpeff) = split("\t");
+		$dp_rem_tot, $dp_rem_ref, $dp_rem_var, $dp_leu_tot, $dp_leu_ref, $dp_leu_var, $freq, $snpeff,
+		$polyphen2, $sift, $gerp, $siphy, $interpro, $af_1000g) = split("\t");
 
 	die "ERROR: $0: snpeff annotation missing from following line:\n$_\n"
 		if (!$snpeff);
@@ -169,6 +171,10 @@ while(<>)
 		? $genes{$patient}{$sample}{$gene}{'max_af'} < $freq ? $freq : $genes{$patient}{$sample}{$gene}{'max_af'}
 		: $freq;
 
+	$genes{$patient}{$sample}{$gene}{'domains'} = defined $genes{$patient}{$sample}{$gene}{'domains'} 
+		? $genes{$patient}{$sample}{$gene}{'domains'}."|$interpro"
+		: $interpro;
+
 	if ($exons)
 	{
 		my $exno = get_exon_no($exons, $gene);
@@ -176,7 +182,8 @@ while(<>)
 	}
 }
 
-print "patient\tcomparison\tgene\tchr\tstart\tend\ttr_len\tcds_len\texons\tcosmic\tdesc\tnum_mut\tnum_mut_nonsyn\tmax_af\tmax_af_ns\timp_exons\timp_exons_ns\tmut_effects\n";
+# TABLE: impacted-genes
+print "patient\tcomparison\tgene\tchr\tstart\tend\ttr_len\tcds_len\texons\tcosmic\tdesc\tnum_mut\tnum_mut_nonsyn\tmax_af\tmax_af_ns\timp_exons\timp_exons_ns\tmut_effects\tdomains\n";
 foreach my $p (keys(%genes))
 {
 	foreach my $s (keys(%{$genes{$p}}))
@@ -213,6 +220,8 @@ foreach my $p (keys(%genes))
 				print $v,"[",$genes{$p}{$s}{$g}{'all'}{$v},"]";
 				$first = 0;
 			}
+			
+			print "\t", $genes{$p}{$s}{$g}{'domains'} ? $genes{$p}{$s}{$g}{'domains'} : "";
 			print "\n";
 			
 			$written ++;

@@ -11,9 +11,19 @@ args <- commandArgs(trailingOnly = TRUE)
 if (is.na(args[1])) stop("input file not specified")
 if (is.na(args[2])) stop("output file not specified")
 
-t <- read.csv(args[1], sep="\t", as.is=TRUE)
+t <- read.csv(args[1], sep="\t", as.is=TRUE, check.names=F)
 #t <- read.csv("~/hdall/results/music/sm_pathways.tsv.part", sep="\t", as.is=TRUE)
-t2 <- t[t$Class=="KEGG_PATHWAY" | t$Class == "BBID" | t$Class == "BIOCARTA" | t$Class == "PIR_SUPERFAMILY" | t$Class == "COG_ONTOLOGY",]
+#t2 <- t
+
+pcol <- as.numeric(args[3]) # number of column containing p-value for filtering
+pval <- as.numeric(args[4]) # maximum p-value
+if (!is.na(pcol))
+{
+	t2 <- t[(!is.na(t[pcol]) & t[pcol] <= pval) | t$Class == "NCI",]
+} else
+{
+	t2 <- t
+}
 #t2 <- t[t$Class=="KEGG_PATHWAY",]
 
 pairs <- t(combn(rownames(t2),2))

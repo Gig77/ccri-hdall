@@ -1,12 +1,12 @@
 export SHELLOPTS:=errexit:pipefail
 SHELL=/bin/bash  # required to make pipefail work
 
-all: dia rel ../gene-patient-matrix.annotated.tsv ../gene-patient-matrix.high-af.annotated.tsv sm_pathways.tsv sm_pathways.high-af.tsv MSigDB rel/mutation-relation.tsv rel/mutation-relation.KRAS-PTPN11.tsv ../pathway-patient-matrix.tsv ../pathway-patient-matrix.high-af.tsv 
+all: dia rel ../gene-patient-matrix.annotated.tsv ../gene-patient-matrix.high-af.annotated.tsv pathscan/sm_pathways.tsv rel/mutation-relation.tsv rel/mutation-relation.KRAS-PTPN11.tsv ../pathway-patient-matrix.clustered.tsv ../pathway-patient-matrix.iter2.clustered.tsv  
 
-dia: ucsc-genes.hg19.roi dia/rem_dia.maf dia/gene_mrs dia/smg.tsv dia/sm_pathways.tsv dia/sm_pathways.annotated.tsv
-rel: ucsc-genes.hg19.roi rel/rem_rel.maf rel/gene_mrs rel/smg.tsv rel/sm_pathways.tsv rel/sm_pathways.annotated.tsv
-dia-high-af: ucsc-genes.hg19.roi dia-high-af/rem_dia.maf dia-high-af/gene_mrs dia-high-af/smg.tsv dia-high-af/sm_pathways.tsv dia-high-af/sm_pathways.annotated.tsv
-rel-high-af: ucsc-genes.hg19.roi rel-high-af/rem_rel.maf rel-high-af/gene_mrs rel-high-af/smg.tsv rel-high-af/sm_pathways.tsv rel-high-af/sm_pathways.annotated.tsv
+dia: ucsc-genes.hg19.roi dia/rem_dia.maf dia/gene_mrs dia/smg.tsv pathscan/sm_pathways.dia.tsv pathscan/sm_pathways.dia.annotated.tsv
+rel: ucsc-genes.hg19.roi rel/rem_rel.maf rel/gene_mrs rel/smg.tsv pathscan/sm_pathways.rel.tsv pathscan/sm_pathways.rel.annotated.tsv
+dia-high-af: ucsc-genes.hg19.roi dia-high-af/rem_dia.maf dia-high-af/gene_mrs dia-high-af/smg.tsv pathscan/sm_pathways.dia.tsv pathscan/sm_pathways.dia.annotated.tsv
+rel-high-af: ucsc-genes.hg19.roi rel-high-af/rem_rel.maf rel-high-af/gene_mrs rel-high-af/smg.tsv pathscan/sm_pathways.rel.tsv pathscan/sm_pathways.rel.annotated.tsv
 
 #---
 
@@ -22,7 +22,9 @@ ucsc-genes.hg19.roi: ~/hdall/results/id-mappings.tsv ~/hdall/results/ucsc-genes.
 	bgzip -c ucsc-genes.hg19.roi > ucsc-genes.hg19.roi.gz
 	tabix ucsc-genes.hg19.roi.gz -s 1 -b 2 -e 3
 
-#---
+#-----------------------------------------------------------------------
+# PREPARE MAF FILES FOR GENOME MUSIC
+#-----------------------------------------------------------------------
 
 PATIENTS = 314 1021247 399 430 446 460 545 592 715 786 792 818 842 A B C D E X Y
 
@@ -66,17 +68,19 @@ maf-high-af/%.maf: ../filtered_variants/%.snp.filtered.vcf ../filtered_variants/
 		--sample $* \
 		--music-roi ucsc-genes.hg19.roi.gz \
 		--mapping-entrez ~/hdall/results/gene-id-mapping.biomart-0.7.tsv \
-		--min-af 0.25 \
+		--min-af 0.20 \
 		2>&1 1>$@.part | grep -vP '(Leading or trailing space|variant.Format)' | tee -a make.log
 	cat ../filtered_variants/$*.indel.filtered.vcf | perl ~/hdall/scripts/vcf2maf.pl \
 		--sample $* \
 		--music-roi ucsc-genes.hg19.roi.gz \
 		--mapping-entrez ~/hdall/results/gene-id-mapping.biomart-0.7.tsv \
-		--min-af 0.25 \
+		--min-af 0.20 \
 		2>&1 1>>$@.part | grep -vP '(Leading or trailing space|variant.Format)' | tee -a make.log
 	mv $@.part $@
 		
-#---
+#-----------------------------------------------------------------------
+# GENOME MUSIC CALC-WIG-COVG
+#-----------------------------------------------------------------------
 	
 dia/total_covgs: dia/wig-list.tsv ~/hdall/data/hg19/ucsc.hg19.nochr.fasta
 	rm -f dia/total_covgs
@@ -114,7 +118,9 @@ rel-high-af/total_covgs: rel/total_covgs
 	cp -r rel/roi_covgs rel-high-af/roi_covgs
 	cp -r rel/gene_covgs rel-high-af/gene_covgs
 
-#---
+#-----------------------------------------------------------------------
+# GENOME MUSIC CALC-BMR
+#-----------------------------------------------------------------------
 
 dia/gene_mrs: dia/total_covgs dia/wig-list.tsv dia/rem_dia.maf ~/hdall/data/hg19/ucsc.hg19.nochr.fasta ucsc-genes.hg19.roi
 	rm -f dia/overall_bmrs
@@ -152,7 +158,9 @@ rel-high-af/gene_mrs: rel-high-af/total_covgs rel/wig-list.tsv rel-high-af/rem_r
 		--reference-sequence ~/hdall/data/hg19/ucsc.hg19.nochr.fasta \
 		--roi-file ucsc-genes.hg19.roi
 
+#-----------------------------------------------------------------------
 #--- GENOME MUSIC PROXIMITY
+#-----------------------------------------------------------------------
 
 dia/proximity.tsv: dia/rem_dia.maf
 	genome music proximity \
@@ -196,177 +204,192 @@ rel-high-af/smg.tsv: rel-high-af/gene_mrs
 		--output-file rel-high-af/smg.tsv.part
 	mv rel-high-af/smg.tsv.part rel-high-af/smg.tsv
 
-pathways-david-complete.tsv: pathways-david.tsv pathways-david-reverse.tsv
+#-----------------------------------------------------------------------
+#--- GENOME MUSIC PATH-SCAN (using only high allelic frequency variants)
+#-----------------------------------------------------------------------
+
+pathscan/pathways-david-complete.tsv: pathscan/pathways-david.tsv pathscan/pathways-david-reverse.tsv
 	perl ~/hdall/scripts/merge-david-annotations.pl \
-		pathways-david.tsv \
-		pathways-david-reverse.tsv \
-		> pathways-david-complete.tsv.part
-	mv pathways-david-complete.tsv.part pathways-david-complete.tsv
+		pathscan/pathways-david.tsv \
+		pathscan/pathways-david-reverse.tsv \
+		> pathscan/pathways-david-complete.tsv.part
+	mv pathscan/pathways-david-complete.tsv.part pathscan/pathways-david-complete.tsv
 
-#--- GENOME MUSIC PATH-SCAN
-
-dia/sm_pathways.tsv: dia/smg.tsv pathways-david-complete.tsv
-	genome music path-scan \
-		--bam-list dia/wig-list.tsv \
-		--gene-covg-dir dia/gene_covgs/ \
-		--maf-file dia/rem_dia.maf \
-		--output-file dia/sm_pathways.tsv.part \
-		--pathway-file pathways-david-complete.tsv
-	mv dia/sm_pathways.tsv.part dia/sm_pathways.tsv
-	mv dia/sm_pathways.tsv.part_detailed dia/sm_pathways.tsv_detailed
-
-dia/sm_pathways.annotated.tsv: dia/sm_pathways.tsv
-	perl ~/hdall/scripts/music/annotate-pathscan-result.pl \
-		--sm-pathways dia/sm_pathways.tsv \
-		--sm-pathways-detail dia/sm_pathways.tsv_detailed \
-		> dia/sm_pathways.annotated.tsv.part
-	mv dia/sm_pathways.annotated.tsv.part dia/sm_pathways.annotated.tsv
-
-rel/sm_pathways.tsv: rel/smg.tsv pathways-david-complete.tsv
-	genome music path-scan \
-		--bam-list rel/wig-list.tsv \
-		--gene-covg-dir rel/gene_covgs/ \
-		--maf-file rel/rem_rel.maf \
-		--output-file rel/sm_pathways.tsv.part \
-		--pathway-file pathways-david-complete.tsv
-	mv rel/sm_pathways.tsv.part rel/sm_pathways.tsv
-	mv rel/sm_pathways.tsv.part_detailed rel/sm_pathways.tsv_detailed
-
-rel/sm_pathways.annotated.tsv: rel/sm_pathways.tsv
-	perl ~/hdall/scripts/music/annotate-pathscan-result.pl \
-		--sm-pathways rel/sm_pathways.tsv \
-		--sm-pathways-detail rel/sm_pathways.tsv_detailed \
-		> rel/sm_pathways.annotated.tsv.part
-	mv rel/sm_pathways.annotated.tsv.part rel/sm_pathways.annotated.tsv
-
-dia-high-af/sm_pathways.tsv: dia-high-af/smg.tsv pathways-david-complete.tsv
-	genome music path-scan \
-		--bam-list dia/wig-list.tsv \
-		--gene-covg-dir dia-high-af/gene_covgs/ \
-		--maf-file dia-high-af/rem_dia.maf \
-		--genes-to-ignore TTN,PTPN11,NF1,TBP,KRAS,NRAS,CREBBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1 \
-		--output-file dia-high-af/sm_pathways.tsv.part \
-		--pathway-file pathways-david-complete.tsv
-	mv dia-high-af/sm_pathways.tsv.part dia-high-af/sm_pathways.tsv
-	mv dia-high-af/sm_pathways.tsv.part_detailed dia-high-af/sm_pathways.tsv_detailed
-
-dia-high-af/sm_pathways.annotated.tsv: dia-high-af/sm_pathways.tsv
-	perl ~/hdall/scripts/music/annotate-pathscan-result.pl \
-		--sm-pathways dia-high-af/sm_pathways.tsv \
-		--sm-pathways-detail dia-high-af/sm_pathways.tsv_detailed \
-		> dia-high-af/sm_pathways.annotated.tsv.part
-	mv dia-high-af/sm_pathways.annotated.tsv.part dia-high-af/sm_pathways.annotated.tsv
-
-rel-high-af/sm_pathways.tsv: rel-high-af/smg.tsv pathways-david-complete.tsv
-	genome music path-scan \
-		--bam-list rel/wig-list.tsv \
-		--gene-covg-dir rel-high-af/gene_covgs/ \
-		--maf-file rel-high-af/rem_rel.maf \
-		--genes-to-ignore TTN,PTPN11,NF1,TBP,KRAS,NRAS,CREBBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1 \
-		--output-file rel-high-af/sm_pathways.tsv.part \
-		--pathway-file pathways-david-complete.tsv
-	mv rel-high-af/sm_pathways.tsv.part rel-high-af/sm_pathways.tsv
-	mv rel-high-af/sm_pathways.tsv.part_detailed rel-high-af/sm_pathways.tsv_detailed
-
-rel-high-af/sm_pathways.annotated.tsv: rel-high-af/sm_pathways.tsv
-	perl ~/hdall/scripts/music/annotate-pathscan-result.pl \
-		--sm-pathways rel-high-af/sm_pathways.tsv \
-		--sm-pathways-detail rel-high-af/sm_pathways.tsv_detailed \
-		> rel-high-af/sm_pathways.annotated.tsv.part
-	mv rel-high-af/sm_pathways.annotated.tsv.part rel-high-af/sm_pathways.annotated.tsv
-
-sm_pathways.tsv: dia/sm_pathways.annotated.tsv rel/sm_pathways.annotated.tsv ~/hdall/scripts/cluster-pathways.R ~/hdall/scripts/music/merge-sm-pathways.R
-	R --no-save --quiet --slave -f ~/hdall/scripts/music/merge-sm-pathways.R \
-		2>&1 1>sm_pathways.tsv.part | tee -a make.log
-	R --no-save --quiet --slave -f ~/hdall/scripts/cluster-pathways.R \
-		--args sm_pathways.tsv.part sm_pathways.clustered.tsv.part \
-		2>&1 | tee -a make.log
-	mv sm_pathways.clustered.tsv.part sm_pathways.tsv
-	rm sm_pathways.tsv.part
-
-sm_pathways.high-af.tsv: dia-high-af/sm_pathways.annotated.tsv rel-high-af/sm_pathways.annotated.tsv ~/hdall/scripts/cluster-pathways.R ~/hdall/scripts/music/merge-sm-pathways.R
-	R --no-save --quiet --slave -f ~/hdall/scripts/music/merge-sm-pathways.R \
-		2>&1 1>sm_pathways.high-af.tsv.part | tee -a make.log
-	R --no-save --quiet --slave -f ~/hdall/scripts/cluster-pathways.R \
-		--args sm_pathways.high-af.tsv.part sm_pathways.high-af.clustered.tsv.part \
-		2>&1 | tee -a make.log
-	mv sm_pathways.high-af.clustered.tsv.part sm_pathways.high-af.tsv
-	rm sm_pathways.high-af.tsv.part
-
-#--- MSigDB gene set enrichment
-	
-MSigDB: gene-sets.mutsigdb4.0.tsv dia/sm_pathways.msigdb.annotated.tsv rel/sm_pathways.msigdb.annotated.tsv
-
-gene-sets.mutsigdb4.0.tsv: ~/hdall/data/msigdb/msigdb.v4.0.entrez.gmt ~/hdall/scripts/msigdb2pathscan.pl
+pathscan/gene-sets.mutsigdb4.0.tsv: ~/hdall/data/msigdb/msigdb.v4.0.entrez.gmt ~/hdall/scripts/msigdb2pathscan.pl
 	cat ~/hdall/data/msigdb/c1.all.v4.0.symbols.gmt | perl ~/hdall/scripts/msigdb2pathscan.pl \
 		--entrez-id-file ~/hdall/data/msigdb/msigdb.v4.0.entrez.gmt \
 		--category c1_positional \
-		2>&1 1>gene-sets.mutsigdb4.0.tsv.part | tee -a make.log 
+		2>&1 1>pathscan/gene-sets.mutsigdb4.0.tsv.part | tee -a make.log 
 	cat ~/hdall/data/msigdb/c2.all.v4.0.symbols.gmt | perl ~/hdall/scripts/msigdb2pathscan.pl \
 		--entrez-id-file ~/hdall/data/msigdb/msigdb.v4.0.entrez.gmt \
 		--category c2_curated \
-		2>&1 1>>gene-sets.mutsigdb4.0.tsv.part | tee -a make.log 
+		2>&1 1>>pathscan/gene-sets.mutsigdb4.0.tsv.part | tee -a make.log 
 	cat ~/hdall/data/msigdb/c3.all.v4.0.symbols.gmt | perl ~/hdall/scripts/msigdb2pathscan.pl \
 		--entrez-id-file ~/hdall/data/msigdb/msigdb.v4.0.entrez.gmt \
 		--category c3_motif \
-		2>&1 1>>gene-sets.mutsigdb4.0.tsv.part | tee -a make.log 
+		2>&1 1>>pathscan/gene-sets.mutsigdb4.0.tsv.part | tee -a make.log 
 	cat ~/hdall/data/msigdb/c4.all.v4.0.symbols.gmt | perl ~/hdall/scripts/msigdb2pathscan.pl \
 		--entrez-id-file ~/hdall/data/msigdb/msigdb.v4.0.entrez.gmt \
 		--category c4_computational \
-		2>&1 1>>gene-sets.mutsigdb4.0.tsv.part | tee -a make.log 
+		2>&1 1>>pathscan/gene-sets.mutsigdb4.0.tsv.part | tee -a make.log 
 	cat ~/hdall/data/msigdb/c5.all.v4.0.symbols.gmt | perl ~/hdall/scripts/msigdb2pathscan.pl \
 		--entrez-id-file ~/hdall/data/msigdb/msigdb.v4.0.entrez.gmt \
 		--category c5_GO \
-		2>&1 1>>gene-sets.mutsigdb4.0.tsv.part | tee -a make.log 
+		2>&1 1>>pathscan/gene-sets.mutsigdb4.0.tsv.part | tee -a make.log 
 	cat ~/hdall/data/msigdb/c6.all.v4.0.symbols.gmt | perl ~/hdall/scripts/msigdb2pathscan.pl \
 		--entrez-id-file ~/hdall/data/msigdb/msigdb.v4.0.entrez.gmt \
 		--category c6_oncogenic_signature \
-		2>&1 1>>gene-sets.mutsigdb4.0.tsv.part | tee -a make.log 
+		2>&1 1>>pathscan/gene-sets.mutsigdb4.0.tsv.part | tee -a make.log 
 	cat ~/hdall/data/msigdb/c7.all.v4.0.symbols.gmt | perl ~/hdall/scripts/msigdb2pathscan.pl \
 		--entrez-id-file ~/hdall/data/msigdb/msigdb.v4.0.entrez.gmt \
 		--category c7_immunologic_signature \
-		2>&1 1>>gene-sets.mutsigdb4.0.tsv.part | tee -a make.log
-	mv gene-sets.mutsigdb4.0.tsv.part gene-sets.mutsigdb4.0.tsv
+		2>&1 1>>pathscan/gene-sets.mutsigdb4.0.tsv.part | tee -a make.log
 
-dia/sm_pathways.msigdb.tsv: dia/smg.tsv dia/wig-list.tsv dia-high-af/rem_dia.maf gene-sets.mutsigdb4.0.tsv
+pathscan/pathways-nci.tsv: ~/hdall/data/nci-pathway/uniprot.tab ~/hdall/scripts/nci2pathscan.pl
+	cat ~/hdall/data/nci-pathway/uniprot.tab | perl ~/hdall/scripts/nci2pathscan.pl \
+		2>&1 1>>pathscan/pathways-nci.tsv.part | tee -a make.log
+	mv pathscan/pathways-nci.tsv.part pathscan/pathways-nci.tsv
+	
+pathscan/pathways-all.tsv: pathscan/pathways-david-complete.tsv pathscan/gene-sets.mutsigdb4.0.tsv pathscan/pathways-nci.tsv
+	cp pathscan/pathways-david-complete.tsv pathscan/pathways-all.tsv.part
+	cat pathscan/gene-sets.mutsigdb4.0.tsv pathscan/pathways-nci.tsv pathscan/pathways-TCGA-AML-2013.tsv >> pathscan/pathways-all.tsv.part
+	mv pathscan/pathways-all.tsv.part pathscan/pathways-all.tsv
+
+pathscan/pathways-all.sizefiltered.tsv: pathscan/pathways-all.tsv
+	cat pathscan/pathways-all.tsv | perl -ne '@f = split /\t/; @g = split(/\|/, $$f[3]); print $$_ if (@g > 1 and @g < 400);' > pathscan/pathways-all.sizefiltered.tsv.part
+	mv pathscan/pathways-all.sizefiltered.tsv.part pathscan/pathways-all.sizefiltered.tsv
+
+# iteration 1: exclude likely false positives from Lawrence et al. (2013)
+#-------------------------------------------------------------------------
+pathscan/sm_pathways.dia.tsv: dia-high-af/smg.tsv pathscan/pathways-all.sizefiltered.tsv
 	genome music path-scan \
 		--bam-list dia/wig-list.tsv \
 		--gene-covg-dir dia-high-af/gene_covgs/ \
 		--maf-file dia-high-af/rem_dia.maf \
-		--output-file dia/sm_pathways.msigdb.tsv.part \
-		--pathway-file gene-sets.mutsigdb4.0.tsv
-	#	--noskip-non-coding \
-	#	--noskip-silent \
-	mv dia/sm_pathways.msigdb.tsv.part dia/sm_pathways.msigdb.tsv
-	mv dia/sm_pathways.msigdb.tsv.part_detailed dia/sm_pathways.msigdb.tsv_detailed
+		--output-file pathscan/sm_pathways.dia.tsv.part \
+		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
+		--genes-to-ignore TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1
+	mv pathscan/sm_pathways.dia.tsv.part pathscan/sm_pathways.dia.tsv
+	mv pathscan/sm_pathways.dia.tsv.part_detailed pathscan/sm_pathways.dia.tsv_detailed
 
-dia/sm_pathways.msigdb.annotated.tsv: dia/sm_pathways.msigdb.tsv
+pathscan/sm_pathways.dia.annotated.tsv: pathscan/sm_pathways.dia.tsv ~/hdall/scripts/music/annotate-pathscan-result.pl
 	perl ~/hdall/scripts/music/annotate-pathscan-result.pl \
-		--sm-pathways dia/sm_pathways.msigdb.tsv \
-		--sm-pathways-detail dia/sm_pathways.msigdb.tsv_detailed \
-		> dia/sm_pathways.msigdb.annotated.tsv.part
-	mv dia/sm_pathways.msigdb.annotated.tsv.part dia/sm_pathways.msigdb.annotated.tsv
+		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
+		--sm-pathways pathscan/sm_pathways.dia.tsv \
+		--sm-pathways-detail pathscan/sm_pathways.dia.tsv_detailed \
+		> pathscan/sm_pathways.dia.annotated.tsv.part
+	mv pathscan/sm_pathways.dia.annotated.tsv.part pathscan/sm_pathways.dia.annotated.tsv
 
-rel/sm_pathways.msigdb.tsv: rel/smg.tsv rel/wig-list.tsv rel-high-af/rem_rel.maf gene-sets.mutsigdb4.0.tsv
+pathscan/sm_pathways.rel.tsv: rel-high-af/smg.tsv pathscan/pathways-all.sizefiltered.tsv
 	genome music path-scan \
 		--bam-list rel/wig-list.tsv \
 		--gene-covg-dir rel-high-af/gene_covgs/ \
 		--maf-file rel-high-af/rem_rel.maf \
-		--output-file rel/sm_pathways.msigdb.tsv.part \
-		--pathway-file gene-sets.mutsigdb4.0.tsv
-	#	--noskip-non-coding \
-	#	--noskip-silent \
-	mv rel/sm_pathways.msigdb.tsv.part rel/sm_pathways.msigdb.tsv
-	mv rel/sm_pathways.msigdb.tsv.part_detailed rel/sm_pathways.msigdb.tsv_detailed
+		--output-file pathscan/sm_pathways.rel.tsv.part \
+		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
+		--genes-to-ignore TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1
+	mv pathscan/sm_pathways.rel.tsv.part pathscan/sm_pathways.rel.tsv
+	mv pathscan/sm_pathways.rel.tsv.part_detailed pathscan/sm_pathways.rel.tsv_detailed
 
-rel/sm_pathways.msigdb.annotated.tsv: rel/sm_pathways.msigdb.tsv
+pathscan/sm_pathways.rel.annotated.tsv: pathscan/sm_pathways.rel.tsv ~/hdall/scripts/music/annotate-pathscan-result.pl
 	perl ~/hdall/scripts/music/annotate-pathscan-result.pl \
-		--sm-pathways rel/sm_pathways.msigdb.tsv \
-		--sm-pathways-detail rel/sm_pathways.msigdb.tsv_detailed \
-		> rel/sm_pathways.msigdb.annotated.tsv.part
-	mv rel/sm_pathways.msigdb.annotated.tsv.part rel/sm_pathways.msigdb.annotated.tsv
+		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
+		--sm-pathways pathscan/sm_pathways.rel.tsv \
+		--sm-pathways-detail pathscan/sm_pathways.rel.tsv_detailed \
+		> pathscan/sm_pathways.rel.annotated.tsv.part
+	mv pathscan/sm_pathways.rel.annotated.tsv.part pathscan/sm_pathways.rel.annotated.tsv
 
+pathscan/sm_pathways.tsv: pathscan/sm_pathways.dia.annotated.tsv pathscan/sm_pathways.rel.annotated.tsv ~/hdall/scripts/cluster-pathways.R ~/hdall/scripts/music/merge-sm-pathways.R
+	R --no-save --quiet --slave -f ~/hdall/scripts/music/merge-sm-pathways.R \
+		--args pathscan/sm_pathways.dia.annotated.tsv pathscan/sm_pathways.rel.annotated.tsv \
+		2>&1 1>pathscan/sm_pathways.tsv.part | tee -a make.log
+	R --no-save --quiet --slave -f ~/hdall/scripts/cluster-pathways.R \
+		--args pathscan/sm_pathways.tsv.part pathscan/sm_pathways.clustered.tsv.part 13 1e-7 \
+		2>&1 | tee -a make.log
+	mv pathscan/sm_pathways.clustered.tsv.part pathscan/sm_pathways.tsv
+	rm pathscan/sm_pathways.tsv.part
+
+../pathway-patient-matrix.clustered.tsv: pathscan/sm_pathways.dia.annotated.tsv pathscan/sm_pathways.rel.annotated.tsv ../gene-patient-matrix.tsv ../kamilla/gene-pathway-assignment.tsv ~/hdall/scripts/get-pathway-patient-matrix.pl ~/hdall/scripts/cluster-pathways.R
+	perl ~/hdall/scripts/get-pathway-patient-matrix.pl \
+		--enriched-pathways-dia pathscan/sm_pathways.dia.annotated.tsv \
+		--enriched-pathways-rel pathscan/sm_pathways.rel.annotated.tsv \
+		--curated-pathways ../kamilla/gene-pathway-assignment.tsv \
+		--gene-patient-matrix ../gene-patient-matrix.tsv \
+		2>&1 1>../pathway-patient-matrix.tsv.part | tee -a make.log
+	mv ../pathway-patient-matrix.tsv.part ../pathway-patient-matrix.tsv
+	# TABLE: pathway-patient-matrix
+	R --no-save --quiet --slave -f ~/hdall/scripts/cluster-pathways.R \
+		--args ../pathway-patient-matrix.tsv ../pathway-patient-matrix.clustered.tsv.part 27 1e-7 \
+		2>&1 | tee -a make.log
+	mv ../pathway-patient-matrix.clustered.tsv.part ../pathway-patient-matrix.clustered.tsv
+
+# iteration 2: additionally exclude KRAS, NRAS, and CREBBP
+#----------------------------------------------------------
+pathscan/sm_pathways.dia.iter2.tsv: dia-high-af/smg.tsv pathscan/pathways-all.sizefiltered.tsv
+	genome music path-scan \
+		--bam-list dia/wig-list.tsv \
+		--gene-covg-dir dia-high-af/gene_covgs/ \
+		--maf-file dia-high-af/rem_dia.maf \
+		--output-file pathscan/sm_pathways.dia.iter2.tsv.part \
+		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
+		--genes-to-ignore KRAS,NRAS,CREBBP,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1
+	mv pathscan/sm_pathways.dia.iter2.tsv.part pathscan/sm_pathways.dia.iter2.tsv
+	mv pathscan/sm_pathways.dia.iter2.tsv.part_detailed pathscan/sm_pathways.dia.iter2.tsv_detailed
+
+pathscan/sm_pathways.dia.iter2.annotated.tsv: pathscan/sm_pathways.dia.iter2.tsv ~/hdall/scripts/music/annotate-pathscan-result.pl
+	perl ~/hdall/scripts/music/annotate-pathscan-result.pl \
+		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
+		--sm-pathways pathscan/sm_pathways.dia.iter2.tsv \
+		--sm-pathways-detail pathscan/sm_pathways.dia.iter2.tsv_detailed \
+		> pathscan/sm_pathways.dia.iter2.annotated.tsv.part
+	mv pathscan/sm_pathways.dia.iter2.annotated.tsv.part pathscan/sm_pathways.dia.iter2.annotated.tsv
+
+pathscan/sm_pathways.rel.iter2.tsv: rel-high-af/smg.tsv pathscan/pathways-all.sizefiltered.tsv
+	genome music path-scan \
+		--bam-list rel/wig-list.tsv \
+		--gene-covg-dir rel-high-af/gene_covgs/ \
+		--maf-file rel-high-af/rem_rel.maf \
+		--output-file pathscan/sm_pathways.rel.iter2.tsv.part \
+		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
+		--genes-to-ignore KRAS,NRAS,CREBBP,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1
+	mv pathscan/sm_pathways.rel.iter2.tsv.part pathscan/sm_pathways.rel.iter2.tsv
+	mv pathscan/sm_pathways.rel.iter2.tsv.part_detailed pathscan/sm_pathways.rel.iter2.tsv_detailed
+
+pathscan/sm_pathways.rel.iter2.annotated.tsv: pathscan/sm_pathways.rel.iter2.tsv ~/hdall/scripts/music/annotate-pathscan-result.pl
+	perl ~/hdall/scripts/music/annotate-pathscan-result.pl \
+		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
+		--sm-pathways pathscan/sm_pathways.rel.iter2.tsv \
+		--sm-pathways-detail pathscan/sm_pathways.rel.iter2.tsv_detailed \
+		> pathscan/sm_pathways.rel.iter2.annotated.tsv.part
+	mv pathscan/sm_pathways.rel.iter2.annotated.tsv.part pathscan/sm_pathways.rel.iter2.annotated.tsv
+
+pathscan/sm_pathways.iter2.tsv: pathscan/sm_pathways.dia.iter2.annotated.tsv pathscan/sm_pathways.rel.iter2.annotated.tsv ~/hdall/scripts/cluster-pathways.R ~/hdall/scripts/music/merge-sm-pathways.R
+	R --no-save --quiet --slave -f ~/hdall/scripts/music/merge-sm-pathways.R \
+		--args pathscan/sm_pathways.dia.iter2.annotated.tsv pathscan/sm_pathways.rel.iter2.annotated.tsv \
+		2>&1 1>pathscan/sm_pathways.iter2.tsv.part | tee -a make.log
+	R --no-save --quiet --slave -f ~/hdall/scripts/cluster-pathways.R \
+		--args pathscan/sm_pathways.iter2.tsv.part pathscan/sm_pathways.iter2.clustered.tsv.part 13 1e-7 \
+		2>&1 | tee -a make.log
+	mv pathscan/sm_pathways.iter2.clustered.tsv.part pathscan/sm_pathways.iter2.tsv
+	rm pathscan/sm_pathways.iter2.tsv.part
+
+../pathway-patient-matrix.iter2.clustered.tsv: pathscan/sm_pathways.dia.iter2.annotated.tsv pathscan/sm_pathways.rel.iter2.annotated.tsv pathscan/sm_pathways.iter2.tsv ../gene-patient-matrix.tsv ../kamilla/gene-pathway-assignment.tsv ~/hdall/scripts/get-pathway-patient-matrix.pl ~/hdall/scripts/cluster-pathways.R
+	perl ~/hdall/scripts/get-pathway-patient-matrix.pl \
+		--enriched-pathways-dia pathscan/sm_pathways.dia.iter2.annotated.tsv \
+		--enriched-pathways-rel pathscan/sm_pathways.rel.iter2.annotated.tsv \
+		--curated-pathways ../kamilla/gene-pathway-assignment.tsv \
+		--gene-patient-matrix ../gene-patient-matrix.tsv \
+		2>&1 1>../pathway-patient-matrix.iter2.tsv.part | tee -a make.log
+	mv ../pathway-patient-matrix.iter2.tsv.part ../pathway-patient-matrix.iter2.tsv
+	# TABLE: pathway-patient-matrix
+	R --no-save --quiet --slave -f ~/hdall/scripts/cluster-pathways.R \
+		--args ../pathway-patient-matrix.iter2.tsv ../pathway-patient-matrix.iter2.clustered.tsv.part 27 1e-7 \
+		2>&1 | tee -a make.log
+	mv ../pathway-patient-matrix.iter2.clustered.tsv.part ../pathway-patient-matrix.iter2.clustered.tsv
+
+#-----------------------------------------------------------------------
 #--- MUSIC MUTATION-RELATION ANALYSIS
+#-----------------------------------------------------------------------
 
 rel/mutation-relation.tsv: ../gene-patient-matrix.tsv rel/wig-list.tsv rel/rem_rel.maf
 	rm -f rel/mutation-relation.gene-list-recrel2-maxaf20.txt
@@ -405,50 +428,32 @@ dia/mutation-relation.tsv: ../gene-patient-matrix.tsv dia/wig-list.tsv dia/rem_d
 		--output-file dia/mutation-relation.tsv.part
 	mv dia/mutation-relation.tsv.part dia/mutation-relation.tsv
 
-#--- COMBINE ALL RESULTS INTO FINAL LIST
+#-----------------------------------------------------------------------
+#--- COMBINE ALL RESULTS INTO FINAL LISTS
+#-----------------------------------------------------------------------
 
-../gene-patient-matrix.annotated.tsv: ../gene-patient-matrix.tsv dia/smg.tsv rel/smg.tsv dia/sm_pathways.annotated.tsv rel/sm_pathways.annotated.tsv ~/hdall/scripts/annotate-gene-patient-matrix.pl
+../gene-patient-matrix.annotated.tsv: ../gene-patient-matrix.tsv dia/smg.tsv rel/smg.tsv pathscan/sm_pathways.dia.annotated.tsv pathscan/sm_pathways.rel.annotated.tsv ../cnv/impacted-genes-list.cnv.tsv ../kamilla/gene-pathway-assignment.tsv ~/hdall/scripts/annotate-gene-patient-matrix.pl
 	perl ~/hdall/scripts/annotate-gene-patient-matrix.pl \
 		--gene-patient-matrix ../gene-patient-matrix.tsv \
 		--smg-dia dia/smg.tsv \
 		--smg-rel rel/smg.tsv \
-		--smp-dia dia/sm_pathways.annotated.tsv \
-		--smp-rel rel/sm_pathways.annotated.tsv \
+		--smp-dia pathscan/sm_pathways.dia.annotated.tsv \
+		--smp-rel pathscan/sm_pathways.rel.annotated.tsv \
 		--cnv ../cnv/impacted-genes-list.cnv.tsv \
+		--pathway-groups ../kamilla/gene-pathway-assignment.tsv \
 		2>&1 1>../gene-patient-matrix.annotated.tsv.part | tee -a make.log
 	mv ../gene-patient-matrix.annotated.tsv.part ../gene-patient-matrix.annotated.tsv	
 	
-../gene-patient-matrix.high-af.annotated.tsv: ../gene-patient-matrix.high-af.tsv dia-high-af/smg.tsv rel-high-af/smg.tsv dia-high-af/sm_pathways.annotated.tsv rel-high-af/sm_pathways.annotated.tsv ~/hdall/scripts/annotate-gene-patient-matrix.pl
+../gene-patient-matrix.high-af.annotated.tsv: ../gene-patient-matrix.high-af.tsv dia-high-af/smg.tsv rel-high-af/smg.tsv pathscan/sm_pathways.dia.annotated.tsv pathscan/sm_pathways.rel.annotated.tsv ../cnv/impacted-genes-list.cnv.tsv ../kamilla/gene-pathway-assignment.tsv ~/hdall/scripts/annotate-gene-patient-matrix.pl
 	perl ~/hdall/scripts/annotate-gene-patient-matrix.pl \
 		--gene-patient-matrix ../gene-patient-matrix.high-af.tsv \
 		--smg-dia dia-high-af/smg.tsv \
 		--smg-rel rel-high-af/smg.tsv \
-		--smp-dia dia-high-af/sm_pathways.annotated.tsv \
-		--smp-rel rel-high-af/sm_pathways.annotated.tsv \
+		--smp-dia pathscan/sm_pathways.dia.annotated.tsv \
+		--smp-rel pathscan/sm_pathways.rel.annotated.tsv \
 		--cnv ../cnv/impacted-genes-list.cnv.tsv \
+		--pathway-groups ../kamilla/gene-pathway-assignment.tsv \
 		2>&1 1>../gene-patient-matrix.high-af.annotated.tsv.part | tee -a make.log
 	mv ../gene-patient-matrix.high-af.annotated.tsv.part ../gene-patient-matrix.high-af.annotated.tsv
-	
-../pathway-patient-matrix.tsv: dia/sm_pathways.annotated.tsv rel/sm_pathways.annotated.tsv ../gene-patient-matrix.tsv ~/hdall/scripts/get-pathway-patient-matrix.pl ~/hdall/scripts/cluster-pathways.R
-	perl ~/hdall/scripts/get-pathway-patient-matrix.pl \
-		--enriched-pathways-dia dia/sm_pathways.annotated.tsv \
-		--enriched-pathways-rel rel/sm_pathways.annotated.tsv \
-		--gene-patient-matrix ../gene-patient-matrix.tsv \
-		2>&1 1>../pathway-patient-matrix.tsv.part | tee -a make.log
-	R --no-save --quiet --slave -f ~/hdall/scripts/cluster-pathways.R \
-		--args ../pathway-patient-matrix.tsv.part ../pathway-patient-matrix.clustered.tsv
-	mv ../pathway-patient-matrix.clustered.tsv ../pathway-patient-matrix.tsv
-	rm ../pathway-patient-matrix.tsv.part
-
-../pathway-patient-matrix.high-af.tsv: dia-high-af/sm_pathways.annotated.tsv rel-high-af/sm_pathways.annotated.tsv ../gene-patient-matrix.high-af.tsv ~/hdall/scripts/get-pathway-patient-matrix.pl ~/hdall/scripts/cluster-pathways.R
-	perl ~/hdall/scripts/get-pathway-patient-matrix.pl \
-		--enriched-pathways-dia dia-high-af/sm_pathways.annotated.tsv \
-		--enriched-pathways-rel rel-high-af/sm_pathways.annotated.tsv \
-		--gene-patient-matrix ../gene-patient-matrix.high-af.tsv \
-		2>&1 1>../pathway-patient-matrix.high-af.tsv.part | tee -a make.log
-	R --no-save --quiet --slave -f ~/hdall/scripts/cluster-pathways.R \
-		--args ../pathway-patient-matrix.high-af.tsv.part ../pathway-patient-matrix.high-af.clustered.tsv
-	mv ../pathway-patient-matrix.high-af.clustered.tsv ../pathway-patient-matrix.high-af.tsv
-	rm ../pathway-patient-matrix.high-af.tsv.part
-	
+		
 	

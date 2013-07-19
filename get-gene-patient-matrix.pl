@@ -28,12 +28,13 @@ my %impact2flag =
 die "ERROR: invalid or missing list type\n"
 	if (!$mut_count and !$mut_max_freq and !$mut_details);
 
-my (%case_freq, %case_freq_ns, %mut_total, %mut_total_ns, %mut_gene_patient, %patients, %variants, %gene_info, %max_afs, %imp_exons);
+# TABLE: impacted-genes
+my (%case_freq, %case_freq_ns, %mut_total, %mut_total_ns, %mut_gene_patient, %patients, %variants, %gene_info, %max_afs, %imp_exons, %imp_domains);
 <>; # skip header: patient\tcomparison\tgene\tchr\tstart\tend\ttr_len\tcds_len\texons\tcosmic\tdesc\tnum_mut\tnum_mut_nonsyn\tmax_af\tmax_af_ns\timp_exons\timp_exons_ns\tmut_effects\n
 while(<>)
 {
 	chomp;
-	my ($patient, $comp, $gene, $chr, $start, $end, $tr_len, $cds_len, $exons, $cosmic, $desc, $num_mutations, $num_mutations_nonsyn, $max_af, $max_af_ns, $ex, $ex_ns, $mutations) = split/\t/;
+	my ($patient, $comp, $gene, $chr, $start, $end, $tr_len, $cds_len, $exons, $cosmic, $desc, $num_mutations, $num_mutations_nonsyn, $max_af, $max_af_ns, $ex, $ex_ns, $mutations, $domains) = split/\t/;
 	
 	$gene_info{$gene}{'chr'} = $chr;
 	$gene_info{$gene}{'start'} = $start;
@@ -69,7 +70,9 @@ while(<>)
 	
 	map { $imp_exons{$comp}{$gene}{'all'}{$_} = 1 } split(",", $ex);  # impacted exons, all variants
 	map { $imp_exons{$comp}{$gene}{'ns'}{$_} = 1 } split(",", $ex_ns); # impacted exons, only nonsynonymous variants
-	
+
+	map { $imp_domains{$comp}{$gene}{$_} = 1 } split('\|', $domains); # impacted domains
+		
 	if ($case_freq{$comp}{$gene})
 	{
 		$case_freq{$comp}{$gene} ++;
@@ -155,6 +158,8 @@ map { print "$_-rel\t" } keys(%patients);
 print "freq-cons\t";
 print "tot-cons";
 map { print "\t$_-cons" } keys(%patients);
+
+print "\timp-domains-dia\timp-domains-rel";
 print "\n";
 
 foreach my $g (@sorted)
@@ -234,5 +239,9 @@ foreach my $g (@sorted)
 			print values(%{$variants{'cons'}{$g}{$p}}) > 0 ? join("\|", values(%{$variants{'cons'}{$g}{$p}})) : " ";
 		}
 	}
+	
+	print "\t", $imp_domains{'rem_dia'}{$g} ? join("|", keys($imp_domains{'rem_dia'}{$g})) : "";
+	print "\t", $imp_domains{'rem_rel'}{$g} ? join("|", keys($imp_domains{'rem_rel'}{$g})) : "";
+	
 	print "\n";
 }

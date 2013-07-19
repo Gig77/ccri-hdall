@@ -8,7 +8,7 @@ use Carp;
 use Getopt::Long;
 
 # parse detailed results first
-my ($gene_patient_matrix, $smg_dia, $smg_rel, $smp_dia_file, $smp_rel_file, $cnv);
+my ($gene_patient_matrix, $smg_dia, $smg_rel, $smp_dia_file, $smp_rel_file, $cnv, $pathway_group_file);
 GetOptions
 (
 	"gene-patient-matrix=s" => \$gene_patient_matrix,
@@ -16,8 +16,11 @@ GetOptions
 	"smg-rel=s" => \$smg_rel,   
 	"smp-dia=s" => \$smp_dia_file,  
 	"smp-rel=s" => \$smp_rel_file,
-	"cnv=s" => \$cnv   
+	"cnv=s" => \$cnv,
+	"pathway-groups=s" => \$pathway_group_file   
 );
+
+croak "ERROR: Pathway group file not specified" if (!$pathway_group_file);
 
 # read significantly mutated genes at diagnosis
 my %smg_dia_pvalue;
@@ -44,15 +47,17 @@ while(<R>)
 }
 close(R);
 INFO(scalar(keys(%smg_rel_pvalue))." genes read from file $smg_rel");
+croak "ERROR: no significanly mutated genes found in file $smg_rel" if (keys(%smg_rel_pvalue) == 0);
 
 # read significantly mutated pathways at diagnosis
+# TABLE: sm_pathways.annotated
 my (%smp_dia, %smp_dia_genes);
 open(D,"$smp_dia_file") or croak "ERROR: could not read file $smp_dia_file\n";
 <D>; # skip header
 while(<D>)
 {
 	chomp;
-	my ($id, $name, $class, $samples_affected, $total_variations, $p, $fdr, $num_genes, $genes) = split(/\t/);
+	my ($id, $name, $class, $size, $samples_affected, $total_variations, $p, $fdr, $num_genes, $genes) = split(/\t/);
 	next if ($class ne "BBID" and $class ne "BIOCARTA" and $class ne "KEGG_PATHWAY" and $class ne "OMIM_DISEASE");
 	$smp_dia{$id."|".$name} = $p;
 	next if ($p > 0.05);
@@ -64,15 +69,17 @@ while(<D>)
 }
 close(D);
 INFO(scalar(keys(%smp_dia_genes))." pathways read from file $smp_dia_file");
+croak "ERROR: no significanly mutated pathways found in file $smp_dia_file" if (keys(%smp_dia_genes) == 0);
 
 # read significantly mutated pathways at relapse
+# TABLE: sm_pathways.annotated
 my (%smp_rel, %smp_rel_genes);
 open(D,"$smp_rel_file") or croak "ERROR: could not read file $smp_rel_file\n";
 <D>; # skip header
 while(<D>)
 {
 	chomp;
-	my ($id, $name, $class, $samples_affected, $total_variations, $p, $fdr, $num_genes, $genes) = split(/\t/);
+	my ($id, $name, $class, $size, $samples_affected, $total_variations, $p, $fdr, $num_genes, $genes) = split(/\t/);
 	next if ($class ne "BBID" and $class ne "BIOCARTA" and $class ne "KEGG_PATHWAY" and $class ne "OMIM_DISEASE");
 	$smp_rel{$id."|".$name} = $p;
 	next if ($p > 0.05);
@@ -84,6 +91,7 @@ while(<D>)
 }
 close(D);
 INFO(scalar(keys(%smp_rel_genes))." pathways read from file $smp_rel_file");
+croak "ERROR: no significanly mutated pathways found in file $smp_rel_file" if (keys(%smp_rel_genes) == 0);
 
 # read copy-number info
 my (%cnvs);
@@ -100,6 +108,27 @@ while(<D>)
 }
 close(D);
 INFO("$cnv_read CNVs read from file $cnv");
+
+# read pathway groups the mutated genes belong to
+my %pathway_groups;
+my $pg_read = 0;
+open(PG,"$pathway_group_file") or croak "ERROR: could not open file $pathway_group_file\n"; 
+<PG>; # skip header
+while(<PG>)
+{
+	chomp;
+	my ($gene, $group1, $group2, $group3, $category, $comment, $source) = split /\t/;
+
+	croak "ERROR: coud not parse following line:\n$_\n" if (!$group1 or !$gene);
+
+	$pathway_groups{$gene} = $group1;
+	$pathway_groups{$gene} .= ";$group2" if ($group2);
+	$pathway_groups{$gene} .= ";$group3" if ($group3);
+	
+	$pg_read ++;
+}
+close(PG);
+INFO("$pg_read pathway assignments read from file $pathway_group_file");
 
 # TABLE: gene-patient-matrix
 open(M,"$gene_patient_matrix") or croak "ERROR: could not read file $gene_patient_matrix\n";
@@ -150,24 +179,29 @@ while(<M>)
 	$gene_info{$g}{'freq-cons'} = $fields[65];
 	$gene_info{$g}{'tot-cons'} = $fields[66];
 	for (my $d = 67; $d <= 86; $d ++) { $gene_info{$g}{$patients_cons[$d-67]} = $fields[$d]; }
+	
+	$gene_info{$g}{'imp-domains-dia'} = $fields[87];
+	$gene_info{$g}{'imp-domains-rel'} = $fields[88];
 }
 close(M);
 INFO(scalar(keys(%gene_info))." genes read from file $gene_patient_matrix");
 
 # output header
-print "gene\tdescr\tchr\tstart\tend\texons\ttr_len\tcds_len\tcosmic\t";
+print "gene\tpathway\tdescr\tchr\tstart\tend\texons\ttr_len\tcds_len\tcosmic\t";
 print "freq-dia\ttot-dia\tfreq-dia-ns\ttot-dia-ns\tmax-af-dia\tmax-af-dia-ns\timp-ex-dia\timp-ex-dia-ns\tp-gene-dia\tp-pw-dia";
 map { print "\t$_" } (@patients_dia);
 print "\tfreq-rel\ttot-rel\tfreq-rel-ns\ttot-rel-ns\tmax-af-rel\tmax-af-rel-ns\timp-ex-rel\timp-ex-rel-ns\tp-gene-rel\tp-pw-rel";
 map { print "\t$_" } (@patients_rel);
 print "\tfreq-cons\ttot-cons";
 map { print "\t$_" } (@patients_cons);
+print "\timp-domains-dia\timp-domains-rel";
 print "\tenr-pw-dia\tenr-pw-rel\tenr-pw-rel-spec";
 print "\n";
 
 foreach my $g (keys(%gene_info))
 {
 	print "$g";
+	print "\t".(defined $pathway_groups{$g} ? $pathway_groups{$g} : "");
 	print "\t",$gene_info{$g}{'desc'},"\t",$gene_info{$g}{'chr'},"\t",$gene_info{$g}{'start'},"\t",$gene_info{$g}{'end'},"\t",$gene_info{$g}{'exons'},"\t",$gene_info{$g}{'tr_len'},"\t",$gene_info{$g}{'cds_len'},"\t",$gene_info{$g}{'cosmic'};
 
 	print "\t".(defined $gene_info{$g}{'freq-dia'} ? $gene_info{$g}{'freq-dia'} : "");
@@ -223,6 +257,9 @@ foreach my $g (keys(%gene_info))
 	print "\t".(defined $gene_info{$g}{'tot-cons'} ? $gene_info{$g}{'tot-cons'} : "");
 	map { print "\t".(defined $gene_info{$g}{$_} ? $gene_info{$g}{$_} : "") } (@patients_cons);
 
+	print "\t".(defined $gene_info{$g}{'imp-domains-dia'} ? $gene_info{$g}{'imp-domains-dia'} : "");
+	print "\t".(defined $gene_info{$g}{'imp-domains-rel'} ? $gene_info{$g}{'imp-domains-rel'} : "");
+	
 	print "\t";
 	my @enriched_pw_dia;
 	map { push(@enriched_pw_dia, $_."(".sprintf("%.1e", $smp_dia_genes{$g}{$_}).")") if ($_ ne 'pvalue') } sort {$smp_dia_genes{$g}{$a} <=> $smp_dia_genes{$g}{$b}} keys(%{$smp_dia_genes{$g}});

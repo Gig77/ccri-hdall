@@ -19,7 +19,7 @@ filtered-variants.tsv:	$(foreach P, $(PATIENTS), filtered_variants/$P_rem_dia.sn
 	cat filtered_variants/*.filtered.tsv >> filtered-variants.tsv.part
 	mv filtered-variants.tsv.part filtered-variants.tsv
 	
-filtered_variants/%.snp.filtered.tsv: ~/hdall/data/mutect_vcf/%_calls_snpeff.vcf ~/hdall/scripts/filter-variants.pl
+filtered_variants/%.snp.filtered.tsv: ~/hdall/data/mutect_vcf/%_calls_snpeff_snpsift.vcf ~/hdall/scripts/filter-variants.pl
 	perl ~/hdall/scripts/filter-variants.pl $* $< snp --vcf-out filtered_variants/$*.snp.filtered.vcf \
 		2>&1 1>$@.part | grep -v -P '(Leading or trailing space|variant.Format)' | tee -a make.log
 	mv $@.part $@
@@ -36,7 +36,7 @@ impacted-genes-list.tsv: filtered-variants.tsv ~/hdall/scripts/impacted-genes.pl
 
 impacted-genes-list.high-af.tsv: filtered-variants.tsv ~/hdall/scripts/impacted-genes.pl
 	cat filtered-variants.tsv \
-		| perl -ne 'print $$_ if ((split/\t/)[19] >= 0.25)' \
+		| perl -ne 'print $$_ if ((split/\t/)[19] >= 0.20)' \
 		| perl ~/hdall/scripts/impacted-genes.pl \
 		2>&1 1>impacted-genes-list.high-af.tsv.part | tee -a make.log
 	mv impacted-genes-list.high-af.tsv.part impacted-genes-list.high-af.tsv
@@ -53,7 +53,7 @@ gene-patient-matrix.high-af.tsv: impacted-genes-list.high-af.tsv ~/hdall/scripts
 
 impacted-genes-list.tier1.tsv: filtered-variants.tsv ~/hdall/scripts/impacted-genes.pl
 	cat filtered-variants.tsv \
-		| perl -ne 'print $$_ if (/(patient|HIGH|MODERATE)/ and (split/\t/)[19] >= 0.25)' \
+		| perl -ne 'print $$_ if (/(patient|HIGH|MODERATE)/ and (split/\t/)[19] >= 0.20)' \
 		| perl ~/hdall/scripts/impacted-genes.pl \
 		2>&1 1>impacted-genes-list.tier1.tsv.part | tee -a make.log
 	mv impacted-genes-list.tier1.tsv.part impacted-genes-list.tier1.tsv

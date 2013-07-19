@@ -5,12 +5,24 @@ use Carp;
 use Getopt::Long;
 
 # parse detailed results first
-my ($sm_pathways, $sm_pathways_detail);
+my ($sm_pathways, $sm_pathways_detail, $pathway_file);
 GetOptions
 (
+	"pathway-file=s" => \$pathway_file, # input pathway file for music path-scan
 	"sm-pathways=s" => \$sm_pathways, # result list from genome music path-scan  
 	"sm-pathways-detail=s" => \$sm_pathways_detail # detaild result from genome music path-scan (= second output file)  
 );
+
+# read pathway input file
+my %pathways;
+open(P, "$pathway_file") or die "ERROR: could not open pathway file $pathway_file\n";
+while(<P>)
+{
+	chomp;
+	my ($path_id, $path_name, $class, $gene_line, $diseases, $drugs, $description) = split(/\t/);
+	$pathways{$path_id}{'size'} = scalar(split('\|', $gene_line));
+}
+close(P);
 
 my $content = "";
 open(D,"$sm_pathways_detail") or die "ERROR: could not read file $sm_pathways_detail\n";
@@ -48,15 +60,15 @@ while ($content =~ /Pathway: (.*?)\nName: (.*?)\nClass: (.*?)\nP-value: (.*?)\nF
 	}
 }	
 
+# TABLE: sm_pathways.annotated
+print "Pathway\tName\tClass\tSize\tSamples_Affected\tTotal_Variations\tp-value\tFDR\tNumGenes\tGenes\n";
 open(D,"$sm_pathways") or die "ERROR: could not read file $sm_pathways\n";
-my $header = <D>; chomp($header);
-$header .= "\tNumGenes\tGenes";
-print "$header\n";
+<D>; # skip header
 while(<D>) 
 {
 	chomp;
 	my ($pathway, $name, $class, $num_samples, $num_genes, $pvalue, $fdr) = split(/\t/);
-	print "$pathway\t$name\t$class\t$num_samples\t$num_genes\t$pvalue\t$fdr\t";
+	print "$pathway\t$name\t$class\t",$pathways{$pathway}{'size'},"\t$num_samples\t$num_genes\t$pvalue\t$fdr\t";
 	print scalar(keys(%{$data{$pathway}{genes}})),"\t";
 	print join(",", sort(keys(%{$data{$pathway}{genes}}))),"\n";
 }

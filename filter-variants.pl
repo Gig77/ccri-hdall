@@ -39,6 +39,7 @@ if ($header)
 	print "dp_leu_ref\t";
 	print "dp_leu_var\t";
 	print "freq\t";
+	print "aa_change\t";
 	print "effect\t";
 	print "Polyphen2\t";
 	print "SIFT\t";
@@ -260,7 +261,7 @@ while (my $line = $vcf->next_line())
 	print $x->{ID},"\t";
 	print $x->{REF},"\t";
 	print $x->{ALT}->[0],"\t";
-	my ($gene, $add_genes, $impact, $effect, $affected_exon) = get_impact($x->{INFO}{EFF});
+	my ($gene, $add_genes, $impact, $effect, $affected_exon, $aa_change) = get_impact($x->{INFO}{EFF});
 	print "$gene\t";
 	print "$add_genes\t";
 	print "$impact\t";
@@ -275,6 +276,7 @@ while (my $line = $vcf->next_line())
 	print "$ad_tum_ref\t";
 	print "$ad_tum_alt\t";
 	print "$var_freq\t";
+	print "$aa_change\t";
 	print "EFF=",$x->{INFO}{EFF},"\t";
 	print defined $x->{INFO}{'dbNSFP_Polyphen2_HVAR_pred'} ? $x->{INFO}{'dbNSFP_Polyphen2_HVAR_pred'} : "", "\t"; # Polyphen2 prediction based on HumVar, 'D' ('porobably damaging'), 'P' ('possibly damaging') and 'B' ('benign'). Multiple entries separated by ';' 
 	print defined $x->{INFO}{'dbNSFP_SIFT_score'} ? $x->{INFO}{'dbNSFP_SIFT_score'} : "", "\t"; # SIFT score, If a score is smaller than 0.05 the corresponding NS is predicted as 'D(amaging)'; otherwise it is predicted as 'T(olerated)'
@@ -320,7 +322,7 @@ sub get_impact
 	my $effs = shift or die "ERROR: effect not specified";
 
 	# determine all genes impacted by variants
-	my (%genes_by_impact, %all_genes, $combined_effect, $combined_impact, %affected_exons);
+	my (%genes_by_impact, %all_genes, $combined_effect, $combined_impact, %affected_exons, %aa_changes);
 	foreach my $eff (split(",", $effs))
 	{
 		my ($effect, $rest) = $eff =~ /([^\(]+)\(([^\)]+)\)/
@@ -328,7 +330,9 @@ sub get_impact
 
 		my ($impact, $class, $codon_change, $aa_change, $aa_length, $gene_name, $gene_biotype, 
 			$coding, $transcript, $exon, $genotype_num) = split('\|', $rest)
-				or die "ERROR: could not parse SNP effect: $eff\n"; 
+				or die "ERROR: could not parse SNP effect: $eff\n";
+		 
+		$aa_changes{$aa_change} = 1 if ($aa_change);
 
 		if ($exon and $transcript and $gene_name)
 		{
@@ -449,5 +453,5 @@ sub get_impact
 	}
 
 	return ($gene, $add_genes, $combined_impact, $combined_effect, 
-			@aff_exons > 0 ? join(",", @aff_exons) : "");
+			@aff_exons > 0 ? join(",", @aff_exons) : "", join(";", keys(%aa_changes)));
 }

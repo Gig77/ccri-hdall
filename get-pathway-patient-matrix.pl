@@ -3,22 +3,40 @@ use strict;
 
 use Carp;
 use Getopt::Long;
+use List::Util qw(min max);
 
 # STDIN: list with enriched pathways from DAVID
 # STDOUT: pathway/patient matrix indicating the number of times a pathway is mutated across patients
 
-my ($enriched_pathways_dia, $enriched_pathways_rel, $curated_pathways_file, $gene_patient_matrix);
+my ($enriched_pathways_dia, $enriched_pathways_rel, $curated_pathways_file, $filtered_variants);
 GetOptions
 (
 	"enriched-pathways-dia=s" => \$enriched_pathways_dia,  
 	"enriched-pathways-rel=s" => \$enriched_pathways_rel,  
 	"curated-pathways=s" => \$curated_pathways_file, # manually curated pathways with recurrently mutated genes at relapse 
-	"gene-patient-matrix=s" => \$gene_patient_matrix  
+	"filtered-variants=s" => \$filtered_variants  
 );
 
-my %enriched_pathways;
+# TABLE: filtered-variants
+my %variants;
+open(VAR,"$filtered_variants") or croak "ERROR: could not open file $filtered_variants\n"; 
+<VAR>; # skip header
+while(<VAR>)
+{
+	chomp;
+	my ($patient, $sample, $var_type, $status, $chr, $pos, $dbSNP, $ref, $alt, $gene, $add_genes, $impact, $effect, $exons, 
+		$dp_rem_tot, $dp_rem_ref, $dp_rem_var, $freq_rem, $dp_leu_tot, $dp_leu_ref, $dp_leu_var, $freq_leu, $aa_change, $snpeff,
+		$polyphen2, $sift, $gerp, $siphy, $interpro, $af_1000g) = split("\t");
+
+	next if ($status eq "REJECT"); 
+	next if ($effect =~ /^(DOWNSTREAM|INTERGENIC|INTRON|UPSTREAM|INTERGENIC_CONSERVED|SYNONYMOUS_START|SYNONYMOUS_CODING|SYNONYMOUS_STOP|UTR_5_PRIME|UTR_5_DELETED|START_GAINED|UTR_3_PRIME|UTR_3_DELETED|INTRON_CONSERVED|INTRAGENIC|EXON)$/);
+	
+	$variants{$patient}{$sample}{$gene} = $variants{$patient}{$sample}{$gene} ? max($freq_leu, $variants{$patient}{$sample}{$gene}) : $freq_leu; 
+}
+close(VAR);
 
 # TABLE: sm_pathways.annotated
+my %enriched_pathways;
 open(DIA,"$enriched_pathways_dia") or croak "ERROR: could not open file $enriched_pathways_dia\n"; 
 <DIA>; # skip header
 while(<DIA>)
@@ -91,37 +109,12 @@ while(<CUR>)
 }
 close(CUR);
 
-# TABLE: gene-patient-matrix
-my %gene_patient;
-open(MATRIX, "$gene_patient_matrix") or croak "ERROR: could not open file $gene_patient_matrix\n";
-
-my (@patients_dia, @patients_rel);
-my $header = <MATRIX>;
-chomp($header);
-my @hfields = split("\t", $header);
-print STDERR "Patients diagnosis:";
-for (my $d = 17; $d <= 36; $d ++) { print STDERR " $hfields[$d]"; push(@patients_dia, $hfields[$d]); }
-print STDERR "\nPatients relapse:";
-for (my $d = 45; $d <= 64; $d ++) { print STDERR " $hfields[$d]"; push(@patients_rel, $hfields[$d]); }
-print STDERR "\n";
-
-while(<MATRIX>)
-{
-	chomp;
-	my @fields = split /\t/;
-	my $gene = $fields[0];
-	
-	for (my $d = 17; $d <= 36; $d ++) { $gene_patient{$gene}{$patients_dia[$d-17]} = $fields[$d]; }
-	for (my $d = 45; $d <= 64; $d ++) { $gene_patient{$gene}{$patients_rel[$d-45]} = $fields[$d]; }
-}
-close(MATRIX);
-
 # output header
 # TABLE: pathway-patient-matrix
 print "Pathway\tName\tClass\tSize\tp-dia\tfreq-dia";
-map { print "\t$_" } (@patients_dia);
+map { print "\t$_-dia" } (keys(%variants));
 print "\tp-rel\tfreq-rel";
-map { print "\t$_" } (@patients_rel);
+map { print "\t$_-rel" } (keys(%variants));
 print "\tGenes.dia\tGenes.rel\n";
 
 # music enriched pathways
@@ -137,14 +130,15 @@ foreach my $p (keys(%enriched_pathways))
 		my ($p_value, $genes) = split("\t", $enriched_pathways{$p}{dia});
 		$genes_dia = $genes;
 		my ($line, $tot_num_mut) = ("", 0);
-		foreach my $pd (@patients_dia)
+		foreach my $pd (keys(%variants))
 		{
 			my @mut_genes;
 			foreach my $g (split(",", $genes))
 			{
-				if ($gene_patient{$g}{$pd} and $gene_patient{$g}{$pd} ne " ")
+				$g =~ s/\(\d+\)//;
+				if ($variants{$pd}{'rem_dia'}{$g})
 				{
-					push(@mut_genes, $g);
+					push(@mut_genes, "$g(".$variants{$pd}{'rem_dia'}{$g}.")");
 				}
 			}
 			$line .= "\t".(@mut_genes > 0 ? join(",", @mut_genes) : " ");
@@ -155,7 +149,7 @@ foreach my $p (keys(%enriched_pathways))
 	else
 	{
 		print "1\t0";
-		map { print "\t" } (@patients_dia);
+		map { print "\t" } (keys(%variants));
 	}
 	print "\t";		
 	
@@ -164,14 +158,15 @@ foreach my $p (keys(%enriched_pathways))
 		my ($p_value, $genes) = split("\t", $enriched_pathways{$p}{rel});
 		$genes_rel = $genes;
 		my ($line, $tot_num_mut) = ("", 0);
-		foreach my $pr (@patients_rel)
+		foreach my $pr (keys(%variants))
 		{
 			my @mut_genes;
 			foreach my $g (split(",", $genes))
 			{
-				if ($gene_patient{$g}{$pr} and $gene_patient{$g}{$pr} ne " ")
+				$g =~ s/\(\d+\)//;
+				if ($variants{$pr}{'rem_rel'}{$g})
 				{
-					push(@mut_genes, $g);					
+					push(@mut_genes, "$g(".$variants{$pr}{'rem_rel'}{$g}.")");
 				}
 			}
 			$line .= "\t".(@mut_genes > 0 ? join(",", @mut_genes) : " ");
@@ -182,7 +177,7 @@ foreach my $p (keys(%enriched_pathways))
 	else
 	{
 		print "1\t0";
-		map { print "\t" } (@patients_rel);
+		map { print "\t" } (keys(%variants));
 	}
 	print "\t$genes_dia\t$genes_rel\n";
 }
@@ -202,14 +197,15 @@ foreach my $p (keys(%curated_pathways))
 	my %genes_dia;
 	{
 		my ($line, $tot_num_mut) = ("", 0);
-		foreach my $pd (@patients_dia)
+		foreach my $pd (keys(%variants))
 		{
 			my @mut_genes;
 			foreach my $g (split(",", $genes))
 			{
-				if ($gene_patient{$g}{$pd} and $gene_patient{$g}{$pd} ne " ")
+				$g =~ s/\(\d+\)//;
+				if ($variants{$pd}{'rem_dia'}{$g})
 				{
-					push(@mut_genes, $g);
+					push(@mut_genes, "$g(".$variants{$pd}{'rem_dia'}{$g}.")");
 					$genes_dia{$g} = 1;
 				}
 			}
@@ -223,14 +219,15 @@ foreach my $p (keys(%curated_pathways))
 	my %genes_rel;
 	{
 		my ($line, $tot_num_mut) = ("", 0);
-		foreach my $pr (@patients_rel)
+		foreach my $pr (keys(%variants))
 		{
 			my @mut_genes;
 			foreach my $g (split(",", $genes))
 			{
-				if ($gene_patient{$g}{$pr} and $gene_patient{$g}{$pr} ne " ")
+				$g =~ s/\(\d+\)//;
+				if ($variants{$pr}{'rem_rel'}{$g})
 				{
-					push(@mut_genes, $g);					
+					push(@mut_genes, "$g(".$variants{$pr}{'rem_rel'}{$g}.")");
 					$genes_rel{$g} = 1;
 				}
 			}

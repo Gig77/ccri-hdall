@@ -137,24 +137,25 @@ my $written = 0;
 while(<>)
 {
 	chomp;
-	my ($patient, $sample, $var_type, $chr, $pos, $dbSNP, $ref, $alt, $gene, $add_genes, $impact, $effect, $exons, 
-		$dp_rem_tot, $dp_rem_ref, $dp_rem_var, $dp_leu_tot, $dp_leu_ref, $dp_leu_var, $freq, $aa_change, $snpeff,
+	my ($patient, $sample, $var_type, $status, $chr, $pos, $dbSNP, $ref, $alt, $gene, $add_genes, $impact, $effect, $exons, 
+		$dp_rem_tot, $dp_rem_ref, $dp_rem_var, $freq_rem, $dp_leu_tot, $dp_leu_ref, $dp_leu_var, $freq_leu, $aa_change, $snpeff,
 		$polyphen2, $sift, $gerp, $siphy, $interpro, $af_1000g) = split("\t");
 
 	die "ERROR: $0: snpeff annotation missing from following line:\n$_\n"
 		if (!$snpeff);
 
-	next if ($effect =~ /(DOWNSTREAM|INTERGENIC|INTRON|UPSTREAM|INTERGENIC_CONSERVED)/);
+	next if ($status eq "REJECT"); 
+	next if ($effect =~ /^(DOWNSTREAM|INTERGENIC|INTRON|UPSTREAM|INTERGENIC_CONSERVED)$/);
 	
 	if ($effect !~ /^(SYNONYMOUS_START|SYNONYMOUS_CODING|SYNONYMOUS_STOP|UTR_5_PRIME|UTR_5_DELETED|START_GAINED|UTR_3_PRIME|UTR_3_DELETED|INTRON_CONSERVED|INTRAGENIC|EXON)$/)
 	{
-		$genes{$patient}{$sample}{$gene}{'nonsyn'}{"$chr:$pos:$ref->$alt:$freq:$impact:$effect"} = $genes{$patient}{$sample}{$gene}{'nonsyn'}{"$chr:$pos:$ref->$alt:$freq:$impact:$effect"} 
-			? $genes{$patient}{$sample}{$gene}{'nonsyn'}{"$chr:$pos:$ref->$alt:$freq:$impact:$effect"}.",$snpeff"
+		$genes{$patient}{$sample}{$gene}{'nonsyn'}{"$chr:$pos:$ref->$alt:$freq_leu:$impact:$effect"} = $genes{$patient}{$sample}{$gene}{'nonsyn'}{"$chr:$pos:$ref->$alt:$freq_leu:$impact:$effect"} 
+			? $genes{$patient}{$sample}{$gene}{'nonsyn'}{"$chr:$pos:$ref->$alt:$freq_leu:$impact:$effect"}.",$snpeff"
 			: $snpeff;		
 
 		$genes{$patient}{$sample}{$gene}{'max_af_ns'} = exists $genes{$patient}{$sample}{$gene}{'max_af_ns'} 
-			? $genes{$patient}{$sample}{$gene}{'max_af_ns'} < $freq ? $freq : $genes{$patient}{$sample}{$gene}{'max_af_ns'}
-			: $freq;
+			? $genes{$patient}{$sample}{$gene}{'max_af_ns'} < $freq_leu ? $freq_leu : $genes{$patient}{$sample}{$gene}{'max_af_ns'}
+			: $freq_leu;
 		
 		if ($exons)
 		{
@@ -163,13 +164,13 @@ while(<>)
 		}
 	}
 	
-	$genes{$patient}{$sample}{$gene}{'all'}{"$chr:$pos:$ref->$alt:$freq:$impact:$effect"} = $genes{$patient}{$sample}{$gene}{'all'}{"$chr:$pos:$ref->$alt:$freq:$impact:$effect"} 
-		? $genes{$patient}{$sample}{$gene}{'all'}{"$chr:$pos:$ref->$alt:$freq:$impact:$effect"}.",$snpeff"
+	$genes{$patient}{$sample}{$gene}{'all'}{"$chr:$pos:$ref->$alt:$freq_leu:$impact:$effect"} = $genes{$patient}{$sample}{$gene}{'all'}{"$chr:$pos:$ref->$alt:$freq_leu:$impact:$effect"} 
+		? $genes{$patient}{$sample}{$gene}{'all'}{"$chr:$pos:$ref->$alt:$freq_leu:$impact:$effect"}.",$snpeff"
 		: $snpeff;
 
 	$genes{$patient}{$sample}{$gene}{'max_af'} = exists $genes{$patient}{$sample}{$gene}{'max_af'} 
-		? $genes{$patient}{$sample}{$gene}{'max_af'} < $freq ? $freq : $genes{$patient}{$sample}{$gene}{'max_af'}
-		: $freq;
+		? $genes{$patient}{$sample}{$gene}{'max_af'} < $freq_leu ? $freq_leu : $genes{$patient}{$sample}{$gene}{'max_af'}
+		: $freq_leu;
 
 	$genes{$patient}{$sample}{$gene}{'domains'} = defined $genes{$patient}{$sample}{$gene}{'domains'} 
 		? $genes{$patient}{$sample}{$gene}{'domains'}."|$interpro"

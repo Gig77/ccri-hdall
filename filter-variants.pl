@@ -22,6 +22,7 @@ if ($header)
 	print "patient\t";		
 	print "sample\t";
 	print "var_type\t";
+	print "status\t";
 	print "chr\t";
 	print "pos\t";
 	print "dbSNP\t";
@@ -35,10 +36,11 @@ if ($header)
 	print "dp_rem_tot\t";
 	print "dp_rem_ref\t";
 	print "dp_rem_var\t";
+	print "freq_rem\t";
 	print "dp_leu_tot\t";
 	print "dp_leu_ref\t";
 	print "dp_leu_var\t";
-	print "freq\t";
+	print "freq_leu\t";
 	print "aa_change\t";
 	print "effect\t";
 	print "Polyphen2\t";
@@ -171,13 +173,16 @@ while (my $line = $vcf->next_line())
 		next;
 	}		
 
-	if ($x->{FILTER}->[0] eq "REJECT") # quality filter
+	my $status = $x->{FILTER}->[0];
+	$status = "MISSED" if ($patient eq "C" and $x->{CHROM} eq "chr16" and $x->{POS} eq "3789627"); # keep mutation CREBBP mutation falsely rejected by MuTect
+	
+	if ($status eq "REJECT")
 	{
 		$filtered_qual ++;
 		next;
 	}
 
-	my ($dp_tum, $dp_rem, $var_freq, $ad_tum_ref, $ad_tum_alt, $ad_rem_ref, $ad_rem_alt);
+	my ($dp_tum, $dp_rem, $freq_tum, $freq_rem, $ad_tum_ref, $ad_tum_alt, $ad_rem_ref, $ad_rem_alt);
 	
 #	print Dumper($x);
 #	exit;		
@@ -190,9 +195,12 @@ while (my $line = $vcf->next_line())
 		
 		##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Approximate read depth (reads with MQ=255 or with bad mates are filtered)">
 		($dp_tum, $dp_rem) = ($x->{gtypes}{$cmp_sample}{DP}, $x->{gtypes}{$rem_sample}{DP});
-		
+
 		##FORMAT=<ID=FA,Number=A,Type=Float,Description="Allele fraction of the alternate allele with regard to reference">
-		$var_freq = $x->{gtypes}{$cmp_sample}{FA};
+		$freq_tum = $x->{gtypes}{$cmp_sample}{FA};
+		$freq_rem = $x->{gtypes}{$rem_sample}{FA};
+		
+		#next if ($status eq "REJECT" and ($dp_tum <= 50 or $dp_rem <= 50 or $freq_tum < 0.2 or $freq_rem > 0.05));	
 	}
 	elsif ($var_type eq 'indel') # indel
 	{
@@ -206,7 +214,8 @@ while (my $line = $vcf->next_line())
 		($ad_tum_alt, $ad_tum_any_indel) = split(",", $x->{INFO}{T_AC}); 		
 		($ad_rem_alt, $ad_rem_any_indel) = split(",", $x->{INFO}{N_AC});
 		($ad_tum_ref, $ad_rem_ref) = ($dp_tum - $ad_tum_any_indel, $dp_rem - $ad_rem_any_indel); 		
-		$var_freq = $ad_tum_alt / $dp_tum;
+		$freq_tum = sprintf("%.3f", $ad_tum_alt / $dp_tum);
+		$freq_rem = sprintf("%.3f", $ad_rem_alt / $dp_rem);
 
 		# insufficient read depth
 		if ($dp_tum < 10)
@@ -256,6 +265,7 @@ while (my $line = $vcf->next_line())
 	print "$patient\t";		
 	print "$cmp_type\t";
 	print "$var_type\t";
+	print "$status\t";
 	print $x->{CHROM},"\t";
 	print $x->{POS},"\t";
 	print $x->{ID},"\t";
@@ -272,10 +282,11 @@ while (my $line = $vcf->next_line())
 	print "$dp_rem\t";
 	print "$ad_rem_ref\t";
 	print "$ad_rem_alt\t";
+	print "$freq_rem\t";
 	print "$dp_tum\t";
 	print "$ad_tum_ref\t";
 	print "$ad_tum_alt\t";
-	print "$var_freq\t";
+	print "$freq_tum\t";
 	print "$aa_change\t";
 	print "EFF=",$x->{INFO}{EFF},"\t";
 	print defined $x->{INFO}{'dbNSFP_Polyphen2_HVAR_pred'} ? $x->{INFO}{'dbNSFP_Polyphen2_HVAR_pred'} : "", "\t"; # Polyphen2 prediction based on HumVar, 'D' ('porobably damaging'), 'P' ('possibly damaging') and 'B' ('benign'). Multiple entries separated by ';' 
@@ -309,7 +320,7 @@ if ($debug)
 	{
 		INFO("    $k: ", $qual_num{$k});
 	}
-	INFO("  Excluded due to quality: $filtered_qual");
+	INFO("  Rejected by MuTect: $filtered_qual");
 	INFO("  Excluded due to equal genotype: $filtered_gt");
 	INFO("  Excluded due to missing alternative allele: $filtered_alt");
 	INFO("  Excluded germline variants: $filtered_germ");

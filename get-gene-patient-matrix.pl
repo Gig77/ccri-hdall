@@ -134,6 +134,12 @@ foreach my $g (keys(%{$case_freq{'rem_dia'}}))
 				$mut_total{'cons'}{$g} = $mut_total{'cons'}{$g} ? $mut_total{'cons'}{$g} + 1 : 1;
 				$case_freq{'cons'}{$g} = $case_freq{'cons'}{$g} ? $case_freq{'cons'}{$g} + 1 : 1
 					if (!$counted);
+					
+				if ($freq_rel >= 40 and $freq_dia <= 20)
+				{
+					$case_freq{'raise'}{$g} = $case_freq{'raise'}{$g} ? $case_freq{'raise'}{$g} + 1 : 1; 
+				}
+				
 				$counted = 1;
 			}
 #			print "$g\t$p\t$v\n";
@@ -156,6 +162,7 @@ print "freq-rel\ttot-rel\tfreq-rel-ns\ttot-rel-ns\tmax-af-rel\tmax-af-rel-ns\tim
 map { print "$_-rel\t" } keys(%patients);
 
 print "freq-cons\t";
+print "freq-cons-raise\t";
 print "tot-cons";
 map { print "\t$_-cons" } keys(%patients);
 
@@ -222,6 +229,7 @@ foreach my $g (@sorted)
 	}
 
 	print $case_freq{'cons'}{$g} ? $case_freq{'cons'}{$g} : "0", "\t";
+	print $case_freq{'raise'}{$g} ? $case_freq{'raise'}{$g} : "0", "\t";
 	print $mut_total{'cons'}{$g} ? $mut_total{'cons'}{$g} : "0";
 	foreach my $p (keys(%patients))
 	{
@@ -240,8 +248,8 @@ foreach my $g (@sorted)
 		}
 	}
 	
-	print "\t", $imp_domains{'rem_dia'}{$g} ? join("|", keys($imp_domains{'rem_dia'}{$g})) : "";
-	print "\t", $imp_domains{'rem_rel'}{$g} ? join("|", keys($imp_domains{'rem_rel'}{$g})) : "";
+	print "\t", $imp_domains{'rem_dia'}{$g} ? join("|", keys(%{$imp_domains{'rem_dia'}{$g}})) : "";
+	print "\t", $imp_domains{'rem_rel'}{$g} ? join("|", keys(%{$imp_domains{'rem_rel'}{$g}})) : "";
 	
 	print "\n";
 }

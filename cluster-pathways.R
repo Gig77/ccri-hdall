@@ -42,8 +42,8 @@ for (i in 1:nrow(pairs))
 	
 #	g1 <- strsplit(t$Genes.rel[index1], ",")[[1]]
 #	g2 <- strsplit(t$Genes.rel[index2], ",")[[1]]
-	g1 <- union(strsplit(t$Genes.dia[index1], ",")[[1]], strsplit(t$Genes.rel[index1], ",")[[1]])
-	g2 <- union(strsplit(t$Genes.dia[index2], ",")[[1]], strsplit(t$Genes.rel[index2], ",")[[1]])
+	g1 <- union(strsplit(gsub("\\(\\d+\\)", "", t$Genes.dia[index1], perl=T), ",")[[1]], strsplit(gsub("\\(\\d+\\)", "", t$Genes.rel[index1], perl=T), ",")[[1]])
+	g2 <- union(strsplit(gsub("\\(\\d+\\)", "", t$Genes.dia[index2], perl=T), ",")[[1]], strsplit(gsub("\\(\\d+\\)", "", t$Genes.rel[index2], perl=T), ",")[[1]])
 	
 	j <- jacc(g1[!is.na(g1)], g2[!is.na(g2)])
 #	j <- jacc(g1, g2)

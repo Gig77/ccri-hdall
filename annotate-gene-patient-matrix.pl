@@ -8,7 +8,7 @@ use Carp;
 use Getopt::Long;
 
 # parse detailed results first
-my ($gene_patient_matrix, $smg_dia, $smg_rel, $smp_dia_file, $smp_rel_file, $cnv, $pathway_group_file);
+my ($gene_patient_matrix, $smg_dia, $smg_rel, $smp_dia_file, $smp_rel_file, $cnv, $gene_pathway_matrix);
 GetOptions
 (
 	"gene-patient-matrix=s" => \$gene_patient_matrix,
@@ -17,10 +17,10 @@ GetOptions
 	"smp-dia=s" => \$smp_dia_file,  
 	"smp-rel=s" => \$smp_rel_file,
 	"cnv=s" => \$cnv,
-	"pathway-groups=s" => \$pathway_group_file   
+	"gene-pathway-matrix=s" => \$gene_pathway_matrix # clustered gene-pathway-matrix to determine order of genes and pathways   
 );
 
-croak "ERROR: Pathway group file not specified" if (!$pathway_group_file);
+croak "ERROR: Pathway group file not specified" if (!$gene_pathway_matrix);
 
 # read significantly mutated genes at diagnosis
 my %smg_dia_pvalue;
@@ -58,13 +58,16 @@ while(<D>)
 {
 	chomp;
 	my ($id, $name, $class, $size, $samples_affected, $total_variations, $p, $fdr, $num_genes, $genes) = split(/\t/);
-	next if ($class ne "BBID" and $class ne "BIOCARTA" and $class ne "KEGG_PATHWAY" and $class ne "OMIM_DISEASE");
-	$smp_dia{$id."|".$name} = $p;
-	next if ($p > 0.05);
+	next if ($size > 200);
+#	next if ($class ne "NCI");
+	next if ($p > 1e-10);
+
+	$smp_dia{$class."|".$name} = $p;
 	foreach my $g (split(",", $genes))
 	{
+		$g =~ s/\(\d+\)//;
 		$smp_dia_genes{$g}{'pvalue'} = $p if (!exists $smp_dia_genes{$g}{'pvalue'} or $smp_dia_genes{$g}{'pvalue'} > $p);
-		$smp_dia_genes{$g}{$id."|".$name} = $p;
+		$smp_dia_genes{$g}{$class."|".$name} = $p;
 	}
 }
 close(D);
@@ -80,13 +83,16 @@ while(<D>)
 {
 	chomp;
 	my ($id, $name, $class, $size, $samples_affected, $total_variations, $p, $fdr, $num_genes, $genes) = split(/\t/);
-	next if ($class ne "BBID" and $class ne "BIOCARTA" and $class ne "KEGG_PATHWAY" and $class ne "OMIM_DISEASE");
-	$smp_rel{$id."|".$name} = $p;
-	next if ($p > 0.05);
+	next if ($size > 200);
+#	next if ($class ne "NCI");
+	next if ($p > 1e-10);
+
+	$smp_rel{$class."|".$name} = $p;
 	foreach my $g (split(",", $genes))
 	{
+		$g =~ s/\(\d+\)//;
 		$smp_rel_genes{$g}{'pvalue'} = $p if (!exists $smp_rel_genes{$g}{'pvalue'} or $smp_rel_genes{$g}{'pvalue'} > $p);
-		$smp_rel_genes{$g}{$id."|".$name} = $p;
+		$smp_rel_genes{$g}{$class."|".$name} = $p;
 	}
 }
 close(D);
@@ -109,26 +115,31 @@ while(<D>)
 close(D);
 INFO("$cnv_read CNVs read from file $cnv");
 
-# read pathway groups the mutated genes belong to
-my %pathway_groups;
-my $pg_read = 0;
-open(PG,"$pathway_group_file") or croak "ERROR: could not open file $pathway_group_file\n"; 
-<PG>; # skip header
+# read gene/pathway matrix
+my %gpm;
+my %funct_gene_order;
+my $lines_read = 0;
+open(PG, "$gene_pathway_matrix") or croak "ERROR: could not open file $gene_pathway_matrix\n"; 
+my $hline = <PG>; 
+chomp($hline);
+my @pw_names = split("\t", $hline);
+shift(@pw_names);
+for (my $i = 0; $i < @pw_names; $i ++) { my ($pwid, $pwname, $pwcategory) = split('\|', $pw_names[$i]); $pw_names[$i] = "$pwcategory|$pwname"; }
 while(<PG>)
 {
 	chomp;
-	my ($gene, $group1, $group2, $group3, $category, $comment, $source) = split /\t/;
-
-	croak "ERROR: coud not parse following line:\n$_\n" if (!$group1 or !$gene);
-
-	$pathway_groups{$gene} = $group1;
-	$pathway_groups{$gene} .= ";$group2" if ($group2);
-	$pathway_groups{$gene} .= ";$group3" if ($group3);
+	my ($gene, @cells) = split /\t/;
+	croak "ERROR: coud not parse following line:\n$_\n" if (@cells < @pw_names);
 	
-	$pg_read ++;
+	$funct_gene_order{$gene} = $lines_read+1;
+	for (my $i = 0; $i < @cells; $i ++)
+	{
+		$gpm{$gene}{$pw_names[$i]} = 1 if ($cells[$i]);
+	}
+	$lines_read ++;
 }
 close(PG);
-INFO("$pg_read pathway assignments read from file $pathway_group_file");
+INFO("$lines_read lines read from file $gene_pathway_matrix");
 
 # TABLE: gene-patient-matrix
 open(M,"$gene_patient_matrix") or croak "ERROR: could not read file $gene_patient_matrix\n";
@@ -138,7 +149,7 @@ chomp($header);
 my @hfields = split("\t", $header);
 for (my $d = 17; $d <= 36; $d ++) { push(@patients_dia, $hfields[$d]); }
 for (my $d = 45; $d <= 64; $d ++) { push(@patients_rel, $hfields[$d]); }
-for (my $d = 67; $d <= 86; $d ++) { push(@patients_cons, $hfields[$d]); }
+for (my $d = 68; $d <= 87; $d ++) { push(@patients_cons, $hfields[$d]); }
 
 while(<M>)
 {
@@ -177,31 +188,35 @@ while(<M>)
 	for (my $d = 45; $d <= 64; $d ++) { $gene_info{$g}{$patients_rel[$d-45]} = $fields[$d]; }
 
 	$gene_info{$g}{'freq-cons'} = $fields[65];
-	$gene_info{$g}{'tot-cons'} = $fields[66];
-	for (my $d = 67; $d <= 86; $d ++) { $gene_info{$g}{$patients_cons[$d-67]} = $fields[$d]; }
+	$gene_info{$g}{'freq-cons-raise'} = $fields[66];
+	$gene_info{$g}{'tot-cons'} = $fields[67];
+	for (my $d = 68; $d <= 87; $d ++) { $gene_info{$g}{$patients_cons[$d-68]} = $fields[$d]; }
 	
-	$gene_info{$g}{'imp-domains-dia'} = $fields[87];
-	$gene_info{$g}{'imp-domains-rel'} = $fields[88];
+	$gene_info{$g}{'imp-domains-dia'} = $fields[88];
+	$gene_info{$g}{'imp-domains-rel'} = $fields[89];
 }
 close(M);
 INFO(scalar(keys(%gene_info))." genes read from file $gene_patient_matrix");
 
 # output header
-print "gene\tpathway\tdescr\tchr\tstart\tend\texons\ttr_len\tcds_len\tcosmic\t";
+print "gene\tdescr\tchr\tstart\tend\texons\ttr_len\tcds_len\tcosmic\t";
 print "freq-dia\ttot-dia\tfreq-dia-ns\ttot-dia-ns\tmax-af-dia\tmax-af-dia-ns\timp-ex-dia\timp-ex-dia-ns\tp-gene-dia\tp-pw-dia";
 map { print "\t$_" } (@patients_dia);
 print "\tfreq-rel\ttot-rel\tfreq-rel-ns\ttot-rel-ns\tmax-af-rel\tmax-af-rel-ns\timp-ex-rel\timp-ex-rel-ns\tp-gene-rel\tp-pw-rel";
 map { print "\t$_" } (@patients_rel);
-print "\tfreq-cons\ttot-cons";
+print "\tfreq-cons\tfreq-cons-raise\ttot-cons";
 map { print "\t$_" } (@patients_cons);
 print "\timp-domains-dia\timp-domains-rel";
-print "\tenr-pw-dia\tenr-pw-rel\tenr-pw-rel-spec";
+print "\torder";
+
+my (@pw_names_dia, @pw_names_rel);
+map { if ($smp_dia{$_}) { print "\t$_-dia"; push(@pw_names_dia, $_); } } (@pw_names);
+map { if ($smp_rel{$_}) { print "\t$_-rel"; push(@pw_names_rel, $_); } } (@pw_names);
 print "\n";
 
 foreach my $g (keys(%gene_info))
 {
 	print "$g";
-	print "\t".(defined $pathway_groups{$g} ? $pathway_groups{$g} : "");
 	print "\t",$gene_info{$g}{'desc'},"\t",$gene_info{$g}{'chr'},"\t",$gene_info{$g}{'start'},"\t",$gene_info{$g}{'end'},"\t",$gene_info{$g}{'exons'},"\t",$gene_info{$g}{'tr_len'},"\t",$gene_info{$g}{'cds_len'},"\t",$gene_info{$g}{'cosmic'};
 
 	print "\t".(defined $gene_info{$g}{'freq-dia'} ? $gene_info{$g}{'freq-dia'} : "");
@@ -254,26 +269,32 @@ foreach my $g (keys(%gene_info))
 	} 
 
 	print "\t".(defined $gene_info{$g}{'freq-cons'} ? $gene_info{$g}{'freq-cons'} : "");
+	print "\t".(defined $gene_info{$g}{'freq-cons-raise'} ? $gene_info{$g}{'freq-cons-raise'} : "");
 	print "\t".(defined $gene_info{$g}{'tot-cons'} ? $gene_info{$g}{'tot-cons'} : "");
 	map { print "\t".(defined $gene_info{$g}{$_} ? $gene_info{$g}{$_} : "") } (@patients_cons);
 
 	print "\t".(defined $gene_info{$g}{'imp-domains-dia'} ? $gene_info{$g}{'imp-domains-dia'} : "");
 	print "\t".(defined $gene_info{$g}{'imp-domains-rel'} ? $gene_info{$g}{'imp-domains-rel'} : "");
-	
-	print "\t";
-	my @enriched_pw_dia;
-	map { push(@enriched_pw_dia, $_."(".sprintf("%.1e", $smp_dia_genes{$g}{$_}).")") if ($_ ne 'pvalue') } sort {$smp_dia_genes{$g}{$a} <=> $smp_dia_genes{$g}{$b}} keys(%{$smp_dia_genes{$g}});
-	print join(",", @enriched_pw_dia);
 
-	print "\t";
-	my @enriched_pw_rel;
-	map { push(@enriched_pw_rel, $_."(".sprintf("%.1e", $smp_rel_genes{$g}{$_}).")") if ($_ ne 'pvalue') } sort {$smp_rel_genes{$g}{$a} <=> $smp_rel_genes{$g}{$b}} keys(%{$smp_rel_genes{$g}});
-	print join(",", @enriched_pw_rel);
+	print "\t".(defined $funct_gene_order{$g} ? $funct_gene_order{$g} : "");
 
-	print "\t";
-	my @enriched_pw_rel_spec;
-	map { push(@enriched_pw_rel_spec, $_."(".sprintf("%.1e", $smp_rel{$_}).")") if ($_ ne 'pvalue' and $smp_rel{$_} < 0.01 and (!defined $smp_dia{$_} or $smp_dia{$_} > 0.1)) } sort {$smp_rel_genes{$g}{$a} <=> $smp_rel_genes{$g}{$b}} keys(%{$smp_rel_genes{$g}});
-	print join(",", @enriched_pw_rel_spec);
+	map { print "\t", defined $smp_dia_genes{$g}{$_} ? "x" : "" } (@pw_names_dia);
+	map { print "\t", defined $smp_rel_genes{$g}{$_} ? "x" : "" } (@pw_names_rel);
+		
+#	print "\t";
+#	my @enriched_pw_dia;
+#	map { push(@enriched_pw_dia, $_."(".sprintf("%.1e", $smp_dia_genes{$g}{$_}).")") if ($_ ne 'pvalue') } sort {$smp_dia_genes{$g}{$a} <=> $smp_dia_genes{$g}{$b}} keys(%{$smp_dia_genes{$g}});
+#	print join(",", @enriched_pw_dia);
+#
+#	print "\t";
+#	my @enriched_pw_rel;
+#	map { push(@enriched_pw_rel, $_."(".sprintf("%.1e", $smp_rel_genes{$g}{$_}).")") if ($_ ne 'pvalue') } sort {$smp_rel_genes{$g}{$a} <=> $smp_rel_genes{$g}{$b}} keys(%{$smp_rel_genes{$g}});
+#	print join(",", @enriched_pw_rel);
+
+#	print "\t";
+#	my @enriched_pw_rel_spec;
+#	map { push(@enriched_pw_rel_spec, $_."(".sprintf("%.1e", $smp_rel{$_}).")") if ($_ ne 'pvalue' and $smp_rel{$_} < 0.01 and (!defined $smp_dia{$_} or $smp_dia{$_} > 0.1)) } sort {$smp_rel_genes{$g}{$a} <=> $smp_rel_genes{$g}{$b}} keys(%{$smp_rel_genes{$g}});
+#	print join(",", @enriched_pw_rel_spec);
 	 
 	print "\n";
 }

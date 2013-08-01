@@ -134,10 +134,13 @@ $vcf->parse_header();
 my (@samples) = $vcf->get_samples();
 
 while (my $x = $vcf->next_data_hash())
-{
+{	
 	my $chr = $x->{CHROM};
     $chr =~ s/^chr//;
 	my $pos = $x->{POS};
+
+	next if ($x->{FILTER}->[0] eq "REJECT");
+
 	my $ref_allele = $x->{REF};
 	my $alt_allele_1 = $ref_allele; # lets assume for now that all variants are heterozygous
 	my $alt_allele_2 = $x->{ALT}->[0]; # @{$x->{ALT}} > 1 ? $x->{ALT}->[1] : '';

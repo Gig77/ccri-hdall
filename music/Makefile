@@ -54,12 +54,12 @@ maf/%.maf: ../filtered_variants/%.snp.filtered.vcf ../filtered_variants/%.indel.
 		--sample $* \
 		--music-roi ucsc-genes.hg19.roi.gz \
 		--mapping-entrez ~/hdall/results/gene-id-mapping.biomart-0.7.tsv \
-		2>&1 1>$@.part | grep -vP '(Leading or trailing space|variant.Format)' | tee -a make.log
+		2>&1 1>$@.part | grep -vP '(Leading or trailing space|variant.Format|Domain annotations come from)' | tee -a make.log
 	cat ../filtered_variants/$*.indel.filtered.vcf | perl ~/hdall/scripts/vcf2maf.pl \
 		--sample $* \
 		--music-roi ucsc-genes.hg19.roi.gz \
 		--mapping-entrez ~/hdall/results/gene-id-mapping.biomart-0.7.tsv \
-		2>&1 1>>$@.part | grep -vP '(Leading or trailing space|variant.Format)' | tee -a make.log
+		2>&1 1>>$@.part | grep -vP '(Leading or trailing space|variant.Format|Domain annotations come from)' | tee -a make.log
 	mv $@.part $@
 
 maf-high-af/%.maf: ../filtered_variants/%.snp.filtered.vcf ../filtered_variants/%.indel.filtered.vcf ucsc-genes.hg19.roi ~/hdall/results/gene-id-mapping.biomart-0.7.tsv ~/hdall/scripts/vcf2maf.pl
@@ -69,13 +69,13 @@ maf-high-af/%.maf: ../filtered_variants/%.snp.filtered.vcf ../filtered_variants/
 		--music-roi ucsc-genes.hg19.roi.gz \
 		--mapping-entrez ~/hdall/results/gene-id-mapping.biomart-0.7.tsv \
 		--min-af 0.20 \
-		2>&1 1>$@.part | grep -vP '(Leading or trailing space|variant.Format)' | tee -a make.log
+		2>&1 1>$@.part | grep -vP '(Leading or trailing space|variant.Format|Domain annotations come from)' | tee -a make.log
 	cat ../filtered_variants/$*.indel.filtered.vcf | perl ~/hdall/scripts/vcf2maf.pl \
 		--sample $* \
 		--music-roi ucsc-genes.hg19.roi.gz \
 		--mapping-entrez ~/hdall/results/gene-id-mapping.biomart-0.7.tsv \
 		--min-af 0.20 \
-		2>&1 1>>$@.part | grep -vP '(Leading or trailing space|variant.Format)' | tee -a make.log
+		2>&1 1>>$@.part | grep -vP '(Leading or trailing space|variant.Format|Domain annotations come from)' | tee -a make.log
 	mv $@.part $@
 		
 #-----------------------------------------------------------------------
@@ -249,15 +249,26 @@ pathscan/pathways-nci.tsv: ~/hdall/data/nci-pathway/uniprot.tab ~/hdall/scripts/
 	cat ~/hdall/data/nci-pathway/uniprot.tab | perl ~/hdall/scripts/nci2pathscan.pl \
 		2>&1 1>>pathscan/pathways-nci.tsv.part | tee -a make.log
 	mv pathscan/pathways-nci.tsv.part pathscan/pathways-nci.tsv
-	
-pathscan/pathways-all.tsv: pathscan/pathways-david-complete.tsv pathscan/gene-sets.mutsigdb4.0.tsv pathscan/pathways-nci.tsv
+
+pathscan/pathways-wikipathways.tsv: ~/hdall/data/wikipathways/wikipathways_Homo_sapiens_Curation-AnalysisCollection__txt.zip
+	perl ~/hdall/scripts/wikipathways2pathscan.pl \
+		--wiki-dir ~/hdall/data/wikipathways/ \
+		2>&1 1>>pathscan/pathways-wikipathways.tsv.part | tee -a make.log
+	mv pathscan/pathways-wikipathways.tsv.part pathscan/pathways-wikipathways.tsv
+		
+pathscan/pathways-all.tsv: pathscan/pathways-david-complete.tsv pathscan/gene-sets.mutsigdb4.0.tsv pathscan/pathways-nci.tsv pathscan/pathways-wikipathways.tsv
 	cp pathscan/pathways-david-complete.tsv pathscan/pathways-all.tsv.part
-	cat pathscan/gene-sets.mutsigdb4.0.tsv pathscan/pathways-nci.tsv pathscan/pathways-TCGA-AML-2013.tsv >> pathscan/pathways-all.tsv.part
+	cat pathscan/gene-sets.mutsigdb4.0.tsv pathscan/pathways-nci.tsv pathscan/pathways-manual.tsv pathscan/pathways-wikipathways.tsv >> pathscan/pathways-all.tsv.part
 	mv pathscan/pathways-all.tsv.part pathscan/pathways-all.tsv
 
 pathscan/pathways-all.sizefiltered.tsv: pathscan/pathways-all.tsv
 	cat pathscan/pathways-all.tsv | perl -ne '@f = split /\t/; @g = split(/\|/, $$f[3]); print $$_ if (@g > 1 and @g < 400);' > pathscan/pathways-all.sizefiltered.tsv.part
 	mv pathscan/pathways-all.sizefiltered.tsv.part pathscan/pathways-all.sizefiltered.tsv
+
+pathscan/pathways-kegg-biocarta-bbid-reactome.tsv: pathscan/pathways-david-complete.tsv pathscan/gene-sets.mutsigdb4.0.tsv
+	grep -P "(KEGG_PATHWAY|BIOCARTA|BBID)" pathscan/pathways-david-complete.tsv > pathscan/pathways-kegg-biocarta-bbid-reactome.tsv
+	grep "REACTOME_" pathscan/gene-sets.mutsigdb4.0.tsv >> pathscan/pathways-kegg-biocarta-bbid-reactome.tsv
+
 
 # iteration 1: exclude likely false positives from Lawrence et al. (2013)
 #-------------------------------------------------------------------------
@@ -277,6 +288,7 @@ pathscan/sm_pathways.dia.annotated.tsv: pathscan/sm_pathways.dia.tsv ~/hdall/scr
 		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
 		--sm-pathways pathscan/sm_pathways.dia.tsv \
 		--sm-pathways-detail pathscan/sm_pathways.dia.tsv_detailed \
+		--gene-pathway-matrix pathscan/sm_pathways.dia.matrix.tsv \
 		> pathscan/sm_pathways.dia.annotated.tsv.part
 	mv pathscan/sm_pathways.dia.annotated.tsv.part pathscan/sm_pathways.dia.annotated.tsv
 
@@ -296,6 +308,7 @@ pathscan/sm_pathways.rel.annotated.tsv: pathscan/sm_pathways.rel.tsv ~/hdall/scr
 		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
 		--sm-pathways pathscan/sm_pathways.rel.tsv \
 		--sm-pathways-detail pathscan/sm_pathways.rel.tsv_detailed \
+		--gene-pathway-matrix pathscan/sm_pathways.rel.matrix.tsv \
 		> pathscan/sm_pathways.rel.annotated.tsv.part
 	mv pathscan/sm_pathways.rel.annotated.tsv.part pathscan/sm_pathways.rel.annotated.tsv
 
@@ -309,12 +322,12 @@ pathscan/sm_pathways.tsv: pathscan/sm_pathways.dia.annotated.tsv pathscan/sm_pat
 	mv pathscan/sm_pathways.clustered.tsv.part pathscan/sm_pathways.tsv
 	rm pathscan/sm_pathways.tsv.part
 
-../pathway-patient-matrix.clustered.tsv: pathscan/sm_pathways.dia.annotated.tsv pathscan/sm_pathways.rel.annotated.tsv ../gene-patient-matrix.tsv ../kamilla/gene-pathway-assignment.tsv ~/hdall/scripts/get-pathway-patient-matrix.pl ~/hdall/scripts/cluster-pathways.R
+../pathway-patient-matrix.clustered.tsv: pathscan/sm_pathways.dia.annotated.tsv pathscan/sm_pathways.rel.annotated.tsv ../filtered-variants.tsv ../kamilla/gene-pathway-assignment.tsv ~/hdall/scripts/get-pathway-patient-matrix.pl ~/hdall/scripts/cluster-pathways.R
 	perl ~/hdall/scripts/get-pathway-patient-matrix.pl \
 		--enriched-pathways-dia pathscan/sm_pathways.dia.annotated.tsv \
 		--enriched-pathways-rel pathscan/sm_pathways.rel.annotated.tsv \
 		--curated-pathways ../kamilla/gene-pathway-assignment.tsv \
-		--gene-patient-matrix ../gene-patient-matrix.tsv \
+		--filtered-variants ../filtered-variants.tsv \
 		2>&1 1>../pathway-patient-matrix.tsv.part | tee -a make.log
 	mv ../pathway-patient-matrix.tsv.part ../pathway-patient-matrix.tsv
 	# TABLE: pathway-patient-matrix
@@ -341,6 +354,7 @@ pathscan/sm_pathways.dia.iter2.annotated.tsv: pathscan/sm_pathways.dia.iter2.tsv
 		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
 		--sm-pathways pathscan/sm_pathways.dia.iter2.tsv \
 		--sm-pathways-detail pathscan/sm_pathways.dia.iter2.tsv_detailed \
+		--gene-pathway-matrix pathscan/sm_pathways.dia.iter2.matrix.tsv \
 		> pathscan/sm_pathways.dia.iter2.annotated.tsv.part
 	mv pathscan/sm_pathways.dia.iter2.annotated.tsv.part pathscan/sm_pathways.dia.iter2.annotated.tsv
 
@@ -360,6 +374,7 @@ pathscan/sm_pathways.rel.iter2.annotated.tsv: pathscan/sm_pathways.rel.iter2.tsv
 		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
 		--sm-pathways pathscan/sm_pathways.rel.iter2.tsv \
 		--sm-pathways-detail pathscan/sm_pathways.rel.iter2.tsv_detailed \
+		--gene-pathway-matrix pathscan/sm_pathways.rel.iter2.matrix.tsv \
 		> pathscan/sm_pathways.rel.iter2.annotated.tsv.part
 	mv pathscan/sm_pathways.rel.iter2.annotated.tsv.part pathscan/sm_pathways.rel.iter2.annotated.tsv
 
@@ -373,12 +388,12 @@ pathscan/sm_pathways.iter2.tsv: pathscan/sm_pathways.dia.iter2.annotated.tsv pat
 	mv pathscan/sm_pathways.iter2.clustered.tsv.part pathscan/sm_pathways.iter2.tsv
 	rm pathscan/sm_pathways.iter2.tsv.part
 
-../pathway-patient-matrix.iter2.clustered.tsv: pathscan/sm_pathways.dia.iter2.annotated.tsv pathscan/sm_pathways.rel.iter2.annotated.tsv pathscan/sm_pathways.iter2.tsv ../gene-patient-matrix.tsv ../kamilla/gene-pathway-assignment.tsv ~/hdall/scripts/get-pathway-patient-matrix.pl ~/hdall/scripts/cluster-pathways.R
+../pathway-patient-matrix.iter2.clustered.tsv: pathscan/sm_pathways.dia.iter2.annotated.tsv pathscan/sm_pathways.rel.iter2.annotated.tsv pathscan/sm_pathways.iter2.tsv ../filtered-variants.tsv ../kamilla/gene-pathway-assignment.tsv ~/hdall/scripts/get-pathway-patient-matrix.pl ~/hdall/scripts/cluster-pathways.R
 	perl ~/hdall/scripts/get-pathway-patient-matrix.pl \
 		--enriched-pathways-dia pathscan/sm_pathways.dia.iter2.annotated.tsv \
 		--enriched-pathways-rel pathscan/sm_pathways.rel.iter2.annotated.tsv \
 		--curated-pathways ../kamilla/gene-pathway-assignment.tsv \
-		--gene-patient-matrix ../gene-patient-matrix.tsv \
+		--filtered-variants ../filtered-variants.tsv \
 		2>&1 1>../pathway-patient-matrix.iter2.tsv.part | tee -a make.log
 	mv ../pathway-patient-matrix.iter2.tsv.part ../pathway-patient-matrix.iter2.tsv
 	# TABLE: pathway-patient-matrix
@@ -432,7 +447,15 @@ dia/mutation-relation.tsv: ../gene-patient-matrix.tsv dia/wig-list.tsv dia/rem_d
 #--- COMBINE ALL RESULTS INTO FINAL LISTS
 #-----------------------------------------------------------------------
 
-../gene-patient-matrix.annotated.tsv: ../gene-patient-matrix.tsv dia/smg.tsv rel/smg.tsv pathscan/sm_pathways.dia.annotated.tsv pathscan/sm_pathways.rel.annotated.tsv ../cnv/impacted-genes-list.cnv.tsv ../kamilla/gene-pathway-assignment.tsv ~/hdall/scripts/annotate-gene-patient-matrix.pl
+pathscan/gene-pathway-matrix.clustered.tsv: pathscan/pathways-nci.tsv pathscan/pathways-kegg-biocarta-bbid-reactome.tsv pathscan/pathways-wikipathways.tsv ~/hdall/scripts/get-gene-pathway-matrix.pl ~/hdall/scripts/cluster-gene-pathway-matrix.R 
+	cat pathscan/pathways-nci.tsv pathscan/pathways-kegg-biocarta-bbid-reactome.tsv pathscan/pathways-wikipathways.tsv \
+		| perl ~/hdall/scripts/get-gene-pathway-matrix.pl --pathway-file - > pathscan/gene-pathway-matrix.tsv.part
+	mv pathscan/gene-pathway-matrix.tsv.part pathscan/gene-pathway-matrix.tsv
+	R --no-save --quiet --slave -f ~/hdall/scripts/cluster-gene-pathway-matrix.R \
+		--args pathscan/gene-pathway-matrix.tsv pathscan/gene-pathway-matrix.clustered.tsv \
+		2>&1 | tee -a make.log
+
+../gene-patient-matrix.annotated.tsv: ../gene-patient-matrix.tsv dia/smg.tsv rel/smg.tsv pathscan/sm_pathways.dia.annotated.tsv pathscan/sm_pathways.rel.annotated.tsv ../cnv/impacted-genes-list.cnv.tsv pathscan/gene-pathway-matrix.clustered.tsv ~/hdall/scripts/annotate-gene-patient-matrix.pl
 	perl ~/hdall/scripts/annotate-gene-patient-matrix.pl \
 		--gene-patient-matrix ../gene-patient-matrix.tsv \
 		--smg-dia dia/smg.tsv \
@@ -440,11 +463,11 @@ dia/mutation-relation.tsv: ../gene-patient-matrix.tsv dia/wig-list.tsv dia/rem_d
 		--smp-dia pathscan/sm_pathways.dia.annotated.tsv \
 		--smp-rel pathscan/sm_pathways.rel.annotated.tsv \
 		--cnv ../cnv/impacted-genes-list.cnv.tsv \
-		--pathway-groups ../kamilla/gene-pathway-assignment.tsv \
+		--gene-pathway-matrix pathscan/gene-pathway-matrix.clustered.tsv \
 		2>&1 1>../gene-patient-matrix.annotated.tsv.part | tee -a make.log
 	mv ../gene-patient-matrix.annotated.tsv.part ../gene-patient-matrix.annotated.tsv	
 	
-../gene-patient-matrix.high-af.annotated.tsv: ../gene-patient-matrix.high-af.tsv dia-high-af/smg.tsv rel-high-af/smg.tsv pathscan/sm_pathways.dia.annotated.tsv pathscan/sm_pathways.rel.annotated.tsv ../cnv/impacted-genes-list.cnv.tsv ../kamilla/gene-pathway-assignment.tsv ~/hdall/scripts/annotate-gene-patient-matrix.pl
+../gene-patient-matrix.high-af.annotated.tsv: ../gene-patient-matrix.high-af.tsv dia-high-af/smg.tsv rel-high-af/smg.tsv pathscan/sm_pathways.dia.annotated.tsv pathscan/sm_pathways.rel.annotated.tsv ../cnv/impacted-genes-list.cnv.tsv pathscan/gene-pathway-matrix.clustered.tsv ~/hdall/scripts/annotate-gene-patient-matrix.pl
 	perl ~/hdall/scripts/annotate-gene-patient-matrix.pl \
 		--gene-patient-matrix ../gene-patient-matrix.high-af.tsv \
 		--smg-dia dia-high-af/smg.tsv \
@@ -452,7 +475,7 @@ dia/mutation-relation.tsv: ../gene-patient-matrix.tsv dia/wig-list.tsv dia/rem_d
 		--smp-dia pathscan/sm_pathways.dia.annotated.tsv \
 		--smp-rel pathscan/sm_pathways.rel.annotated.tsv \
 		--cnv ../cnv/impacted-genes-list.cnv.tsv \
-		--pathway-groups ../kamilla/gene-pathway-assignment.tsv \
+		--gene-pathway-matrix pathscan/gene-pathway-matrix.clustered.tsv \
 		2>&1 1>../gene-patient-matrix.high-af.annotated.tsv.part | tee -a make.log
 	mv ../gene-patient-matrix.high-af.annotated.tsv.part ../gene-patient-matrix.high-af.annotated.tsv
 		

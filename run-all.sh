@@ -126,14 +126,14 @@ perl $SCRIPT Y rem_rel $VCF_DIR_INDEL/Y_rem_rel_snpeff.vcf Y3767_rem Y10284_rel 
 exit
 
 # DAVID pathway enrichment analysis
-cat ~/hdall/results/gene-patient-matrix.tsv | perl ~/git/hdall/get-smg.pl dia 1 | perl ~/git/hdall/pathway-enrichment-david.pl > ~/hdall/results/enriched-pathways-dia-minfreq1.david.tsv 2>~/hdall/results/enriched-pathways-dia-minfreq1.david.log
-cat ~/hdall/results/gene-patient-matrix.tsv | perl ~/git/hdall/get-smg.pl dia 2 | perl ~/git/hdall/pathway-enrichment-david.pl > ~/hdall/results/enriched-pathways-dia-minfreq2.david.tsv 2>~/hdall/results/enriched-pathways-dia-minfreq2.david.log
+cat ~/hdall/results/gene-patient-matrix.tsv | perl ~/git/hdall/get-smg.pl dia 1 | perl ~/git/hdall/pathway-analysis/pathway-enrichment-david.pl > ~/hdall/results/enriched-pathways-dia-minfreq1.david.tsv 2>~/hdall/results/enriched-pathways-dia-minfreq1.david.log
+cat ~/hdall/results/gene-patient-matrix.tsv | perl ~/git/hdall/get-smg.pl dia 2 | perl ~/git/hdall/pathway-analysis/pathway-enrichment-david.pl > ~/hdall/results/enriched-pathways-dia-minfreq2.david.tsv 2>~/hdall/results/enriched-pathways-dia-minfreq2.david.log
 
-cat ~/hdall/results/gene-patient-matrix.tsv | perl ~/git/hdall/get-smg.pl rel 1 | perl ~/git/hdall/pathway-enrichment-david.pl > ~/hdall/results/enriched-pathways-rel-minfreq1.david.tsv 2>~/hdall/results/enriched-pathways-rel-minfreq1.david.log
-cat ~/hdall/results/gene-patient-matrix.tsv | perl ~/git/hdall/get-smg.pl rel 2 | perl ~/git/hdall/pathway-enrichment-david.pl > ~/hdall/results/enriched-pathways-rel-minfreq2.david.tsv 2>~/hdall/results/enriched-pathways-rel-minfreq2.david.log
+cat ~/hdall/results/gene-patient-matrix.tsv | perl ~/git/hdall/get-smg.pl rel 1 | perl ~/git/hdall/pathway-analysis/pathway-enrichment-david.pl > ~/hdall/results/enriched-pathways-rel-minfreq1.david.tsv 2>~/hdall/results/enriched-pathways-rel-minfreq1.david.log
+cat ~/hdall/results/gene-patient-matrix.tsv | perl ~/git/hdall/get-smg.pl rel 2 | perl ~/git/hdall/pathway-analysis/pathway-enrichment-david.pl > ~/hdall/results/enriched-pathways-rel-minfreq2.david.tsv 2>~/hdall/results/enriched-pathways-rel-minfreq2.david.log
 
-cat ~/hdall/results/gene-patient-matrix.tier1.tsv | perl ~/git/hdall/get-smg.pl dia 1 | perl ~/git/hdall/pathway-enrichment-david.pl > ~/hdall/results/enriched-pathways-dia-tier1.david.tsv 2>~/hdall/results/enriched-pathways-dia-tier1.david.log
-cat ~/hdall/results/gene-patient-matrix.tier1.tsv | perl ~/git/hdall/get-smg.pl rel 1 | perl ~/git/hdall/pathway-enrichment-david.pl > ~/hdall/results/enriched-pathways-rel-tier1.david.tsv 2>~/hdall/results/enriched-pathways-rel-tier1.david.log
+cat ~/hdall/results/gene-patient-matrix.tier1.tsv | perl ~/git/hdall/get-smg.pl dia 1 | perl ~/git/hdall/pathway-analysis/pathway-enrichment-david.pl > ~/hdall/results/enriched-pathways-dia-tier1.david.tsv 2>~/hdall/results/enriched-pathways-dia-tier1.david.log
+cat ~/hdall/results/gene-patient-matrix.tier1.tsv | perl ~/git/hdall/get-smg.pl rel 1 | perl ~/git/hdall/pathway-analysis/pathway-enrichment-david.pl > ~/hdall/results/enriched-pathways-rel-tier1.david.tsv 2>~/hdall/results/enriched-pathways-rel-tier1.david.log
 
 # pathway-patient matrix
 

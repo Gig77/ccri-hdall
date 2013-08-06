@@ -5,13 +5,12 @@ use Carp;
 use Getopt::Long;
 
 # parse detailed results first
-my ($sm_pathways, $sm_pathways_detail, $pathway_file, $gene_pathway_matrix);
+my ($sm_pathways, $sm_pathways_detail, $pathway_file);
 GetOptions
 (
 	"pathway-file=s" => \$pathway_file, # input pathway file for music path-scan
 	"sm-pathways=s" => \$sm_pathways, # result list from genome music path-scan  
-	"sm-pathways-detail=s" => \$sm_pathways_detail, # detaild result from genome music path-scan (= second output file)  
-	"gene-pathway-matrix=s" => \$gene_pathway_matrix # OUTPUT: gene-pathway-matrix  
+	"sm-pathways-detail=s" => \$sm_pathways_detail # detaild result from genome music path-scan (= second output file)  
 );
 
 # read pathway input file
@@ -24,6 +23,7 @@ while(<P>)
 	$pathways{$path_id}{'size'} = scalar(split('\|', $gene_line));
 }
 close(P);
+croak "ERROR: File $pathway_file is empty" if (keys(%pathways) == 0);
 
 my $content = "";
 open(D,"$sm_pathways_detail") or die "ERROR: could not read file $sm_pathways_detail\n";
@@ -33,6 +33,7 @@ while(<D>)
 	$content .= $_;
 }
 close(D);
+croak "ERROR: File $sm_pathways_detail is empty" if ($content eq "");
 
 my (%pw, %genes);
 while ($content =~ /Pathway: (.*?)\nName: (.*?)\nClass: (.*?)\nP-value: (.*?)\nFDR: (.*?)\nDescription:(.*?)\n(.*?)\nSamples with mutations \(#hits\): (.*?)\n/sg)
@@ -77,17 +78,3 @@ while(<D>)
 	print join(",", @genes_print),"\n";
 }
 close(D);
-
-if ($gene_pathway_matrix)
-{
-	open(M,">$gene_pathway_matrix") or croak("ERROR: could not write to file $gene_pathway_matrix");
-	map { print M "\t$_" } keys(%pw);
-	print M "\n";
-	foreach my $g (keys(%genes))
-	{
-		print M "$g";
-		map { print M $genes{$g}{$_} ? "\t1" : "\t0" } keys(%pw);
-		print M "\n";
-	}	
-	close(M);
-}

@@ -58,7 +58,7 @@ while(<D>)
 {
 	chomp;
 	my ($id, $name, $class, $size, $samples_affected, $total_variations, $p, $fdr, $num_genes, $genes) = split(/\t/);
-	next if ($size > 200);
+	next if ($size > 400);
 #	next if ($class ne "NCI");
 	next if ($p > 1e-10);
 
@@ -83,7 +83,7 @@ while(<D>)
 {
 	chomp;
 	my ($id, $name, $class, $size, $samples_affected, $total_variations, $p, $fdr, $num_genes, $genes) = split(/\t/);
-	next if ($size > 200);
+	next if ($size > 400);
 #	next if ($class ne "NCI");
 	next if ($p > 1e-10);
 

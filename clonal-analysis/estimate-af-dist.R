@@ -1,38 +1,84 @@
 options(warn=1)
 
-# estimate minimal residual disease
-patients <- c("314", "399", "430", "446", "460", "545", "592", "715", "786", "792", "818", "842", "1021247", "A", "B", "C", "D", "E", "X", "Y") 
-#patients <- c("430")
+library(MASS)
 
-# per chromosome
-pdf("~/hdall/results/ploidy-lowres.pdf", width=12, paper='A4r')
-for(p in patients) {
-	for(s in c("dia", "rel")) {
-		par(mfrow=c(5,5), mar=c(2,2,1.5,0.5), oma=c(2.5,2.5,2.5,0))
-		t <- read.csv(paste("~/hdall/data/mutect_vcf/", p, "_rem_", s, "_call_stats.out", sep=""), sep="\t", skip=1)
-		tpass <- t[t$t_ref_count+t$t_alt_count >= 50 & t$n_ref_count+t$n_alt_count >= 50 & t$t_ins_count == 0 & t$t_del_count == 0 & t$t_ref_max_mapq >= 60 & t$t_alt_max_mapq >= 60 , c("contig", "t_ref_count", "t_alt_count", "n_ref_count", "n_alt_count")]
-		tot_norm = sum(tpass$n_ref_count+tpass$n_alt_count) 
-		tot_tum = sum(tpass$t_ref_count+tpass$t_alt_count)
-	
-		for (chr in c("chr1", "chr2", "chr3", "chr4", "chr5", "chr6", "chr7", "chr8", "chr9", "chr10", "chr11", "chr12", "chr13", "chr14", "chr15", "chr16", "chr17", "chr18", "chr19", "chr20", "chr21", "chr22", "chrX", "chrY")) {
-			tmajor <- tpass[tpass$contig == chr,]
-			dp <- log2(((tmajor$t_alt_count+tmajor$t_ref_count)/tot_tum)/((tmajor$n_ref_count+tmajor$n_alt_count)/tot_norm))
-			frac_tumor <- tmajor$t_alt_count/(tmajor$t_ref_count+tmajor$t_alt_count)	
-			title <- paste(chr, " (n=", length(frac_tumor), ")", sep="")
-			if (length(dp) > 1) { 
-				smoothScatter(dp, frac_tumor, xlim=c(-2,2), nbin=50, ylim=c(0,1), axes=F, main=title)
-			}
-			else {
-				plot(1, type="n", xlim=c(-2,2), ylim=c(0,1), axes=F, main=title)
-				box()
-			}
-			axis(2, at=seq(0,1,0.1)) 
-			axis(1, at=seq(-2,2,0.5)) 
-		}
-		mtext(paste(p, s), side=3, outer=T, cex=1, line=1)
-		mtext("log2(coverage tumor/coverage remission)", side=1, outer=T, cex=1, line=1)
-		mtext("tumor allelic frequency", side=2, outer=T, cex=1, line=1)
-		frame()
-	}
-}
+# patient 545
+patient <- "545";
+sample <- "dia";
+diploid <- c("chr1", "chr2", "chr3", "chr4", "chr5", "chr7", "chr8", "chr9", "chr11", "chr12", "chr13", "chr15", "chr16")
+triploid <- c("chr6", "chr10")
+
+#v <- read.csv(paste("~/hdall/data/mutect_vcf/", patient, "_rem_", sample, "_call_stats.out", sep=""), sep="\t", skip=1)
+vpass <- v[v$t_ref_count+v$t_alt_count >= 50 & v$n_ref_count+v$n_alt_count >= 50 & v$t_ins_count == 0 & v$t_del_count == 0 & v$t_ref_max_mapq >= 60 & v$t_alt_max_mapq >= 60 , c("contig", "t_ref_count", "t_alt_count", "n_ref_count", "n_alt_count")]
+vgerm <- vpass[vpass$t_alt_count > 1 & vpass$n_alt_count > 1,]
+vsom <- vpass[vpass$t_alt_count > 1 & vpass$n_alt_count == 0,]
+
+# triploid chromosomes
+#----------------------
+vtrip <- vgerm[vgerm$contig %in% triploid,]
+af <- vtrip$t_alt_count / (vtrip$t_ref_count + vtrip$t_alt_count)
+afhet.trip <- af[af>=0.23 & af<=0.43]	
+
+# fit normal distribution
+f.trip<-fitdistr(afhet.trip, "normal")
+x <- seq(0,1,length=300)
+y <- dnorm(x, f.trip$estimate["mean"]-0.05, f.trip$estimate["sd"])
+hist(af, xlim=c(0, 1), xlab="allelic frequency", breaks=50, main=paste("patient ", patient, " ", sample))
+axis(1, at=seq(0,1,0.1)) 
+par(new=T)
+plot(x, y, type="l", lwd=2, col="red", axes=F, xlab=NA, ylab=NA)
+
+freqtable <- cbind(rep(patient, 100), rep(sample, 100), rep("triploid", 100), seq(0.01,1,0.01), pnorm(seq(0.01,1,0.01), f.trip$estimate["mean"], f.trip$estimate["sd"]))
+colnames(freqtable) <- c("patient", "sample", "ploidy", "af", "probability")
+write.table(freqtable, file=paste("~/hdall/results/clonal-analysis/allelic-freq-prob.tsv", sep=""), col.names=T, row.names=F, sep="\t", quote=F)
+
+stop()
+
+# diploid chromosomes
+#----------------------
+vdipl <- vgerm[vgerm$contig %in% diploid,]
+af <- vdipl$t_alt_count / (vdipl$t_ref_count + vdipl$t_alt_count)
+afhet.dip <- af[af>=0.3 & af<=0.7]	
+
+# determine most frequent allelic frequency assuming that this corresponds to the peak of heterozygous variants
+peak <- as.numeric( sub("\\((.+),.*", "\\1", names(table(cut(af, 100)))[50]))
+
+# get allelic frequency above peak and below homozygous variants
+afhet.dip.onetailed <- af[af>=peak & af<=0.8]	
+
+af.freq.onetailed <- table(cut(afhet.dip.onetailed, breaks=30))
+stepsize <- as.numeric( sub("[^,]*,([^]]*)\\]", "\\1", names(af.freq.onetailed)[1])) - as.numeric(sub("\\((.+),.*", "\\1", names(af.freq.onetailed)[1]))
+
+# symmetrify distribution and shift bin to left for optimal fit
+af.freq.twotailed <- c(rep(0,19),rev(af.freq.onetailed), af.freq.onetailed,rep(0,21))
+
+af.cumfreq <- cumsum(af.freq.twotailed)/length(afhet.dip.onetailed)/2
+freqtable <- cbind(seq(0.01,1,0.01),af.cumfreq)
+colnames(freqtable) <- c("af", "probability")
+write.table(freqtable, file=paste("~/hdall/results/clonal-analysis/allelic-freq-prob.", patient, ".disomic.", sample, ".tsv", sep=""), col.names=T, row.names=F, sep="\t", quote=F)
+#stop()
+
+pdf(paste("~/hdall/results/clonal-analysis/allelic-freq-prob.", patient, ".disomic.", sample, ".distribution.pdf", sep=""))
+
+# plot histogram
+hist(af, xlim=c(0, 1), xlab="allelic frequency", breaks=50, main=paste("patient ", patient, " ", sample))
+axis(1, at=seq(0,1,0.1)) 
+
+# fit normal distribution
+f<-fitdistr(afhet.dip, "normal")
+x <- seq(0,1,length=300)
+y <- dnorm(x, f$estimate["mean"], f$estimate["sd"])
+par(new=T)
+plot(x, y, type="l", lwd=2, col="red", axes=F, xlab=NA, ylab=NA)
+
+# fit fat-tailed cauchy distribution
+f<-fitdistr(afhet.dip, "cauchy")
+x <- seq(0,1,length=300)
+y <- dcauchy(x, f$estimate["location"], f$estimate["scale"])
+par(new=T)
+plot(x, y, type="l", lwd=2, col="blue", axes=F, xlab=NA, ylab=NA)
+
+#par(new=T)
+#plot(seq(0.01,1,0.01), af.freq.twotailed, axes=F, xlab=NA, ylab=NA)
+
 dev.off()

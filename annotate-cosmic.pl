@@ -41,6 +41,7 @@ while(<C>)
 close(C);
 INFO("$entries_read mutations read from file $cosmic_mutation_file");
 
+# TABLE: filtered-variants.cosmic
 # TABLE: filtered-variants
 my $header = <>;
 chomp($header);

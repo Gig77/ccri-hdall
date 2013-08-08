@@ -16,6 +16,7 @@ GetOptions
 
 die "ERROR: Format not specified\n" if (!$format);
 
+# TABLE: hdall.cnv.tsv
 print "patient\tsample\tevent\tcnumber\tchromosome\tstart\tend\tsize\tnum_genes\tgenes\n" 
 	if ($header);
 

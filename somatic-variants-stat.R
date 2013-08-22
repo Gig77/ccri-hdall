@@ -1,7 +1,7 @@
 options(warn=1)
 
 chr <- c("chr1", "chr2", "chr3", "chr4", "chr5", "chr6", "chr7", "chr8", "chr9", "chr10", "chr11", "chr12", "chr13", "chr14", "chr15", "chr16", "chr17", "chr18", "chr19", "chr20", "chr21", "chr22", "chrX", "chrY")
-#sv <- read.delim("~/hdall/results/filtered-variants.cosmic.normaf.tsv")
+sv <- read.delim("~/hdall/results/filtered-variants.cosmic.normaf.tsv")
 
 pdf("~/hdall/results/stats/variants-per-chrom-and-ploidy.pdf", height=10)
 

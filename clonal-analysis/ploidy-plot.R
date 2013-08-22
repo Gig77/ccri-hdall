@@ -5,7 +5,7 @@ patients <- c("314", "399", "430", "446", "460", "545", "592", "715", "786", "79
 #patients <- c("430")
 
 # per chromosome
-pdf("~/hdall/results/ploidy-lowres.pdf", width=12, paper='A4r')
+pdf("~/hdall/results/clonal-analysis/ploidy-lowres.pdf", width=12, paper='A4r')
 for(p in patients) {
 	for(s in c("dia", "rel")) {
 		par(mfrow=c(5,5), mar=c(2,2,1.5,0.5), oma=c(2.5,2.5,2.5,0))

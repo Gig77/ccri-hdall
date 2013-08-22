@@ -32,6 +32,7 @@ filtered_variants/%.indel.filtered.tsv: ~/hdall/data/somatic_indel_vcf/%_snpeff.
 filtered-variants.cosmic.tsv: filtered-variants.tsv ~/hdall/data/cosmic/v65/CosmicMutantExport_v65_280513.tsv ~/hdall/scripts/annotate-cosmic.pl
 	cat ~/hdall/results/filtered-variants.tsv | perl ~/hdall/scripts/annotate-cosmic.pl \
 		--cosmic-mutation-file ~/hdall/data/cosmic/v65/CosmicMutantExport_v65_280513.tsv \
+		--only-confirmed \
 		2>&1 1>$@.part | tee -a make.log
 	mv $@.part $@ 
 
@@ -93,3 +94,15 @@ cnv/gene-patient-matrix.cnv.tsv: cnv/impacted-genes-list.cnv.tsv ~/hdall/scripts
 		--max-genes 5 \
 		2>&1 1>cnv/gene-patient-matrix.cnv.tsv.part | tee -a make.log
 	mv cnv/gene-patient-matrix.cnv.tsv.part cnv/gene-patient-matrix.cnv.tsv
+
+stats/variants-per-chrom-and-ploidy.pdf: filtered-variants.cosmic.normaf.tsv ~/hdall/scripts/somatic-variants-stat.R
+	R --no-save --quiet --slave -f ~/hdall/scripts/somatic-variants-stat.R \
+		2>&1 | tee -a make.log
+
+clonal-analysis/allelic-freq-prob.distributions.pdf: ~/hdall/scripts/clonal-analysis/estimate-af-dist.R
+	R --no-save --quiet --slave -f ~/hdall/scripts/clonal-analysis/estimate-af-dist.R \
+		2>&1 | tee -a make.log
+
+lolliplot/pfam-regions.filtered.tsv: ~/hdall/data/pfam-27.0/pfamA.txt ~/hdall/data/pfam-27.0/Pfam-A.regions.tsv.gz
+	perl ~/hdall/scripts/lolliplot/filter-and-annotate-pfam-regions.pl > lolliplot/pfam-regions.filtered.tsv
+		

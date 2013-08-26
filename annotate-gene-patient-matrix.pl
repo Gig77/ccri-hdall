@@ -8,7 +8,7 @@ use Carp;
 use Getopt::Long;
 
 # parse detailed results first
-my ($gene_patient_matrix, $smg_dia, $smg_rel, $smp_dia_file, $smp_rel_file, $cnv, $gene_pathway_matrix);
+my ($gene_patient_matrix, $smg_dia, $smg_rel, $smp_dia_file, $smp_rel_file, $cnv, $gene_pathway_matrix, $gene_panel_file, $max_pvalue, $max_pathway_size);
 GetOptions
 (
 	"gene-patient-matrix=s" => \$gene_patient_matrix,
@@ -17,7 +17,10 @@ GetOptions
 	"smp-dia=s" => \$smp_dia_file,  
 	"smp-rel=s" => \$smp_rel_file,
 	"cnv=s" => \$cnv,
-	"gene-pathway-matrix=s" => \$gene_pathway_matrix # clustered gene-pathway-matrix to determine order of genes and pathways   
+	"gene-pathway-matrix=s" => \$gene_pathway_matrix, # clustered gene-pathway-matrix to determine order of genes and pathways
+	"panel-genes=s" => \$gene_panel_file, # names of genes selected for resequencing   
+	"max-p-value=f" => \$max_pvalue,  
+	"max-pathway-size=i" => \$max_pathway_size
 );
 
 croak "ERROR: Pathway group file not specified" if (!$gene_pathway_matrix);
@@ -58,9 +61,9 @@ while(<D>)
 {
 	chomp;
 	my ($id, $name, $class, $size, $samples_affected, $total_variations, $p, $fdr, $num_genes, $genes) = split(/\t/);
-	next if ($size > 400);
+	next if ($size > $max_pathway_size);
 #	next if ($class ne "NCI");
-	next if ($p > 1e-10);
+	next if ($p > $max_pvalue);
 
 	$smp_dia{$class."|".$name} = $p;
 	foreach my $g (split(",", $genes))
@@ -83,9 +86,9 @@ while(<D>)
 {
 	chomp;
 	my ($id, $name, $class, $size, $samples_affected, $total_variations, $p, $fdr, $num_genes, $genes) = split(/\t/);
-	next if ($size > 400);
+	next if ($size > $max_pathway_size);
 #	next if ($class ne "NCI");
-	next if ($p > 1e-10);
+	next if ($p > $max_pvalue);
 
 	$smp_rel{$class."|".$name} = $p;
 	foreach my $g (split(",", $genes))
@@ -140,6 +143,20 @@ while(<PG>)
 }
 close(PG);
 INFO("$lines_read lines read from file $gene_pathway_matrix");
+
+# read penel genes
+my %panel_genes;
+if ($gene_panel_file)
+{
+	open(P,"$gene_panel_file") or croak "ERROR: could not read file $gene_panel_file\n";
+	while(<P>)
+	{
+		chomp;
+		$panel_genes{$_} = 1;
+	}
+	close(P);
+	INFO(scalar(keys(%panel_genes))." genes read from file $gene_panel_file");	
+}
 
 # TABLE: gene-patient-matrix
 open(M,"$gene_patient_matrix") or croak "ERROR: could not read file $gene_patient_matrix\n";
@@ -199,7 +216,7 @@ close(M);
 INFO(scalar(keys(%gene_info))." genes read from file $gene_patient_matrix");
 
 # output header
-print "gene\tdescr\tchr\tstart\tend\texons\ttr_len\tcds_len\tcosmic\t";
+print "gene\ton-panel\tdescr\tchr\tstart\tend\texons\ttr_len\tcds_len\tcosmic\t";
 print "freq-dia\ttot-dia\tfreq-dia-ns\ttot-dia-ns\tmax-af-dia\tmax-af-dia-ns\timp-ex-dia\timp-ex-dia-ns\tp-gene-dia\tp-pw-dia";
 map { print "\t$_" } (@patients_dia);
 print "\tfreq-rel\ttot-rel\tfreq-rel-ns\ttot-rel-ns\tmax-af-rel\tmax-af-rel-ns\timp-ex-rel\timp-ex-rel-ns\tp-gene-rel\tp-pw-rel";
@@ -217,6 +234,7 @@ print "\n";
 foreach my $g (keys(%gene_info))
 {
 	print "$g";
+	print "\t", $panel_genes{$g} ? "yes" : "-";
 	print "\t",$gene_info{$g}{'desc'},"\t",$gene_info{$g}{'chr'},"\t",$gene_info{$g}{'start'},"\t",$gene_info{$g}{'end'},"\t",$gene_info{$g}{'exons'},"\t",$gene_info{$g}{'tr_len'},"\t",$gene_info{$g}{'cds_len'},"\t",$gene_info{$g}{'cosmic'};
 
 	print "\t".(defined $gene_info{$g}{'freq-dia'} ? $gene_info{$g}{'freq-dia'} : "");

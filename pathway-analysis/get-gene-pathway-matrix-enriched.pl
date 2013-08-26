@@ -46,7 +46,9 @@ while(<>)
 
 	next if ($p_value > $max_pvalue);
 	next if ($size > $max_pathway_size);
-	next if ($class =~ /^c\d\_/); # exclude MSigDB pathways
+#	next unless ($class =~ /^c\d\_/); # only MSigDB pathways
+	next if ($class =~ /^c1_positional/);
+#	next if ($name =~ /^(REACTOME|KEGG|BIOCARTA|PID)_/);
 	next if ($subtract_pathways{$pathway});
 	
 	$pw{$pathway}{name} = $name;

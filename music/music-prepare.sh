@@ -73,4 +73,4 @@ genome music smg --gene-mr-file /mnt/suse/data/christian/hdall/results/current/m
 
 # run music path-scan
 genome music path-scan --bam-list /mnt/suse/data/christian/hdall/results/current/music/dia/wig-list.tsv --gene-covg-dir /mnt/suse/data/christian/hdall/results/current/music/dia/gene_covgs/ --maf-file /mnt/suse/data/christian/hdall/results/current/music/dia/rem_dia.maf --output-file /mnt/suse/data/christian/hdall/results/current/music/dia/sm_pathways.tsv --pathway-file /mnt/suse/data/christian/hdall/results/current/music/pathways-david-complete.tsv
-perl ~/hdall/scripts/music/annotate-pathscan-result.pl --sm-pathways ~/hdall/results/music/dia/sm_pathways.tsv --sm-pathways-detail ~/hdall/results/music/dia/sm_pathways.tsv_detailed > ~/hdall/results/music/dia/sm_pathways.annotated.tsv
+perl ~/hdall/scripts/pathway-analysis/annotate-pathscan-result.pl --sm-pathways ~/hdall/results/music/dia/sm_pathways.tsv --sm-pathways-detail ~/hdall/results/music/dia/sm_pathways.tsv_detailed > ~/hdall/results/music/dia/sm_pathways.annotated.tsv

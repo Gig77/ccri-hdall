@@ -362,8 +362,8 @@ pathscan/sm_pathways.rel.noRAS.noCREBBP.raw.tsv: rel-high-af/smg.tsv pathscan/pa
 	mv pathscan/sm_pathways.rel.noRAS.noCREBBP.raw.tsv.part pathscan/sm_pathways.rel.noRAS.noCREBBP.raw.tsv
 	mv pathscan/sm_pathways.rel.noRAS.noCREBBP.raw.tsv.part_detailed pathscan/sm_pathways.rel.noRAS.noCREBBP.raw.tsv_detailed
 
-pathscan/sm_pathways.%.annotated.tsv: pathscan/sm_pathways.%.raw.tsv ~/hdall/scripts/music/annotate-pathscan-result.pl
-	perl ~/hdall/scripts/music/annotate-pathscan-result.pl \
+pathscan/sm_pathways.%.annotated.tsv: pathscan/sm_pathways.%.raw.tsv ~/hdall/scripts/pathway-analysis/annotate-pathscan-result.pl
+	perl ~/hdall/scripts/pathway-analysis/annotate-pathscan-result.pl \
 		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
 		--sm-pathways pathscan/sm_pathways.$*.raw.tsv \
 		--sm-pathways-detail pathscan/sm_pathways.$*.raw.tsv_detailed \
@@ -372,13 +372,15 @@ pathscan/sm_pathways.%.annotated.tsv: pathscan/sm_pathways.%.raw.tsv ~/hdall/scr
 
 pathscan/sm_pathways.%.matrix.clustered.tsv: pathscan/sm_pathways.%.annotated.tsv ~/hdall/scripts/pathway-analysis/get-gene-pathway-matrix-enriched.pl ~/hdall/scripts/pathway-analysis/cluster-gene-pathway-matrix.R
 	cat pathscan/sm_pathways.$*.annotated.tsv | perl ~/hdall/scripts/pathway-analysis/get-gene-pathway-matrix-enriched.pl \
-		--max-p-value 1e-10 \
+		--max-p-value 1e-8 \
 		--max-pathway-size 400 \
 		2>&1 1>pathscan/sm_pathways.$*.matrix.tsv.tmp | tee -a make.log
+	rm -f pathscan/sm_pathways.$*.matrix.genetree.pdf pathscan/sm_pathways.$*.matrix.pathwaytree.pdf
 	R --no-save --quiet --slave -f ~/hdall/scripts/pathway-analysis/cluster-gene-pathway-matrix.R \
-		--args pathscan/sm_pathways.$*.matrix.tsv.tmp pathscan/sm_pathways.$*.matrix.clustered.tsv pathscan/sm_pathways.$*.matrix.genetree.pdf pathscan/sm_pathways.$*.matrix.pathwaytree.pdf \
+		--args pathscan/sm_pathways.$*.matrix.tsv.tmp pathscan/sm_pathways.$*.matrix.clustered.tsv.part pathscan/sm_pathways.$*.matrix.genetree.pdf pathscan/sm_pathways.$*.matrix.pathwaytree.pdf \
 		2>&1 | tee -a make.log
 	rm pathscan/sm_pathways.$*.matrix.tsv.tmp
+	mv pathscan/sm_pathways.$*.matrix.clustered.tsv.part pathscan/sm_pathways.$*.matrix.clustered.tsv
 
 pathscan/sm_pathways.rel-not-dia.all.matrix.clustered.tsv: pathscan/sm_pathways.dia.all.annotated.tsv pathscan/sm_pathways.rel.all.annotated.tsv ~/hdall/scripts/pathway-analysis/get-gene-pathway-matrix-enriched.pl ~/hdall/scripts/pathway-analysis/cluster-gene-pathway-matrix.R
 	cat pathscan/sm_pathways.rel.all.annotated.tsv | perl ~/hdall/scripts/pathway-analysis/get-gene-pathway-matrix-enriched.pl \
@@ -477,6 +479,9 @@ dia/mutation-relation.tsv: ../gene-patient-matrix.tsv dia/wig-list.tsv dia/rem_d
 		--smp-rel pathscan/sm_pathways.rel.all.annotated.tsv \
 		--cnv ../cnv/impacted-genes-list.cnv.tsv \
 		--gene-pathway-matrix pathscan/gene-pathway-matrix.clustered.tsv \
+		--panel-genes ../panel-genes.tsv \
+		--max-p-value 1e-8 \
+		--max-pathway-size 400 \
 		2>&1 1>../gene-patient-matrix.annotated.tsv.part | tee -a make.log
 	mv ../gene-patient-matrix.annotated.tsv.part ../gene-patient-matrix.annotated.tsv	
 	
@@ -489,6 +494,9 @@ dia/mutation-relation.tsv: ../gene-patient-matrix.tsv dia/wig-list.tsv dia/rem_d
 		--smp-rel pathscan/sm_pathways.rel.all.annotated.tsv \
 		--cnv ../cnv/impacted-genes-list.cnv.tsv \
 		--gene-pathway-matrix pathscan/gene-pathway-matrix.clustered.tsv \
+		--panel-genes ../panel-genes.tsv \
+		--max-p-value 1e-8 \
+		--max-pathway-size 400 \
 		2>&1 1>../gene-patient-matrix.high-af.annotated.tsv.part | tee -a make.log
 	mv ../gene-patient-matrix.high-af.annotated.tsv.part ../gene-patient-matrix.high-af.annotated.tsv
 		

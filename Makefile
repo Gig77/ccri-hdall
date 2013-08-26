@@ -1,7 +1,7 @@
 export SHELLOPTS:=errexit:pipefail
 SHELL=/bin/bash
 
-all: filtered-variants.tsv filtered-variants.cosmic.tsv gene-patient-matrix.tsv gene-patient-matrix.high-af.tsv gene-patient-matrix.tier1.tsv cnv/gene-patient-matrix.cnv.tsv filtered-variants.cosmic.normaf.tsv
+all: filtered-variants.tsv filtered-variants.cosmic.tsv gene-patient-matrix.tsv gene-patient-matrix.high-af.tsv gene-patient-matrix.tier1.tsv cnv/gene-patient-matrix.cnv.tsv filtered-variants.cosmic.normaf.tsv lolliplot/lolliplot_CREBBP_NM_004380_both.svg
 
 nextera:
 	cat kamilla/candidate\ genes\ for\ targeted\ sequencing.tsv | perl ~/hdall/scripts/get-nextera-exons.pl --density Standard > kamilla/nextera-exons.standard.csv
@@ -103,6 +103,10 @@ clonal-analysis/allelic-freq-prob.distributions.pdf: ~/hdall/scripts/clonal-anal
 	R --no-save --quiet --slave -f ~/hdall/scripts/clonal-analysis/estimate-af-dist.R \
 		2>&1 | tee -a make.log
 
-lolliplot/pfam-regions.filtered.tsv: ~/hdall/data/pfam-27.0/pfamA.txt ~/hdall/data/pfam-27.0/Pfam-A.regions.tsv.gz
+lolliplot/pfam-regions.filtered.tsv: ~/hdall/data/pfam-27.0/pfamA.txt ~/hdall/data/pfam-27.0/Pfam-A.regions.tsv.gz ~/hdall/scripts/lolliplot/filter-and-annotate-pfam-regions.pl
 	perl ~/hdall/scripts/lolliplot/filter-and-annotate-pfam-regions.pl > lolliplot/pfam-regions.filtered.tsv
-		
+
+lolliplot/lolliplot_CREBBP_NM_004380_both.svg: id-mappings.tsv lolliplot/pfam-regions.filtered.tsv filtered-variants.cosmic.tsv ~/hdall/scripts/lolliplot/lolliplot.pl
+	rm lolliplot/*.svg 
+	perl ~/hdall/scripts/lolliplot/lolliplot.pl \
+		2>&1 | tee -a make.log

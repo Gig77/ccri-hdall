@@ -470,7 +470,7 @@ dia/mutation-relation.tsv: ../gene-patient-matrix.tsv dia/wig-list.tsv dia/rem_d
 #		--args pathscan/gene-pathway-matrix.tsv pathscan/gene-pathway-matrix.clustered.tsv \
 #		2>&1 | tee -a make.log
 
-../gene-patient-matrix.annotated.tsv: ../gene-patient-matrix.tsv dia/smg.tsv rel/smg.tsv pathscan/sm_pathways.dia.all.annotated.tsv pathscan/sm_pathways.rel.all.annotated.tsv ../cnv/impacted-genes-list.cnv.tsv pathscan/gene-pathway-matrix.clustered.tsv ~/hdall/scripts/annotate-gene-patient-matrix.pl
+../gene-patient-matrix.annotated.tsv: ../gene-patient-matrix.tsv dia/smg.tsv rel/smg.tsv pathscan/sm_pathways.dia.all.annotated.tsv pathscan/sm_pathways.rel.all.annotated.tsv ../cnv/impacted-genes-list.cnv.tsv pathscan/sm_pathways.rel.all.matrix.clustered.tsv ~/hdall/scripts/annotate-gene-patient-matrix.pl
 	perl ~/hdall/scripts/annotate-gene-patient-matrix.pl \
 		--gene-patient-matrix ../gene-patient-matrix.tsv \
 		--smg-dia dia/smg.tsv \
@@ -478,14 +478,14 @@ dia/mutation-relation.tsv: ../gene-patient-matrix.tsv dia/wig-list.tsv dia/rem_d
 		--smp-dia pathscan/sm_pathways.dia.all.annotated.tsv \
 		--smp-rel pathscan/sm_pathways.rel.all.annotated.tsv \
 		--cnv ../cnv/impacted-genes-list.cnv.tsv \
-		--gene-pathway-matrix pathscan/gene-pathway-matrix.clustered.tsv \
+		--gene-pathway-matrix pathscan/sm_pathways.rel.all.matrix.clustered.tsv \
 		--panel-genes ../panel-genes.tsv \
 		--max-p-value 1e-8 \
 		--max-pathway-size 400 \
 		2>&1 1>../gene-patient-matrix.annotated.tsv.part | tee -a make.log
 	mv ../gene-patient-matrix.annotated.tsv.part ../gene-patient-matrix.annotated.tsv	
 	
-../gene-patient-matrix.high-af.annotated.tsv: ../gene-patient-matrix.high-af.tsv dia-high-af/smg.tsv rel-high-af/smg.tsv pathscan/sm_pathways.dia.all.annotated.tsv pathscan/sm_pathways.rel.all.annotated.tsv ../cnv/impacted-genes-list.cnv.tsv pathscan/gene-pathway-matrix.clustered.tsv ~/hdall/scripts/annotate-gene-patient-matrix.pl
+../gene-patient-matrix.high-af.annotated.tsv: ../gene-patient-matrix.high-af.tsv dia-high-af/smg.tsv rel-high-af/smg.tsv pathscan/sm_pathways.dia.all.annotated.tsv pathscan/sm_pathways.rel.all.annotated.tsv ../cnv/impacted-genes-list.cnv.tsv pathscan/sm_pathways.rel.all.matrix.clustered.tsv ~/hdall/scripts/annotate-gene-patient-matrix.pl
 	perl ~/hdall/scripts/annotate-gene-patient-matrix.pl \
 		--gene-patient-matrix ../gene-patient-matrix.high-af.tsv \
 		--smg-dia dia-high-af/smg.tsv \
@@ -493,7 +493,7 @@ dia/mutation-relation.tsv: ../gene-patient-matrix.tsv dia/wig-list.tsv dia/rem_d
 		--smp-dia pathscan/sm_pathways.dia.all.annotated.tsv \
 		--smp-rel pathscan/sm_pathways.rel.all.annotated.tsv \
 		--cnv ../cnv/impacted-genes-list.cnv.tsv \
-		--gene-pathway-matrix pathscan/gene-pathway-matrix.clustered.tsv \
+		--gene-pathway-matrix pathscan/sm_pathways.rel.all.matrix.clustered.tsv \
 		--panel-genes ../panel-genes.tsv \
 		--max-p-value 1e-8 \
 		--max-pathway-size 400 \

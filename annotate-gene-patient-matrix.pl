@@ -65,12 +65,12 @@ while(<D>)
 #	next if ($class ne "NCI");
 	next if ($p > $max_pvalue);
 
-	$smp_dia{$class."|".$name} = $p;
+	$smp_dia{"$class|$name|$size"} = $p;
 	foreach my $g (split(",", $genes))
 	{
 		$g =~ s/\(\d+\)//;
 		$smp_dia_genes{$g}{'pvalue'} = $p if (!exists $smp_dia_genes{$g}{'pvalue'} or $smp_dia_genes{$g}{'pvalue'} > $p);
-		$smp_dia_genes{$g}{$class."|".$name} = $p;
+		$smp_dia_genes{$g}{"$class|$name|$size"} = $p;
 	}
 }
 close(D);
@@ -90,12 +90,12 @@ while(<D>)
 #	next if ($class ne "NCI");
 	next if ($p > $max_pvalue);
 
-	$smp_rel{$class."|".$name} = $p;
+	$smp_rel{"$class|$name|$size"} = $p;
 	foreach my $g (split(",", $genes))
 	{
 		$g =~ s/\(\d+\)//;
 		$smp_rel_genes{$g}{'pvalue'} = $p if (!exists $smp_rel_genes{$g}{'pvalue'} or $smp_rel_genes{$g}{'pvalue'} > $p);
-		$smp_rel_genes{$g}{$class."|".$name} = $p;
+		$smp_rel_genes{$g}{"$class|$name|$size"} = $p;
 	}
 }
 close(D);
@@ -127,7 +127,7 @@ my $hline = <PG>;
 chomp($hline);
 my @pw_names = split("\t", $hline);
 shift(@pw_names);
-for (my $i = 0; $i < @pw_names; $i ++) { my ($pwid, $pwname, $pwcategory) = split('\|', $pw_names[$i]); $pw_names[$i] = "$pwcategory|$pwname"; }
+for (my $i = 0; $i < @pw_names; $i ++) { my ($pwcategory, $pwname, $pwsize) = split ('\|', $pw_names[$i]); $pw_names[$i] = "$pwcategory|$pwname|$pwsize"; }
 while(<PG>)
 {
 	chomp;
@@ -226,9 +226,8 @@ map { print "\t$_" } (@patients_cons);
 print "\timp-domains-dia\timp-domains-rel";
 print "\torder";
 
-my (@pw_names_dia, @pw_names_rel);
-map { if ($smp_dia{$_}) { print "\t$_-dia"; push(@pw_names_dia, $_); } } (@pw_names);
-map { if ($smp_rel{$_}) { print "\t$_-rel"; push(@pw_names_rel, $_); } } (@pw_names);
+my @pw_names_rel;
+map { if ($smp_rel{$_}) { print "\t$_|",sprintf("%.1e", $smp_rel{$_}); push(@pw_names_rel, $_); } } (@pw_names);
 print "\n";
 
 foreach my $g (keys(%gene_info))
@@ -296,7 +295,6 @@ foreach my $g (keys(%gene_info))
 
 	print "\t".(defined $funct_gene_order{$g} ? $funct_gene_order{$g} : "");
 
-	map { print "\t", defined $smp_dia_genes{$g}{$_} ? "x" : "" } (@pw_names_dia);
 	map { print "\t", defined $smp_rel_genes{$g}{$_} ? "x" : "" } (@pw_names_rel);
 		
 #	print "\t";

@@ -42,7 +42,7 @@ open(DIA,"$enriched_pathways_dia") or croak "ERROR: could not open file $enriche
 while(<DIA>)
 {
 	chomp;
-	my ($pathway, $name, $class, $size, $samples, $tot_var, $p_value, $fdr, $num_genes, $genes) = split /\t/;
+	my ($pathway, $name, $class, $size, $samples, $tot_var, $p_value, $fdr, $num_genes, $genes, $link) = split /\t/;
 
 	croak "ERROR: Could not parse pathway entry: $_\n" if (!$pathway or !$name or !$class or !$genes);
 	$enriched_pathways{"$pathway\t$name\t$class\t$size"}{dia} = "$p_value\t$genes";
@@ -55,7 +55,7 @@ open(REL,"$enriched_pathways_rel") or croak "ERROR: could not open file $enriche
 while(<REL>)
 {
 	chomp;
-	my ($pathway, $name, $class, $size, $samples, $tot_var, $p_value, $fdr, $num_genes, $genes) = split /\t/;
+	my ($pathway, $name, $class, $size, $samples, $tot_var, $p_value, $fdr, $num_genes, $genes, $link) = split /\t/;
 
 	croak "ERROR: Could not parse pathway entry: $_\n" if (!$pathway or !$name or !$class or !$genes);
 	$enriched_pathways{"$pathway\t$name\t$class\t$size"}{rel} = "$p_value\t$genes";

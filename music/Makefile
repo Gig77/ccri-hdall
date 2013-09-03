@@ -43,10 +43,20 @@ dia-high-af/rem_dia.maf: $(foreach P, $(PATIENTS), maf-high-af/$P_rem_dia.maf)
 	cat maf-high-af/*rem_dia.maf >> dia-high-af/rem_dia.maf.part
 	mv dia-high-af/rem_dia.maf.part dia-high-af/rem_dia.maf
 
+dia-high-af/rem_dia.cnv.maf: dia-high-af/rem_dia.maf ../cnv/hdall.cnv.tsv ~/hdall/scripts/pathway-analysis/cnv2maf.pl
+	cp dia-high-af/rem_dia.maf dia-high-af/rem_dia.cnv.maf.part
+	cat ../cnv/hdall.cnv.tsv | perl ~/hdall/scripts/pathway-analysis/cnv2maf.pl --max-size-bp 10000000 | grep "_dia" | grep "del" >> dia-high-af/rem_dia.cnv.maf.part
+	mv dia-high-af/rem_dia.cnv.maf.part dia-high-af/rem_dia.cnv.maf
+
 rel-high-af/rem_rel.maf: $(foreach P, $(PATIENTS), maf-high-af/$P_rem_rel.maf)
 	perl ~/hdall/scripts/vcf2maf.pl --header 2>&1 1>rel-high-af/rem_rel.maf.part | tee -a make.log
 	cat maf-high-af/*rem_rel.maf >> rel-high-af/rem_rel.maf.part
 	mv rel-high-af/rem_rel.maf.part rel-high-af/rem_rel.maf
+
+rel-high-af/rem_rel.cnv.maf: rel-high-af/rem_rel.maf ../cnv/hdall.cnv.tsv ~/hdall/scripts/pathway-analysis/cnv2maf.pl
+	cp rel-high-af/rem_rel.maf rel-high-af/rem_rel.cnv.maf.part
+	cat ../cnv/hdall.cnv.tsv | perl ~/hdall/scripts/pathway-analysis/cnv2maf.pl --max-size-bp 10000000 | grep "_rel" | grep "del" >> rel-high-af/rem_rel.cnv.maf.part
+	mv rel-high-af/rem_rel.cnv.maf.part rel-high-af/rem_rel.cnv.maf
 
 maf/%.maf: ../filtered_variants/%.snp.filtered.vcf ../filtered_variants/%.indel.filtered.vcf ucsc-genes.hg19.roi ~/hdall/results/gene-id-mapping.biomart-0.7.tsv ~/hdall/scripts/vcf2maf.pl
 	mkdir -p maf
@@ -208,8 +218,8 @@ rel-high-af/smg.tsv: rel-high-af/gene_mrs
 #--- GENOME MUSIC PATH-SCAN (using only high allelic frequency variants)
 #-----------------------------------------------------------------------
 
-pathscan-dia: pathscan/sm_pathways.dia.all.matrix.clustered.tsv pathscan/sm_pathways.dia.noRAS.matrix.clustered.tsv pathscan/sm_pathways.dia.noCREBBP.matrix.clustered.tsv pathscan/sm_pathways.dia.noRAS.noCREBBP.matrix.clustered.tsv 
-pathscan-rel: pathscan/sm_pathways.rel.all.matrix.clustered.tsv pathscan/sm_pathways.rel.noRAS.matrix.clustered.tsv pathscan/sm_pathways.rel.noCREBBP.matrix.clustered.tsv pathscan/sm_pathways.rel.noRAS.noCREBBP.matrix.clustered.tsv
+pathscan-dia: pathscan/sm_pathways.dia.all.matrix.clustered.tsv pathscan/sm_pathways.dia.all.cnv.annotated.tsv pathscan/sm_pathways.dia.noRAS.matrix.clustered.tsv pathscan/sm_pathways.dia.noCREBBP.matrix.clustered.tsv pathscan/sm_pathways.dia.noRAS.noCREBBP.matrix.clustered.tsv 
+pathscan-rel: pathscan/sm_pathways.rel.all.matrix.clustered.tsv pathscan/sm_pathways.rel.all.cnv.annotated.tsv pathscan/sm_pathways.rel.noRAS.matrix.clustered.tsv pathscan/sm_pathways.rel.noCREBBP.matrix.clustered.tsv pathscan/sm_pathways.rel.noRAS.noCREBBP.matrix.clustered.tsv
 pathscan: pathscan-dia pathscan-rel pathscan/sm_pathways.dia+rel.all.tsv ../pathway-patient-matrix.all.clustered.tsv
 
 pathscan/pathways-david-complete.tsv: pathscan/pathways-david.tsv pathscan/pathways-david-reverse.tsv
@@ -259,10 +269,15 @@ pathscan/pathways-wikipathways.tsv: ~/hdall/data/wikipathways/wikipathways_Homo_
 		--wiki-dir ~/hdall/data/wikipathways/ \
 		2>&1 1>>pathscan/pathways-wikipathways.tsv.part | tee -a make.log
 	mv pathscan/pathways-wikipathways.tsv.part pathscan/pathways-wikipathways.tsv
+
+pathscan/pathways-kegg.jerry.hugo.tsv: pathscan/pathways-kegg.jerry.ensembl.tsv
+	perl ~/hdall/scripts/pathway-analysis/kegg-jerry-ensembl-to-hugo.pl > pathscan/pathways-kegg.jerry.hugo.tsv.part
+	mv pathscan/pathways-kegg.jerry.hugo.tsv.part pathscan/pathways-kegg.jerry.hugo.tsv
 		
-pathscan/pathways-all.tsv: pathscan/pathways-david-complete.tsv pathscan/gene-sets.mutsigdb4.0.tsv pathscan/pathways-nci.tsv pathscan/pathways-wikipathways.tsv
+pathscan/pathways-all.tsv: pathscan/pathways-david-complete.tsv pathscan/gene-sets.mutsigdb4.0.tsv pathscan/pathways-nci.tsv pathscan/pathways-wikipathways.tsv pathscan/pathways-kegg.jerry.hugo.tsv
 	cp pathscan/pathways-david-complete.tsv pathscan/pathways-all.tsv.part
 	cat pathscan/gene-sets.mutsigdb4.0.tsv pathscan/pathways-nci.tsv pathscan/pathways-manual.tsv pathscan/pathways-wikipathways.tsv >> pathscan/pathways-all.tsv.part
+	cat pathscan/pathways-kegg.jerry.hugo.tsv >> pathscan/pathways-all.tsv.part
 	mv pathscan/pathways-all.tsv.part pathscan/pathways-all.tsv
 
 pathscan/pathways-all.sizefiltered.tsv: pathscan/pathways-all.tsv
@@ -273,7 +288,7 @@ pathscan/pathways-kegg-biocarta-bbid-reactome.tsv: pathscan/pathways-david-compl
 	grep -P "(KEGG_PATHWAY|BIOCARTA|BBID)" pathscan/pathways-david-complete.tsv > pathscan/pathways-kegg-biocarta-bbid-reactome.tsv
 	grep "REACTOME_" pathscan/gene-sets.mutsigdb4.0.tsv >> pathscan/pathways-kegg-biocarta-bbid-reactome.tsv
 
-# NOTE: exclude likely false positives from Lawrence et al. (2013)
+# NOTE: only exclude likely false positives from Lawrence et al. (2013)
 pathscan/sm_pathways.dia.all.raw.tsv: dia-high-af/smg.tsv pathscan/pathways-all.sizefiltered.tsv
 	genome music path-scan \
 		--bam-list dia/wig-list.tsv \
@@ -281,7 +296,7 @@ pathscan/sm_pathways.dia.all.raw.tsv: dia-high-af/smg.tsv pathscan/pathways-all.
 		--maf-file dia-high-af/rem_dia.maf \
 		--output-file pathscan/sm_pathways.dia.all.raw.tsv.part \
 		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
-		--genes-to-ignore TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1
+		--genes-to-ignore MESP2,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1
 	mv pathscan/sm_pathways.dia.all.raw.tsv.part pathscan/sm_pathways.dia.all.raw.tsv
 	mv pathscan/sm_pathways.dia.all.raw.tsv.part_detailed pathscan/sm_pathways.dia.all.raw.tsv_detailed
 
@@ -292,10 +307,34 @@ pathscan/sm_pathways.rel.all.raw.tsv: rel-high-af/smg.tsv pathscan/pathways-all.
 		--maf-file rel-high-af/rem_rel.maf \
 		--output-file pathscan/sm_pathways.rel.all.raw.tsv.part \
 		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
-		--genes-to-ignore TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1
+		--genes-to-ignore MESP2,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1
 	mv pathscan/sm_pathways.rel.all.raw.tsv.part pathscan/sm_pathways.rel.all.raw.tsv
 	mv pathscan/sm_pathways.rel.all.raw.tsv.part_detailed pathscan/sm_pathways.rel.all.raw.tsv_detailed
 
+# NOTE: consider also CNV data from arrays
+pathscan/sm_pathways.dia.all.cnv.raw.tsv: dia-high-af/smg.tsv pathscan/pathways-all.sizefiltered.tsv dia-high-af/rem_dia.cnv.maf
+	genome music path-scan \
+		--bam-list dia/wig-list.tsv \
+		--gene-covg-dir dia-high-af/gene_covgs/ \
+		--maf-file dia-high-af/rem_dia.cnv.maf \
+		--output-file pathscan/sm_pathways.dia.all.cnv.raw.tsv.part \
+		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
+		--genes-to-ignore MESP2,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1
+	mv pathscan/sm_pathways.dia.all.cnv.raw.tsv.part pathscan/sm_pathways.dia.all.cnv.raw.tsv
+	mv pathscan/sm_pathways.dia.all.cnv.raw.tsv.part_detailed pathscan/sm_pathways.dia.all.cnv.raw.tsv_detailed
+
+pathscan/sm_pathways.rel.all.cnv.raw.tsv: rel-high-af/smg.tsv pathscan/pathways-all.sizefiltered.tsv rel-high-af/rem_rel.cnv.maf
+	genome music path-scan \
+		--bam-list rel/wig-list.tsv \
+		--gene-covg-dir rel-high-af/gene_covgs/ \
+		--maf-file rel-high-af/rem_rel.cnv.maf \
+		--output-file pathscan/sm_pathways.rel.all.cnv.raw.tsv.part \
+		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
+		--genes-to-ignore MESP2,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1
+	mv pathscan/sm_pathways.rel.all.cnv.raw.tsv.part pathscan/sm_pathways.rel.all.cnv.raw.tsv
+	mv pathscan/sm_pathways.rel.all.cnv.raw.tsv.part_detailed pathscan/sm_pathways.rel.all.cnv.raw.tsv_detailed
+
+# NOTE: exclude KRAS,NRAS
 pathscan/sm_pathways.dia.noRAS.raw.tsv: dia-high-af/smg.tsv pathscan/pathways-all.sizefiltered.tsv
 	genome music path-scan \
 		--bam-list dia/wig-list.tsv \
@@ -303,7 +342,7 @@ pathscan/sm_pathways.dia.noRAS.raw.tsv: dia-high-af/smg.tsv pathscan/pathways-al
 		--maf-file dia-high-af/rem_dia.maf \
 		--output-file pathscan/sm_pathways.dia.noRAS.raw.tsv.part \
 		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
-		--genes-to-ignore KRAS,NRAS,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1
+		--genes-to-ignore MESP2,KRAS,NRAS,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1
 	mv pathscan/sm_pathways.dia.noRAS.raw.tsv.part pathscan/sm_pathways.dia.noRAS.raw.tsv
 	mv pathscan/sm_pathways.dia.noRAS.raw.tsv.part_detailed pathscan/sm_pathways.dia.noRAS.raw.tsv_detailed
 
@@ -314,10 +353,11 @@ pathscan/sm_pathways.rel.noRAS.raw.tsv: rel-high-af/smg.tsv pathscan/pathways-al
 		--maf-file rel-high-af/rem_rel.maf \
 		--output-file pathscan/sm_pathways.rel.noRAS.raw.tsv.part \
 		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
-		--genes-to-ignore KRAS,NRAS,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1
+		--genes-to-ignore MESP2,KRAS,NRAS,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1
 	mv pathscan/sm_pathways.rel.noRAS.raw.tsv.part pathscan/sm_pathways.rel.noRAS.raw.tsv
 	mv pathscan/sm_pathways.rel.noRAS.raw.tsv.part_detailed pathscan/sm_pathways.rel.noRAS.raw.tsv_detailed
 
+# NOTE: exclude CREBBP
 pathscan/sm_pathways.dia.noCREBBP.raw.tsv: dia-high-af/smg.tsv pathscan/pathways-all.sizefiltered.tsv
 	genome music path-scan \
 		--bam-list dia/wig-list.tsv \
@@ -325,7 +365,7 @@ pathscan/sm_pathways.dia.noCREBBP.raw.tsv: dia-high-af/smg.tsv pathscan/pathways
 		--maf-file dia-high-af/rem_dia.maf \
 		--output-file pathscan/sm_pathways.dia.noCREBBP.raw.tsv.part \
 		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
-		--genes-to-ignore CREBBP,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1
+		--genes-to-ignore MESP2,CREBBP,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1
 	mv pathscan/sm_pathways.dia.noCREBBP.raw.tsv.part pathscan/sm_pathways.dia.noCREBBP.raw.tsv
 	mv pathscan/sm_pathways.dia.noCREBBP.raw.tsv.part_detailed pathscan/sm_pathways.dia.noCREBBP.raw.tsv_detailed
 
@@ -336,10 +376,11 @@ pathscan/sm_pathways.rel.noCREBBP.raw.tsv: rel-high-af/smg.tsv pathscan/pathways
 		--maf-file rel-high-af/rem_rel.maf \
 		--output-file pathscan/sm_pathways.rel.noCREBBP.raw.tsv.part \
 		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
-		--genes-to-ignore CREBBP,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1
+		--genes-to-ignore MESP2,CREBBP,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1
 	mv pathscan/sm_pathways.rel.noCREBBP.raw.tsv.part pathscan/sm_pathways.rel.noCREBBP.raw.tsv
 	mv pathscan/sm_pathways.rel.noCREBBP.raw.tsv.part_detailed pathscan/sm_pathways.rel.noCREBBP.raw.tsv_detailed
 
+# NOTE: exclude KRAS,NRAS,CREBBP
 pathscan/sm_pathways.dia.noRAS.noCREBBP.raw.tsv: dia-high-af/smg.tsv pathscan/pathways-all.sizefiltered.tsv
 	genome music path-scan \
 		--bam-list dia/wig-list.tsv \
@@ -347,7 +388,7 @@ pathscan/sm_pathways.dia.noRAS.noCREBBP.raw.tsv: dia-high-af/smg.tsv pathscan/pa
 		--maf-file dia-high-af/rem_dia.maf \
 		--output-file pathscan/sm_pathways.dia.noRAS.noCREBBP.raw.tsv.part \
 		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
-		--genes-to-ignore KRAS,NRAS,CREBBP,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1
+		--genes-to-ignore MESP2,KRAS,NRAS,CREBBP,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1
 	mv pathscan/sm_pathways.dia.noRAS.noCREBBP.raw.tsv.part pathscan/sm_pathways.dia.noRAS.noCREBBP.raw.tsv
 	mv pathscan/sm_pathways.dia.noRAS.noCREBBP.raw.tsv.part_detailed pathscan/sm_pathways.dia.noRAS.noCREBBP.raw.tsv_detailed
 
@@ -358,17 +399,27 @@ pathscan/sm_pathways.rel.noRAS.noCREBBP.raw.tsv: rel-high-af/smg.tsv pathscan/pa
 		--maf-file rel-high-af/rem_rel.maf \
 		--output-file pathscan/sm_pathways.rel.noRAS.noCREBBP.raw.tsv.part \
 		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
-		--genes-to-ignore KRAS,NRAS,CREBBP,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1
+		--genes-to-ignore MESP2,KRAS,NRAS,CREBBP,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1
 	mv pathscan/sm_pathways.rel.noRAS.noCREBBP.raw.tsv.part pathscan/sm_pathways.rel.noRAS.noCREBBP.raw.tsv
 	mv pathscan/sm_pathways.rel.noRAS.noCREBBP.raw.tsv.part_detailed pathscan/sm_pathways.rel.noRAS.noCREBBP.raw.tsv_detailed
 
-pathscan/sm_pathways.%.annotated.tsv: pathscan/sm_pathways.%.raw.tsv ~/hdall/scripts/pathway-analysis/annotate-pathscan-result.pl
+pathscan/sm_pathways.dia.%.annotated.tsv: pathscan/sm_pathways.dia.%.raw.tsv ~/hdall/scripts/pathway-analysis/annotate-pathscan-result.pl
 	perl ~/hdall/scripts/pathway-analysis/annotate-pathscan-result.pl \
 		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
-		--sm-pathways pathscan/sm_pathways.$*.raw.tsv \
-		--sm-pathways-detail pathscan/sm_pathways.$*.raw.tsv_detailed \
-		> pathscan/sm_pathways.$*.annotated.tsv.part
-	mv pathscan/sm_pathways.$*.annotated.tsv.part pathscan/sm_pathways.$*.annotated.tsv
+		--sm-pathways pathscan/sm_pathways.dia.$*.raw.tsv \
+		--sm-pathways-detail pathscan/sm_pathways.dia.$*.raw.tsv_detailed \
+		--maf-file dia-high-af/rem_dia.cnv.maf \
+		> pathscan/sm_pathways.dia.$*.annotated.tsv.part
+	mv pathscan/sm_pathways.dia.$*.annotated.tsv.part pathscan/sm_pathways.dia.$*.annotated.tsv
+
+pathscan/sm_pathways.rel.%.annotated.tsv: pathscan/sm_pathways.rel.%.raw.tsv ~/hdall/scripts/pathway-analysis/annotate-pathscan-result.pl
+	perl ~/hdall/scripts/pathway-analysis/annotate-pathscan-result.pl \
+		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
+		--sm-pathways pathscan/sm_pathways.rel.$*.raw.tsv \
+		--sm-pathways-detail pathscan/sm_pathways.rel.$*.raw.tsv_detailed \
+		--maf-file rel-high-af/rem_rel.cnv.maf \
+		> pathscan/sm_pathways.rel.$*.annotated.tsv.part
+	mv pathscan/sm_pathways.rel.$*.annotated.tsv.part pathscan/sm_pathways.rel.$*.annotated.tsv
 
 pathscan/sm_pathways.%.matrix.clustered.tsv: pathscan/sm_pathways.%.annotated.tsv ~/hdall/scripts/pathway-analysis/get-gene-pathway-matrix-enriched.pl ~/hdall/scripts/pathway-analysis/cluster-gene-pathway-matrix.R
 	cat pathscan/sm_pathways.$*.annotated.tsv | perl ~/hdall/scripts/pathway-analysis/get-gene-pathway-matrix-enriched.pl \

@@ -60,7 +60,7 @@ open(D,"$smp_dia_file") or croak "ERROR: could not read file $smp_dia_file\n";
 while(<D>)
 {
 	chomp;
-	my ($id, $name, $class, $size, $samples_affected, $total_variations, $p, $fdr, $num_genes, $genes) = split(/\t/);
+	my ($id, $name, $class, $size, $samples_affected, $total_variations, $p, $fdr, $num_genes, $genes, $link) = split(/\t/);
 	next if ($size > $max_pathway_size);
 #	next if ($class ne "NCI");
 	next if ($p > $max_pvalue);
@@ -85,7 +85,7 @@ open(D,"$smp_rel_file") or croak "ERROR: could not read file $smp_rel_file\n";
 while(<D>)
 {
 	chomp;
-	my ($id, $name, $class, $size, $samples_affected, $total_variations, $p, $fdr, $num_genes, $genes) = split(/\t/);
+	my ($id, $name, $class, $size, $samples_affected, $total_variations, $p, $fdr, $num_genes, $genes, $link) = split(/\t/);
 	next if ($size > $max_pathway_size);
 #	next if ($class ne "NCI");
 	next if ($p > $max_pvalue);

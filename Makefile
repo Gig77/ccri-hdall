@@ -76,15 +76,15 @@ gene-patient-matrix.tier1.tsv: impacted-genes-list.tier1.tsv ~/hdall/scripts/get
 		2>&1 1>gene-patient-matrix.tier1.tsv.part | tee -a make.log
 	mv gene-patient-matrix.tier1.tsv.part gene-patient-matrix.tier1.tsv
 
-cnv/hdall.cnv.tsv: cnv/CNAsallpatients.tsv cnv/hyperdiploid_CytoHDarray.tsv ~/hdall/scripts/parse-cnv-data.pl
-	cat cnv/CNAsallpatients.tsv | perl ~/hdall/scripts/parse-cnv-data.pl --format andrea --header \
+cnv/hdall.cnv.tsv: cnv/CNAsallpatients.tsv cnv/hyperdiploid_CytoHDarray.tsv ~/hdall/scripts/cnv/parse-cnv-data.pl
+	cat cnv/CNAsallpatients.tsv | perl ~/hdall/scripts/cnv/parse-cnv-data.pl --format andrea --header \
 		2>&1 1>cnv/hdall.cnv.tsv.part | tee -a make.log 
-	cat cnv/hyperdiploid_CytoHDarray.tsv | perl ~/hdall/scripts/parse-cnv-data.pl --format maria \
+	cat cnv/hyperdiploid_CytoHDarray.tsv | perl ~/hdall/scripts/cnv/parse-cnv-data.pl --format maria \
 		2>&1 1>>cnv/hdall.cnv.tsv.part | tee -a make.log 
 	mv cnv/hdall.cnv.tsv.part cnv/hdall.cnv.tsv
 
-cnv/impacted-genes-list.cnv.tsv: cnv/hdall.cnv.tsv ~/hdall/scripts/impacted-genes.cnv.pl
-	cat cnv/hdall.cnv.tsv | perl ~/hdall/scripts/impacted-genes.cnv.pl \
+cnv/impacted-genes-list.cnv.tsv: cnv/hdall.cnv.tsv ~/hdall/scripts/impacted-genes-cnv.pl
+	cat cnv/hdall.cnv.tsv | perl ~/hdall/scripts/impacted-genes-cnv.pl \
 		--max-genes 99999 \
 		2>&1 1>cnv/impacted-genes-list.cnv.tsv.part | tee -a make.log 
 	mv cnv/impacted-genes-list.cnv.tsv.part cnv/impacted-genes-list.cnv.tsv

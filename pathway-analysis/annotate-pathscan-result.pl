@@ -5,12 +5,13 @@ use Carp;
 use Getopt::Long;
 
 # parse detailed results first
-my ($sm_pathways, $sm_pathways_detail, $pathway_file);
+my ($sm_pathways, $sm_pathways_detail, $pathway_file, $maf_file);
 GetOptions
 (
 	"pathway-file=s" => \$pathway_file, # input pathway file for music path-scan
 	"sm-pathways=s" => \$sm_pathways, # result list from genome music path-scan  
-	"sm-pathways-detail=s" => \$sm_pathways_detail # detaild result from genome music path-scan (= second output file)  
+	"sm-pathways-detail=s" => \$sm_pathways_detail, # detaild result from genome music path-scan (= second output file)  
+	"maf-file=s" => \$maf_file # for determining type of mutation affecting each gene (needed to color KEGG diagrams)  
 );
 
 # read pathway input file
@@ -34,6 +35,42 @@ while(<D>)
 }
 close(D);
 croak "ERROR: File $sm_pathways_detail is empty" if ($content eq "");
+
+# TABLE: cnv.maf
+my %mut_type;
+open(M,"$maf_file") or die "ERROR: could not read file $maf_file\n";
+<M>;<M>; # skip headers
+while(<M>) 
+{
+	chomp;
+	my @f = split("\t");
+	
+	my $hugo = $f[0];
+	my $center = $f[2];
+	my $type = $f[9];
+	
+	if ($center eq 'Array')
+	{
+		if ($type eq "ins")
+		{
+			$mut_type{$hugo}{gain} = 1;
+		}
+		elsif ($type eq "del")
+		{
+			$mut_type{$hugo}{loss} = 1;
+		}
+		else
+		{
+			croak "ERROR: Invalid variant type $type:\n$_\n";
+		}
+	}
+	else
+	{
+		$mut_type{$hugo}{mutated} = 1; 
+	}
+}
+close(M);
+croak "ERROR: File $maf_file is empty" if (keys(%mut_type) == 0);
 
 my (%pw, %genes);
 while ($content =~ /Pathway: (.*?)\nName: (.*?)\nClass: (.*?)\nP-value: (.*?)\nFDR: (.*?)\nDescription:(.*?)\n(.*?)\nSamples with mutations \(#hits\): (.*?)\n/sg)
@@ -64,17 +101,63 @@ while ($content =~ /Pathway: (.*?)\nName: (.*?)\nClass: (.*?)\nP-value: (.*?)\nF
 }	
 
 # TABLE: sm_pathways.annotated
-print "Pathway\tName\tClass\tSize\tSamples_Affected\tTotal_Variations\tp-value\tFDR\tNumGenes\tGenes\n";
+print "Pathway\tName\tClass\tSize\tSamples_Affected\tTotal_Variations\tp-value\tFDR\tNumGenes(deleted)\tGenes\tLink\tgenes_deleted\n";
 open(D,"$sm_pathways") or die "ERROR: could not read file $sm_pathways\n";
 <D>; # skip header
 while(<D>) 
 {
 	chomp;
 	my ($pathway, $name, $class, $num_samples, $num_genes, $pvalue, $fdr) = split(/\t/);
-	print "$pathway\t$name\t$class\t",$pathways{$pathway}{'size'},"\t$num_samples\t$num_genes\t$pvalue\t$fdr\t";
-	print scalar(keys(%{$pw{$pathway}{genes}})),"\t";
+	
 	my @genes_sorted = sort { $pw{$pathway}{genes}{$b} <=> $pw{$pathway}{genes}{$a} } keys(%{$pw{$pathway}{genes}});
 	my @genes_print = map { "$_(".$pw{$pathway}{genes}{$_}.")"  } @genes_sorted; 
-	print join(",", @genes_print),"\n";
+
+	# determine number of deleted genes
+	my $num_deleted = 0;
+	for (my $i = 0; $i < @genes_sorted; $i ++)
+	{
+		$num_deleted ++ if ($mut_type{$genes_sorted[$i]}{loss});
+	}
+	
+	print "$pathway\t$name\t$class\t",$pathways{$pathway}{'size'},"\t$num_samples\t";
+	print $num_genes, $num_deleted > 0 ? " ($num_deleted)" : "", "\t";
+	print "$pvalue\t$fdr\t";
+	print scalar(keys(%{$pw{$pathway}{genes}})),"\t";
+	print join(",", @genes_print),"\t";
+	if ($class  =~ /^KEGG/)
+	{
+		my $keggid = $pathway;
+		$keggid =~ s/KEGG_PATHWAY://;
+		print "http://www.genome.jp/kegg-bin/show_pathway?map=$keggid&multi_query=";
+		for (my $i = 0; $i < @genes_sorted; $i ++)
+		{
+			my ($bgcolor, $fgcolor);
+			if ($mut_type{$genes_sorted[$i]}{mutated} and $mut_type{$genes_sorted[$i]}{loss})
+			{
+				($bgcolor, $fgcolor) = ("yellow", "red");
+			}
+			elsif ($mut_type{$genes_sorted[$i]}{mutated} and $mut_type{$genes_sorted[$i]}{gain})
+			{
+				($bgcolor, $fgcolor) = ("yellow", "blue");
+			}
+			elsif ($mut_type{$genes_sorted[$i]}{loss})
+			{
+				($bgcolor, $fgcolor) = ("red", "black");
+			}
+			elsif ($mut_type{$genes_sorted[$i]}{gain})
+			{
+				($bgcolor, $fgcolor) = ("blue", "yellow");
+			}
+			else
+			{
+				($bgcolor, $fgcolor) = ("yellow", "black");
+			}
+			
+			print $genes_sorted[$i],'+',$bgcolor,'%2C',$fgcolor;
+			print '%0D%0A' if ($i < @genes_sorted - 1);
+		}
+	}
+		
+	print "\n";
 }
 close(D);

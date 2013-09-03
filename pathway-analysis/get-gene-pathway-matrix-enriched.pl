@@ -28,12 +28,12 @@ if ($subtract_pathway_file)
 	<S>; # skip header
 	while(<S>)
 	{
-		my ($pathway, $name, $class, $size, $samples, $tot_var, $p_value, $fdr, $num_genes, $genes) = split /\t/;
+		my ($pathway, $name, $class, $size, $samples, $tot_var, $p_value, $fdr, $num_genes, $genes, $link) = split /\t/;
 		$subtract_pathways{$pathway} = 1 if ($p_value < $subtract_pvalue);
 	}
 	close(S);
+	print STDERR "INFO: Will exclude ".keys(%subtract_pathways)." pathways with p-value < $subtract_pvalue in diagnosis\n";
 }
-print STDERR "INFO: Will exclude ".keys(%subtract_pathways)." pathways with p-value < $subtract_pvalue in diagnosis\n";
 
 # TABLE: sm_pathways.annotated
 my (%pw, %genes);
@@ -41,7 +41,7 @@ my (%pw, %genes);
 while(<>)
 {
 	chomp;
-	my ($pathway, $name, $class, $size, $samples, $tot_var, $p_value, $fdr, $num_genes, $genes) = split /\t/;
+	my ($pathway, $name, $class, $size, $samples, $tot_var, $p_value, $fdr, $num_genes, $genes, $link) = split /\t/;
 	croak "ERROR: Could not parse pathway entry: $_\n" if (!$pathway or !$name or !$class or !$genes);
 
 	next if ($p_value > $max_pvalue);

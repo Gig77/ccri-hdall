@@ -243,9 +243,20 @@ while (my $line = $vcf->next_line())
 		# check alignment quality around indel
 		##INFO=<ID=T_NQSMM,Number=2,Type=Float,Description="In TUMOR: Within NQS window: fraction of mismatching bases in consensus indel-supporting reads/in reference-supporting reads">
 		my ($frac_mm_reads_indel, $frac_mm_reads_ref) = split(",", $x->{INFO}{T_NQSMM});
-		if ($frac_mm_reads_indel > $frac_mm_reads_ref)
+		if ($frac_mm_reads_indel - $frac_mm_reads_ref > 0.01)
 		{
 			INFO("REJECT: POOR ALIGNMENT: ",$x->{CHROM},":",$x->{POS},"\t","frac_mm_reads_indel: $frac_mm_reads_indel\tfrac_mm_reads_ref: $frac_mm_reads_ref");
+			next;
+		}
+
+		# check mapping quality
+		##INFO=<ID=T_MQ,Number=2,Type=Float,Description="In TUMOR: average mapping quality of consensus indel-supporting reads/reference-supporting reads">
+		##INFO=<ID=N_MQ,Number=2,Type=Float,Description="In NORMAL: average mapping quality of consensus indel-supporting reads/reference-supporting reads">
+		my ($mq_indel_tum, $mq_ref_tum) = split(",", $x->{INFO}{T_MQ});
+		my ($mq_indel_rem, $mq_ref_rem) = split(",", $x->{INFO}{N_MQ});		
+		if ($mq_indel_tum < 40)
+		{
+			INFO("REJECT: POOR MAPPING: ",$x->{CHROM},":",$x->{POS},"\t","T_MQ=$mq_indel_tum,$mq_ref_tum");
 			next;
 		}
 		

@@ -296,7 +296,7 @@ pathscan/sm_pathways.dia.all.raw.tsv: dia-high-af/smg.tsv pathscan/pathways-all.
 		--maf-file dia-high-af/rem_dia.maf \
 		--output-file pathscan/sm_pathways.dia.all.raw.tsv.part \
 		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
-		--genes-to-ignore MESP2,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1
+		--genes-to-ignore MESP2,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1,PDZD7
 	mv pathscan/sm_pathways.dia.all.raw.tsv.part pathscan/sm_pathways.dia.all.raw.tsv
 	mv pathscan/sm_pathways.dia.all.raw.tsv.part_detailed pathscan/sm_pathways.dia.all.raw.tsv_detailed
 
@@ -307,7 +307,7 @@ pathscan/sm_pathways.rel.all.raw.tsv: rel-high-af/smg.tsv pathscan/pathways-all.
 		--maf-file rel-high-af/rem_rel.maf \
 		--output-file pathscan/sm_pathways.rel.all.raw.tsv.part \
 		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
-		--genes-to-ignore MESP2,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1
+		--genes-to-ignore MESP2,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1,PDZD7
 	mv pathscan/sm_pathways.rel.all.raw.tsv.part pathscan/sm_pathways.rel.all.raw.tsv
 	mv pathscan/sm_pathways.rel.all.raw.tsv.part_detailed pathscan/sm_pathways.rel.all.raw.tsv_detailed
 
@@ -319,7 +319,7 @@ pathscan/sm_pathways.dia.all.cnv.raw.tsv: dia-high-af/smg.tsv pathscan/pathways-
 		--maf-file dia-high-af/rem_dia.cnv.maf \
 		--output-file pathscan/sm_pathways.dia.all.cnv.raw.tsv.part \
 		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
-		--genes-to-ignore MESP2,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1
+		--genes-to-ignore MESP2,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1,PDZD7
 	mv pathscan/sm_pathways.dia.all.cnv.raw.tsv.part pathscan/sm_pathways.dia.all.cnv.raw.tsv
 	mv pathscan/sm_pathways.dia.all.cnv.raw.tsv.part_detailed pathscan/sm_pathways.dia.all.cnv.raw.tsv_detailed
 
@@ -330,7 +330,7 @@ pathscan/sm_pathways.rel.all.cnv.raw.tsv: rel-high-af/smg.tsv pathscan/pathways-
 		--maf-file rel-high-af/rem_rel.cnv.maf \
 		--output-file pathscan/sm_pathways.rel.all.cnv.raw.tsv.part \
 		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
-		--genes-to-ignore MESP2,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1
+		--genes-to-ignore MESP2,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1,PDZD7
 	mv pathscan/sm_pathways.rel.all.cnv.raw.tsv.part pathscan/sm_pathways.rel.all.cnv.raw.tsv
 	mv pathscan/sm_pathways.rel.all.cnv.raw.tsv.part_detailed pathscan/sm_pathways.rel.all.cnv.raw.tsv_detailed
 
@@ -342,7 +342,7 @@ pathscan/sm_pathways.dia.noRAS.raw.tsv: dia-high-af/smg.tsv pathscan/pathways-al
 		--maf-file dia-high-af/rem_dia.maf \
 		--output-file pathscan/sm_pathways.dia.noRAS.raw.tsv.part \
 		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
-		--genes-to-ignore MESP2,KRAS,NRAS,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1
+		--genes-to-ignore MESP2,KRAS,NRAS,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1,PDZD7
 	mv pathscan/sm_pathways.dia.noRAS.raw.tsv.part pathscan/sm_pathways.dia.noRAS.raw.tsv
 	mv pathscan/sm_pathways.dia.noRAS.raw.tsv.part_detailed pathscan/sm_pathways.dia.noRAS.raw.tsv_detailed
 
@@ -353,7 +353,7 @@ pathscan/sm_pathways.rel.noRAS.raw.tsv: rel-high-af/smg.tsv pathscan/pathways-al
 		--maf-file rel-high-af/rem_rel.maf \
 		--output-file pathscan/sm_pathways.rel.noRAS.raw.tsv.part \
 		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
-		--genes-to-ignore MESP2,KRAS,NRAS,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1
+		--genes-to-ignore MESP2,KRAS,NRAS,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1,PDZD7
 	mv pathscan/sm_pathways.rel.noRAS.raw.tsv.part pathscan/sm_pathways.rel.noRAS.raw.tsv
 	mv pathscan/sm_pathways.rel.noRAS.raw.tsv.part_detailed pathscan/sm_pathways.rel.noRAS.raw.tsv_detailed
 
@@ -365,7 +365,7 @@ pathscan/sm_pathways.dia.noCREBBP.raw.tsv: dia-high-af/smg.tsv pathscan/pathways
 		--maf-file dia-high-af/rem_dia.maf \
 		--output-file pathscan/sm_pathways.dia.noCREBBP.raw.tsv.part \
 		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
-		--genes-to-ignore MESP2,CREBBP,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1
+		--genes-to-ignore MESP2,CREBBP,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1,PDZD7
 	mv pathscan/sm_pathways.dia.noCREBBP.raw.tsv.part pathscan/sm_pathways.dia.noCREBBP.raw.tsv
 	mv pathscan/sm_pathways.dia.noCREBBP.raw.tsv.part_detailed pathscan/sm_pathways.dia.noCREBBP.raw.tsv_detailed
 
@@ -376,7 +376,7 @@ pathscan/sm_pathways.rel.noCREBBP.raw.tsv: rel-high-af/smg.tsv pathscan/pathways
 		--maf-file rel-high-af/rem_rel.maf \
 		--output-file pathscan/sm_pathways.rel.noCREBBP.raw.tsv.part \
 		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
-		--genes-to-ignore MESP2,CREBBP,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1
+		--genes-to-ignore MESP2,CREBBP,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1,PDZD7
 	mv pathscan/sm_pathways.rel.noCREBBP.raw.tsv.part pathscan/sm_pathways.rel.noCREBBP.raw.tsv
 	mv pathscan/sm_pathways.rel.noCREBBP.raw.tsv.part_detailed pathscan/sm_pathways.rel.noCREBBP.raw.tsv_detailed
 
@@ -388,7 +388,7 @@ pathscan/sm_pathways.dia.noRAS.noCREBBP.raw.tsv: dia-high-af/smg.tsv pathscan/pa
 		--maf-file dia-high-af/rem_dia.maf \
 		--output-file pathscan/sm_pathways.dia.noRAS.noCREBBP.raw.tsv.part \
 		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
-		--genes-to-ignore MESP2,KRAS,NRAS,CREBBP,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1
+		--genes-to-ignore MESP2,KRAS,NRAS,CREBBP,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1,PDZD7
 	mv pathscan/sm_pathways.dia.noRAS.noCREBBP.raw.tsv.part pathscan/sm_pathways.dia.noRAS.noCREBBP.raw.tsv
 	mv pathscan/sm_pathways.dia.noRAS.noCREBBP.raw.tsv.part_detailed pathscan/sm_pathways.dia.noRAS.noCREBBP.raw.tsv_detailed
 
@@ -399,7 +399,7 @@ pathscan/sm_pathways.rel.noRAS.noCREBBP.raw.tsv: rel-high-af/smg.tsv pathscan/pa
 		--maf-file rel-high-af/rem_rel.maf \
 		--output-file pathscan/sm_pathways.rel.noRAS.noCREBBP.raw.tsv.part \
 		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
-		--genes-to-ignore MESP2,KRAS,NRAS,CREBBP,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1
+		--genes-to-ignore MESP2,KRAS,NRAS,CREBBP,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1,PDZD7
 	mv pathscan/sm_pathways.rel.noRAS.noCREBBP.raw.tsv.part pathscan/sm_pathways.rel.noRAS.noCREBBP.raw.tsv
 	mv pathscan/sm_pathways.rel.noRAS.noCREBBP.raw.tsv.part_detailed pathscan/sm_pathways.rel.noRAS.noCREBBP.raw.tsv_detailed
 

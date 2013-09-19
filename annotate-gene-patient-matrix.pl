@@ -8,7 +8,7 @@ use Carp;
 use Getopt::Long;
 
 # parse detailed results first
-my ($gene_patient_matrix, $smg_dia, $smg_rel, $smp_dia_file, $smp_rel_file, $cnv, $gene_pathway_matrix, $gene_panel_file, $max_pvalue, $max_pathway_size);
+my ($gene_patient_matrix, $smg_dia, $smg_rel, $smp_dia_file, $smp_rel_file, $cnv, $gene_pathway_matrix, $gene_panel_file, $max_pvalue, $max_pathway_size, $curated_freq_file);
 GetOptions
 (
 	"gene-patient-matrix=s" => \$gene_patient_matrix,
@@ -20,7 +20,8 @@ GetOptions
 	"gene-pathway-matrix=s" => \$gene_pathway_matrix, # clustered gene-pathway-matrix to determine order of genes and pathways
 	"panel-genes=s" => \$gene_panel_file, # names of genes selected for resequencing   
 	"max-p-value=f" => \$max_pvalue,  
-	"max-pathway-size=i" => \$max_pathway_size
+	"max-pathway-size=i" => \$max_pathway_size,
+	"curated-frequencies=s" => \$curated_freq_file
 );
 
 croak "ERROR: Pathway group file not specified" if (!$gene_pathway_matrix);
@@ -64,18 +65,23 @@ while(<D>)
 	next if ($size > $max_pathway_size);
 #	next if ($class ne "NCI");
 	next if ($p > $max_pvalue);
+	next if ($class =~ /(c1_|c3_|c7_|c4_)/);
 
 	$smp_dia{"$class|$name|$size"} = $p;
 	foreach my $g (split(",", $genes))
 	{
 		$g =~ s/\(\d+\)//;
-		$smp_dia_genes{$g}{'pvalue'} = $p if (!exists $smp_dia_genes{$g}{'pvalue'} or $smp_dia_genes{$g}{'pvalue'} > $p);
+		if (!exists $smp_dia_genes{$g}{'pvalue'} or $smp_dia_genes{$g}{'pvalue'} > $p)
+		{
+			$smp_dia_genes{$g}{'pvalue'} = $p;
+			$smp_dia_genes{$g}{'pathway'} = "$class|$name|$size";
+		}
 		$smp_dia_genes{$g}{"$class|$name|$size"} = $p;
 	}
 }
 close(D);
 INFO(scalar(keys(%smp_dia_genes))." pathways read from file $smp_dia_file");
-croak "ERROR: no significanly mutated pathways found in file $smp_dia_file" if (keys(%smp_dia_genes) == 0);
+INFO("WARNING: no significanly mutated pathways found in file $smp_dia_file") if (keys(%smp_dia_genes) == 0);
 
 # read significantly mutated pathways at relapse
 # TABLE: sm_pathways.annotated
@@ -89,18 +95,23 @@ while(<D>)
 	next if ($size > $max_pathway_size);
 #	next if ($class ne "NCI");
 	next if ($p > $max_pvalue);
+	next if ($class =~ /(c1_|c3_|c7_|c4_)/);
 
 	$smp_rel{"$class|$name|$size"} = $p;
 	foreach my $g (split(",", $genes))
 	{
 		$g =~ s/\(\d+\)//;
-		$smp_rel_genes{$g}{'pvalue'} = $p if (!exists $smp_rel_genes{$g}{'pvalue'} or $smp_rel_genes{$g}{'pvalue'} > $p);
+		if (!exists $smp_rel_genes{$g}{'pvalue'} or $smp_rel_genes{$g}{'pvalue'} > $p)
+		{
+			$smp_rel_genes{$g}{'pvalue'} = $p;
+			$smp_rel_genes{$g}{'pathway'} = "$class|$name|$size";
+		}
 		$smp_rel_genes{$g}{"$class|$name|$size"} = $p;
 	}
 }
 close(D);
 INFO(scalar(keys(%smp_rel_genes))." pathways read from file $smp_rel_file");
-croak "ERROR: no significanly mutated pathways found in file $smp_rel_file" if (keys(%smp_rel_genes) == 0);
+INFO("WARNING: no significanly mutated pathways found in file $smp_rel_file") if (keys(%smp_rel_genes) == 0);
 
 # read copy-number info
 my (%cnvs);
@@ -144,7 +155,7 @@ while(<PG>)
 close(PG);
 INFO("$lines_read lines read from file $gene_pathway_matrix");
 
-# read penel genes
+# read panel genes
 my %panel_genes;
 if ($gene_panel_file)
 {
@@ -156,6 +167,23 @@ if ($gene_panel_file)
 	}
 	close(P);
 	INFO(scalar(keys(%panel_genes))." genes read from file $gene_panel_file");	
+}
+
+# read curated frequency number
+# TABLE: freq-rel-ns-curated.tsv
+my %curated_freq;
+if ($curated_freq_file)
+{
+	open(C,"$curated_freq_file") or croak "ERROR: could not read CNV file $curated_freq_file\n";
+	<C>; # skip header:
+	while(<C>)
+	{
+		chomp;
+		my ($gene, $freq, $comment) = split(/\t/);
+		$curated_freq{$gene} = $freq;
+	}
+	close(C);
+	INFO("".scalar(keys(%curated_freq))." genes read from file $curated_freq_file");	
 }
 
 # TABLE: gene-patient-matrix
@@ -215,11 +243,13 @@ while(<M>)
 close(M);
 INFO(scalar(keys(%gene_info))." genes read from file $gene_patient_matrix");
 
+# TABLE: gene-patient-matrix.annotated
+
 # output header
 print "gene\ton-panel\tdescr\tchr\tstart\tend\texons\ttr_len\tcds_len\tcosmic\t";
-print "freq-dia\ttot-dia\tfreq-dia-ns\ttot-dia-ns\tmax-af-dia\tmax-af-dia-ns\timp-ex-dia\timp-ex-dia-ns\tp-gene-dia\tp-pw-dia";
+print "freq-dia\ttot-dia\tfreq-dia-ns\ttot-dia-ns\tmax-af-dia\tmax-af-dia-ns\timp-ex-dia\timp-ex-dia-ns\tp-gene-dia\tp-pw-dia\ttop-pw-dia";
 map { print "\t$_" } (@patients_dia);
-print "\tfreq-rel\ttot-rel\tfreq-rel-ns\ttot-rel-ns\tmax-af-rel\tmax-af-rel-ns\timp-ex-rel\timp-ex-rel-ns\tp-gene-rel\tp-pw-rel";
+print "\tfreq-rel\ttot-rel\tfreq-rel-ns\tfreq-rel-ns-curated\ttot-rel-ns\tmax-af-rel\tmax-af-rel-ns\timp-ex-rel\timp-ex-rel-ns\tp-gene-rel\tp-pw-rel\ttop-pw-rel";
 map { print "\t$_" } (@patients_rel);
 print "\tfreq-cons\tfreq-cons-raise\ttot-cons";
 map { print "\t$_" } (@patients_cons);
@@ -247,6 +277,8 @@ foreach my $g (keys(%gene_info))
 
 	print "\t".(defined $smg_dia_pvalue{$g} ? $smg_dia_pvalue{$g} : ""); 
 	print "\t".(defined $smp_dia_genes{$g}{'pvalue'} ? $smp_dia_genes{$g}{'pvalue'} : "");
+	print "\t".(defined $smp_dia_genes{$g}{'pathway'} ? $smp_dia_genes{$g}{'pathway'} : ""); 
+
 	foreach my $pdia (@patients_dia)
 	{
 		print "\t";
@@ -263,6 +295,7 @@ foreach my $g (keys(%gene_info))
 	print "\t".(defined $gene_info{$g}{'freq-rel'} ? $gene_info{$g}{'freq-rel'} : "");
 	print "\t".(defined $gene_info{$g}{'tot-rel'} ? $gene_info{$g}{'tot-rel'} : "");
 	print "\t".(defined $gene_info{$g}{'freq-rel-ns'} ? $gene_info{$g}{'freq-rel-ns'} : "");
+	print "\t".(defined $curated_freq{$g} ? $curated_freq{$g} : (defined $gene_info{$g}{'freq-rel-ns'} ? $gene_info{$g}{'freq-rel-ns'} : ""));
 	print "\t".(defined $gene_info{$g}{'tot-rel-ns'} ? $gene_info{$g}{'tot-rel-ns'} : "");
 	print "\t".(defined $gene_info{$g}{'max-af-rel'} ? $gene_info{$g}{'max-af-rel'} : "");
 	print "\t".(defined $gene_info{$g}{'max-af-rel-ns'} ? $gene_info{$g}{'max-af-rel-ns'} : "");
@@ -271,6 +304,7 @@ foreach my $g (keys(%gene_info))
 
 	print "\t".(defined $smg_rel_pvalue{$g} ? $smg_rel_pvalue{$g} : ""); 
 	print "\t".(defined $smp_rel_genes{$g}{'pvalue'} ? $smp_rel_genes{$g}{'pvalue'} : ""); 
+	print "\t".(defined $smp_rel_genes{$g}{'pathway'} ? $smp_rel_genes{$g}{'pathway'} : ""); 
 
 	foreach my $prel (@patients_rel)
 	{

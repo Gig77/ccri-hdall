@@ -120,9 +120,8 @@ while(<D>)
 	}
 	
 	print "$pathway\t$name\t$class\t",$pathways{$pathway}{'size'},"\t$num_samples\t";
-	print $num_genes, $num_deleted > 0 ? " ($num_deleted)" : "", "\t";
-	print "$pvalue\t$fdr\t";
-	print scalar(keys(%{$pw{$pathway}{genes}})),"\t";
+	print "$num_genes\t$pvalue\t$fdr\t";
+	print scalar(keys(%{$pw{$pathway}{genes}})), $num_deleted > 0 ? " ($num_deleted)" : "", "\t";
 	print join(",", @genes_print),"\t";
 	if ($class  =~ /^KEGG/)
 	{

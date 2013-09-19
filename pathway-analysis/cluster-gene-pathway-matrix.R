@@ -6,9 +6,10 @@ if (is.na(args[2])) stop("output file not specified")
 #if (is.na(args[3])) stop("PDF output file for hierarchical gene tree not specified")
 #if (is.na(args[4])) stop("PDF output file for hierarchical pathway tree not specified")
 
-if (length(readLines(args[1])) == 0)
+if (length(readLines(args[1])) == 0 || length(readLines(args[1])) == 1)
 {
-	print("WARNING: Input file args[1] is empty. Cannot perform clustering of gene-pathway-matrix")
+	print(paste("WARNING: Input file", args[1], "is empty. Cannot perform clustering of gene-pathway-matrix"))
+	file.copy(args[1], args[2], overwrite=T)
 	quit()
 }
 	 

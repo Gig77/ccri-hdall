@@ -9,7 +9,7 @@ use Generic;
 use Log::Log4perl qw(:easy);
 use Lolliplot;
 
-my $hugos = "CREBBP,KRAS,NRAS,TRRAP,CDC42EP1,SCN5A,CTBS,FRG1,TBP";
+my $hugos = "CREBBP,KRAS,NRAS,TRRAP,CDC42EP1,SCN5A,CTBS,FRG1,TBP,USP9X,CACNA1B";
 
 # ucsc/HUGO mapping
 my %id2sym;

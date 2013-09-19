@@ -14,7 +14,7 @@ use Data::Dumper;
 
 INFO("START: ", join(" ", @ARGV));
 
-my ($music_roi, $keep_variants_file, $entrez_mapping, $sample, $header, $min_af);
+my ($music_roi, $keep_variants_file, $entrez_mapping, $sample, $header, $min_af, $deleterious);
 GetOptions
 (
 	"music-roi=s" => \$music_roi,  # MuSiC region of interest (ROI) file (must be tabix accessible, i.e. compressed and indexed)
@@ -22,6 +22,7 @@ GetOptions
 	"mapping-entrez=s" => \$entrez_mapping,  # file with mappings from gene symbol to entrez ids
 	"sample=s" => \$sample,  # e.g. 314_rem_dia
 	"header" => \$header,  # output header yes/no
+	"deleterious" => \$deleterious,  # output only variants predicted to be deleterious by PolyPhen or SIFT
 	"min-af=s" => \$min_af  # minimum allelic frequency
 );
 
@@ -140,7 +141,7 @@ while (my $x = $vcf->next_data_hash())
 	my $pos = $x->{POS};
 
 	next if ($x->{FILTER}->[0] eq "REJECT");
-
+	
 	my $ref_allele = $x->{REF};
 	my $alt_allele_1 = $ref_allele; # lets assume for now that all variants are heterozygous
 	my $alt_allele_2 = $x->{ALT}->[0]; # @{$x->{ALT}} > 1 ? $x->{ALT}->[1] : '';
@@ -205,6 +206,18 @@ while (my $x = $vcf->next_data_hash())
 #		next if (exists $written{$gene});
 		
 		my $effect = get_variant_classification($snpeff_genes->{$gene}{'effect'}, $var_type);
+		
+		if ($deleterious and $effect eq "Missense_Mutation")
+		{
+			my ($polyphen, $sift, $siphy) = ($x->{INFO}{'dbNSFP_Polyphen2_HVAR_pred'}, $x->{INFO}{'dbNSFP_SIFT_score'}, $x->{INFO}{'dbNSFP_29way_logOdds'});
+			my $isdel = 0;
+			$isdel = 1 if (!$polyphen and !defined $sift);
+			$isdel = 1 if ($polyphen and $polyphen =~ /D/);
+			$isdel = 1 if (defined $sift and $sift < 0.05);
+			$isdel = 1 if (defined $siphy and $siphy > 19);
+			next if (!$isdel);
+		}
+
 		
 		if ($effect eq 'Intron')
 		{

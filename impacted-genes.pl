@@ -144,7 +144,6 @@ while(<>)
 	die "ERROR: $0: snpeff annotation missing from following line:\n$_\n"
 		if (!$snpeff);
 
-	next if ($status eq "REJECT"); 
 	next if ($effect =~ /^(DOWNSTREAM|INTERGENIC|INTRON|UPSTREAM|INTERGENIC_CONSERVED)$/);
 	
 	if ($effect !~ /^(SYNONYMOUS_START|SYNONYMOUS_CODING|SYNONYMOUS_STOP|UTR_5_PRIME|UTR_5_DELETED|START_GAINED|UTR_3_PRIME|UTR_3_DELETED|INTRON_CONSERVED|INTRAGENIC|EXON)$/)

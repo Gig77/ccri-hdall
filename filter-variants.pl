@@ -9,11 +9,12 @@ use Data::Dumper;
 use Getopt::Long;
 use Carp;
 
-my ($vcf_out, $header);
+my ($vcf_out, $header, $rejected_variants_file);
 GetOptions
 (
 	"vcf-out=s" => \$vcf_out,  # filtered VCF output file
-	"header" => \$header  # if set, write header line to output
+	"header" => \$header,  # if set, write header line to output
+	"rejected-variants-file=s" => \$rejected_variants_file # file with variants rejected based on manual curation; will be filtered from output
 );
 
 # TABLE: filtered-variants
@@ -113,6 +114,21 @@ while(<G>)
 }
 close(G);
 INFO(scalar(keys(%canonical))." canonical genes read from file $ENV{HOME}/hdall/data/hg19/hg19.knownCanonical.txt");
+
+my %rejected_variants;
+if ($rejected_variants_file)
+{
+	open(R,"$rejected_variants_file") or die "could not open file $rejected_variants_file";
+	<R>; # skip header
+	while(<R>)
+	{
+		chomp;
+		my ($patient, $sample, $var_type, $rejected_because, $chr, $pos) = split(/\t/);
+		$rejected_variants{"$patient\t$sample\t$chr\t$pos"} = $rejected_because;
+	}
+	close(R);
+	INFO(scalar(keys(%rejected_variants))." variants read from file $rejected_variants_file");
+}
 
 $| = 1; # turn on autoflush
 
@@ -271,12 +287,15 @@ while (my $line = $vcf->next_line())
 		croak "ERROR: Invalid variant type: $var_type\n";
 	}
 
+	my $reject = $rejected_variants{"$patient\t$cmp_type\t".$x->{CHROM}."\t".$x->{POS}};
+	$line =~ s/^([^\t]+\t[^\t]+\t[^\t]+\t[^\t]+\t[^\t]+\t[^\t]+\t)[^\t]+/$1REJECT/ if ($reject);
+	
 	print VCFOUT "$line" if ($vcf_out);
 	
 	print "$patient\t";		
 	print "$cmp_type\t";
 	print "$var_type\t";
-	print "$status\t";
+	print $reject ? "REJECT\t" : "$status\t";
 	print $x->{CHROM},"\t";
 	print $x->{POS},"\t";
 	print $x->{ID},"\t";

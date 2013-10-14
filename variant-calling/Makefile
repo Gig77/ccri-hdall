@@ -1,6 +1,8 @@
 export SHELLOPTS:=errexit:pipefail
 SHELL=/bin/bash  # required to make pipefail work
 
+all:
+
 # download dbSNP data from UCSC
 ~/hdall/data/hg19/hg19.snp137Common.txt: 
 	#mysql -h genome-mysql.cse.ucsc.edu -u genome -D hg19 -N -A -e 'select * from snp137Common' > ~/hdall/data/hg19/hg19.snp137Common.txt
@@ -10,29 +12,58 @@ SHELL=/bin/bash  # required to make pipefail work
 	bgzip -c ~/hdall/data/hg19/hg19.snp137Common.txt > ~/hdall/data/hg19/hg19.snp137Common.txt.gz
 	tabix ~/hdall/data/hg19/hg19.snp137Common.txt.gz -s 2 -b 3 -e 4
 
-varscan: ~/hdall/data/varscan/545_rel.merged.duplicate_marked.realigned.recalibrated.varscan.snp ~/hdall/data/varscan/545_rem.merged.duplicate_marked.realigned.recalibrated.varscan.snp
 
-~/hdall/data/varscan/545_rel.merged.duplicate_marked.realigned.recalibrated.varscan.snp: ~/hdall/data/bam/545_rel.merged.duplicate_marked.realigned.recalibrated.bam
-	~/tools/samtools-0.1.19/samtools mpileup \
-		-q 1 \
-		-f ~/hdall/data/hg19/ucsc.hg19.fasta \
-		~/hdall/data/bam/545_rel.merged.duplicate_marked.realigned.recalibrated.bam \
-		| tee >(java -jar ~/tools/varscan-2.3.6/VarScan.v2.3.6.jar mpileup2snp - > ~/hdall/data/varscan/545_rel.merged.duplicate_marked.realigned.recalibrated.varscan.snp.part) \
-		| java -jar ~/tools/varscan-2.3.6/VarScan.v2.3.6.jar mpileup2indel - > ~/hdall/data/varscan/545_rel.merged.duplicate_marked.realigned.recalibrated.varscan.indel.part
-	mv ~/hdall/data/varscan/545_rel.merged.duplicate_marked.realigned.recalibrated.varscan.snp.part ~/hdall/data/varscan/545_rel.merged.duplicate_marked.realigned.recalibrated.varscan.snp
-	mv ~/hdall/data/varscan/545_rel.merged.duplicate_marked.realigned.recalibrated.varscan.indel.part ~/hdall/data/varscan/545_rel.merged.duplicate_marked.realigned.recalibrated.varscan.indel
+SAMPLES = 545_rel 545_rem D_rem
+varscan: $(foreach S, $(SAMPLES), ~/hdall/data/varscan/$S.merged.duplicate_marked.realigned.recalibrated.varscan.vcf)
 
-~/hdall/data/varscan/545_rel.merged.duplicate_marked.realigned.recalibrated.varscan.vcf: ~/hdall/data/bam/545_rel.merged.duplicate_marked.realigned.recalibrated.bam
-	~/tools/samtools-0.1.19/samtools mpileup \
-		-q 1 \
-		-f ~/hdall/data/hg19/ucsc.hg19.fasta \
-		~/hdall/data/bam/545_rel.merged.duplicate_marked.realigned.recalibrated.bam \
-		| java -jar ~/tools/varscan-2.3.6/VarScan.v2.3.6.jar mpileup2cns \
-			--variants \
-			--p-value 1 \
-			--output-vcf 1 - \
-			> ~/hdall/data/varscan/545_rel.merged.duplicate_marked.realigned.recalibrated.varscan.vcf.part
-	mv ~/hdall/data/varscan/545_rel.merged.duplicate_marked.realigned.recalibrated.varscan.vcf.part ~/hdall/data/varscan/545_rel.merged.duplicate_marked.realigned.recalibrated.varscan.vcf
+# relapse samples; more stringent filtering
+~/hdall/data/varscan/%_rel.merged.duplicate_marked.realigned.recalibrated.varscan.vcf: ~/hdall/data/bam/%_rel.merged.duplicate_marked.realigned.recalibrated.bam
+	~/tools/samtools-0.1.19/samtools mpileup -q 40 -f ~/hdall/data/hg19/ucsc.hg19.fasta $< \
+		| java -jar ~/tools/varscan-2.3.6/VarScan.v2.3.6.jar mpileup2cns --variants --strand-filter 1 --min-coverage 10 --min-avg-qual 25 --p-value 1 --min-var-freq 0.1 --min-reads2 4 --output-vcf 1 - \
+			> $@.part
+	mv $@.part $@
+	bgzip -c $@ > $@.gz
+	tabix -p vcf $@.gz
 
-~/hdall/results/variant-calling/545_rel.merged.duplicate_marked.realigned.recalibrated.varscan.snpeff.vcf:
-	java -Xmx2g -jar ~/tools/snpEff-3.3h/snpEff.jar -v -lof -hgvs hg19 ~/hdall/data/varscan/545_rel.merged.duplicate_marked.realigned.recalibrated.varscan.vcf > ~/hdall/results/variant-calling/545_rel.merged.duplicate_marked.realigned.recalibrated.varscan.snpeff.vcf 
+# remission samples; less stringent filtering
+~/hdall/data/varscan/%_rem.merged.duplicate_marked.realigned.recalibrated.varscan.vcf: ~/hdall/data/bam/%_rem.merged.duplicate_marked.realigned.recalibrated.bam
+	~/tools/samtools-0.1.19/samtools mpileup -q 1 -f ~/hdall/data/hg19/ucsc.hg19.fasta $< \
+		| java -jar ~/tools/varscan-2.3.6/VarScan.v2.3.6.jar mpileup2cns --variants --strand-filter 0 --min-coverage 2 --min-avg-qual 15 --p-value 1 --min-var-freq 0.05 --min-reads2 2 --output-vcf 1 - \
+			> $@.part
+	mv $@.part $@
+	bgzip -c $@ > $@.gz
+	tabix -p vcf $@.gz
+
+# annotate remission variants
+ ~/hdall/data/varscan/545_rel.merged.duplicate_marked.realigned.recalibrated.varscan.somatic.vcf: ~/hdall/data/varscan/545_rel.merged.duplicate_marked.realigned.recalibrated.varscan.vcf ~/hdall/data/varscan/545_rem.merged.duplicate_marked.realigned.recalibrated.varscan.vcf.gz ~/hdall/scripts/variant-calling/annotate-remission.pl
+	cat ~/hdall/data/varscan/545_rel.merged.duplicate_marked.realigned.recalibrated.varscan.vcf \
+		| perl ~/hdall/scripts/variant-calling/annotate-remission.pl \
+			--patient 545 \
+			--rem-sample ~/hdall/data/varscan/D_rem.merged.duplicate_marked.realigned.recalibrated.varscan.vcf.gz \
+			> $@.part
+	mv $@.part $@ 
+
+# annotate mutation impact on genes using snpEff
+
+~/hdall/data/varscan/545_rel.merged.duplicate_marked.realigned.recalibrated.varscan.somatic.snpeff.vcf: ~/hdall/data/varscan/545_rel.merged.duplicate_marked.realigned.recalibrated.varscan.somatic.vcf
+	(cd ~/tools/snpEff-3.3h; java -Xmx2g -jar ~/tools/snpEff-3.3h/snpEff.jar -v -lof -hgvs hg19 $< > $@.part)
+	mv $@.part $@
+
+# annotate dbSnp variants using SnpSift
+
+~/tools/snpEff-3.3h/common_no_known_medical_impact_20130930.chr.vcf:
+	#cd ~/tools/snpEff-3.3h
+	#wget -O dbSnp.vcf.gz ftp://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/common_no_known_medical_impact_20130930.vcf.gz
+	#gunzip common_no_known_medical_impact_20130930.vcf.gz
+	#cat common_no_known_medical_impact_20130930.vcf | perl -ne 's/^(\d+|X|Y)\t/chr$1\t/; s/^MT\t/chrM\t/; print $_;' > common_no_known_medical_impact_20130930.chr.vcf
+	#rm common_no_known_medical_impact_20130930.vcf
+  
+~/hdall/data/varscan/545_rel.merged.duplicate_marked.realigned.recalibrated.varscan.somatic.snpeff.dbsnp.vcf: ~/hdall/data/varscan/545_rel.merged.duplicate_marked.realigned.recalibrated.varscan.somatic.snpeff.vcf ~/tools/snpEff-3.3h/common_no_known_medical_impact_20130930.chr.vcf
+	(cd ~/tools/snpEff-3.3h; java -jar SnpSift.jar annotate -v ~/tools/snpEff-3.3h/common_no_known_medical_impact_20130930.chr.vcf $< > $@.part) 
+	mv $@.part $@
+
+# filter somatic non-silent variants impacting panel genes
+~/hdall/data/varscan/545_rel.merged.duplicate_marked.realigned.recalibrated.varscan.somatic.snpeff.dbsnp.panel.nonsilent.vcf: ~/hdall/data/varscan/545_rel.merged.duplicate_marked.realigned.recalibrated.varscan.somatic.snpeff.dbsnp.vcf ~/hdall/scripts/variant-calling/filter-panel-nonsilent.pl 
+	cat $< | perl ~/hdall/scripts/variant-calling/filter-panel-nonsilent.pl > $@.part
+	mv $@.part $@
+	

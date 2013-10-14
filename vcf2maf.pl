@@ -210,12 +210,14 @@ while (my $x = $vcf->next_data_hash())
 		if ($deleterious and $effect eq "Missense_Mutation")
 		{
 			my ($polyphen, $sift, $siphy) = ($x->{INFO}{'dbNSFP_Polyphen2_HVAR_pred'}, $x->{INFO}{'dbNSFP_SIFT_score'}, $x->{INFO}{'dbNSFP_29way_logOdds'});
-			my $isdel = 0;
-			$isdel = 1 if (!$polyphen and !defined $sift);
-			$isdel = 1 if ($polyphen and $polyphen =~ /D/);
-			$isdel = 1 if (defined $sift and $sift < 0.05);
-			$isdel = 1 if (defined $siphy and $siphy > 19);
-			next if (!$isdel);
+			
+			my $is_deletrious = 0;
+			$is_deletrious = 1 if ($polyphen and $polyphen =~ /D/ and defined $sift and $sift < 0.05); # polyphen & sift
+			$is_deletrious = 1 if ($polyphen and $polyphen =~ /D/ and defined $siphy and $siphy >= 12); # polyphen & siphy
+			$is_deletrious = 1 if (defined $sift and $sift < 0.05 and defined $siphy and $siphy >= 12); # sift and siphy
+			$is_deletrious = 1 if (defined $siphy and $siphy > 20); # siphy only, highly conserved (keeps GNAQ)
+			
+			next if (!$is_deletrious);
 		}
 
 		

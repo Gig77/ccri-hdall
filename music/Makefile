@@ -377,7 +377,7 @@ pathscan/pathways-kegg-biocarta-bbid-reactome.tsv: pathscan/pathways-david-compl
 	grep "REACTOME_" pathscan/gene-sets.mutsigdb4.0.tsv >> pathscan/pathways-kegg-biocarta-bbid-reactome.tsv
 
 # NOTE: only exclude likely false positives from Lawrence et al. (2013)
-pathscan/sm_pathways.dia.all.raw.tsv: dia-high-af/smg.tsv pathscan/pathways-all.sizefiltered.tsv
+pathscan/sm_pathways.dia.all.raw.tsv: dia-high-af/smg.tsv pathscan/pathways-all.sizefiltered.tsv dia-high-af/rem_dia.maf
 	genome music path-scan \
 		--bam-list dia/wig-list.tsv \
 		--gene-covg-dir dia-high-af/gene_covgs/ \
@@ -388,7 +388,7 @@ pathscan/sm_pathways.dia.all.raw.tsv: dia-high-af/smg.tsv pathscan/pathways-all.
 	mv pathscan/sm_pathways.dia.all.raw.tsv.part pathscan/sm_pathways.dia.all.raw.tsv
 	mv pathscan/sm_pathways.dia.all.raw.tsv.part_detailed pathscan/sm_pathways.dia.all.raw.tsv_detailed
 
-pathscan/sm_pathways.dia.all.del.raw.tsv: dia-high-af-del/smg.tsv pathscan/pathways-all.sizefiltered.tsv
+pathscan/sm_pathways.dia.all.del.raw.tsv: dia-high-af-del/smg.tsv pathscan/pathways-all.sizefiltered.tsv dia-high-af-del/rem_dia.maf
 	genome music path-scan \
 		--bam-list dia/wig-list.tsv \
 		--gene-covg-dir dia-high-af-del/gene_covgs/ \
@@ -399,7 +399,7 @@ pathscan/sm_pathways.dia.all.del.raw.tsv: dia-high-af-del/smg.tsv pathscan/pathw
 	mv pathscan/sm_pathways.dia.all.del.raw.tsv.part pathscan/sm_pathways.dia.all.del.raw.tsv
 	mv pathscan/sm_pathways.dia.all.del.raw.tsv.part_detailed pathscan/sm_pathways.dia.all.del.raw.tsv_detailed
 
-pathscan/sm_pathways.rel.all.raw.tsv: rel-high-af/smg.tsv pathscan/pathways-all.sizefiltered.tsv
+pathscan/sm_pathways.rel.all.raw.tsv: rel-high-af/smg.tsv pathscan/pathways-all.sizefiltered.tsv rel-high-af/rem_rel.maf
 	genome music path-scan \
 		--bam-list rel/wig-list.tsv \
 		--gene-covg-dir rel-high-af/gene_covgs/ \
@@ -410,7 +410,7 @@ pathscan/sm_pathways.rel.all.raw.tsv: rel-high-af/smg.tsv pathscan/pathways-all.
 	mv pathscan/sm_pathways.rel.all.raw.tsv.part pathscan/sm_pathways.rel.all.raw.tsv
 	mv pathscan/sm_pathways.rel.all.raw.tsv.part_detailed pathscan/sm_pathways.rel.all.raw.tsv_detailed
 
-pathscan/sm_pathways.rel.all.del.raw.tsv: rel-high-af-del/smg.tsv pathscan/pathways-all.sizefiltered.tsv
+pathscan/sm_pathways.rel.all.del.raw.tsv: rel-high-af-del/smg.tsv pathscan/pathways-all.sizefiltered.tsv rel-high-af-del/rem_rel.maf
 	genome music path-scan \
 		--bam-list rel/wig-list.tsv \
 		--gene-covg-dir rel-high-af-del/gene_covgs/ \
@@ -467,7 +467,7 @@ pathscan/sm_pathways.rel.all.cnv.del.raw.tsv: rel-high-af-del/smg.tsv pathscan/p
 	mv pathscan/sm_pathways.rel.all.cnv.del.raw.tsv.part_detailed pathscan/sm_pathways.rel.all.cnv.del.raw.tsv_detailed
 
 # NOTE: exclude KRAS,NRAS
-pathscan/sm_pathways.dia.noRAS.raw.tsv: dia-high-af/smg.tsv pathscan/pathways-all.sizefiltered.tsv
+pathscan/sm_pathways.dia.noRAS.raw.tsv: dia-high-af-del/smg.tsv pathscan/pathways-all.sizefiltered.tsv dia-high-af-del/rem_dia.maf
 	genome music path-scan \
 		--bam-list dia/wig-list.tsv \
 		--gene-covg-dir dia-high-af-del/gene_covgs/ \
@@ -478,7 +478,7 @@ pathscan/sm_pathways.dia.noRAS.raw.tsv: dia-high-af/smg.tsv pathscan/pathways-al
 	mv pathscan/sm_pathways.dia.noRAS.raw.tsv.part pathscan/sm_pathways.dia.noRAS.raw.tsv
 	mv pathscan/sm_pathways.dia.noRAS.raw.tsv.part_detailed pathscan/sm_pathways.dia.noRAS.raw.tsv_detailed
 
-pathscan/sm_pathways.rel.noRAS.raw.tsv: rel-high-af/smg.tsv pathscan/pathways-all.sizefiltered.tsv
+pathscan/sm_pathways.rel.noRAS.raw.tsv: rel-high-af-del/smg.tsv pathscan/pathways-all.sizefiltered.tsv rel-high-af-del/rem_rel.maf
 	genome music path-scan \
 		--bam-list rel/wig-list.tsv \
 		--gene-covg-dir rel-high-af-del/gene_covgs/ \
@@ -490,7 +490,7 @@ pathscan/sm_pathways.rel.noRAS.raw.tsv: rel-high-af/smg.tsv pathscan/pathways-al
 	mv pathscan/sm_pathways.rel.noRAS.raw.tsv.part_detailed pathscan/sm_pathways.rel.noRAS.raw.tsv_detailed
 
 # NOTE: exclude CREBBP
-pathscan/sm_pathways.dia.noCREBBP.raw.tsv: dia-high-af/smg.tsv pathscan/pathways-all.sizefiltered.tsv
+pathscan/sm_pathways.dia.noCREBBP.raw.tsv: dia-high-af-del/smg.tsv pathscan/pathways-all.sizefiltered.tsv dia-high-af-del/rem_dia.maf
 	genome music path-scan \
 		--bam-list dia/wig-list.tsv \
 		--gene-covg-dir dia-high-af-del/gene_covgs/ \
@@ -501,7 +501,7 @@ pathscan/sm_pathways.dia.noCREBBP.raw.tsv: dia-high-af/smg.tsv pathscan/pathways
 	mv pathscan/sm_pathways.dia.noCREBBP.raw.tsv.part pathscan/sm_pathways.dia.noCREBBP.raw.tsv
 	mv pathscan/sm_pathways.dia.noCREBBP.raw.tsv.part_detailed pathscan/sm_pathways.dia.noCREBBP.raw.tsv_detailed
 
-pathscan/sm_pathways.rel.noCREBBP.raw.tsv: rel-high-af/smg.tsv pathscan/pathways-all.sizefiltered.tsv
+pathscan/sm_pathways.rel.noCREBBP.raw.tsv: rel-high-af-del/smg.tsv pathscan/pathways-all.sizefiltered.tsv rel-high-af-del/rem_rel.maf
 	genome music path-scan \
 		--bam-list rel/wig-list.tsv \
 		--gene-covg-dir rel-high-af-del/gene_covgs/ \
@@ -513,7 +513,7 @@ pathscan/sm_pathways.rel.noCREBBP.raw.tsv: rel-high-af/smg.tsv pathscan/pathways
 	mv pathscan/sm_pathways.rel.noCREBBP.raw.tsv.part_detailed pathscan/sm_pathways.rel.noCREBBP.raw.tsv_detailed
 
 # NOTE: exclude KRAS,NRAS,CREBBP
-pathscan/sm_pathways.dia.noRAS.noCREBBP.raw.tsv: dia-high-af/smg.tsv pathscan/pathways-all.sizefiltered.tsv
+pathscan/sm_pathways.dia.noRAS.noCREBBP.raw.tsv: dia-high-af-del/smg.tsv pathscan/pathways-all.sizefiltered.tsv dia-high-af-del/rem_dia.maf
 	genome music path-scan \
 		--bam-list dia/wig-list.tsv \
 		--gene-covg-dir dia-high-af-del/gene_covgs/ \
@@ -524,7 +524,7 @@ pathscan/sm_pathways.dia.noRAS.noCREBBP.raw.tsv: dia-high-af/smg.tsv pathscan/pa
 	mv pathscan/sm_pathways.dia.noRAS.noCREBBP.raw.tsv.part pathscan/sm_pathways.dia.noRAS.noCREBBP.raw.tsv
 	mv pathscan/sm_pathways.dia.noRAS.noCREBBP.raw.tsv.part_detailed pathscan/sm_pathways.dia.noRAS.noCREBBP.raw.tsv_detailed
 
-pathscan/sm_pathways.rel.noRAS.noCREBBP.raw.tsv: rel-high-af/smg.tsv pathscan/pathways-all.sizefiltered.tsv
+pathscan/sm_pathways.rel.noRAS.noCREBBP.raw.tsv: rel-high-af-del/smg.tsv pathscan/pathways-all.sizefiltered.tsv rel-high-af-del/rem_rel.maf
 	genome music path-scan \
 		--bam-list rel/wig-list.tsv \
 		--gene-covg-dir rel-high-af-del/gene_covgs/ \
@@ -555,7 +555,7 @@ pathscan/sm_pathways.rel.%.annotated.tsv: pathscan/sm_pathways.rel.%.raw.tsv ~/h
 
 pathscan/sm_pathways.%.matrix.clustered.tsv: pathscan/sm_pathways.%.annotated.tsv ~/hdall/scripts/pathway-analysis/get-gene-pathway-matrix-enriched.pl ~/hdall/scripts/pathway-analysis/cluster-gene-pathway-matrix.R
 	cat pathscan/sm_pathways.$*.annotated.tsv | perl ~/hdall/scripts/pathway-analysis/get-gene-pathway-matrix-enriched.pl \
-		--max-p-value 1e-8 \
+		--max-p-value 1e-6 \
 		--max-pathway-size 400 \
 		2>&1 1>pathscan/sm_pathways.$*.matrix.tsv.tmp | tee -a make.log
 	rm -f pathscan/sm_pathways.$*.matrix.genetree.pdf pathscan/sm_pathways.$*.matrix.pathwaytree.pdf
@@ -653,11 +653,11 @@ dia/mutation-relation.tsv: ../gene-patient-matrix.tsv dia/wig-list.tsv dia/rem_d
 #		--args pathscan/gene-pathway-matrix.tsv pathscan/gene-pathway-matrix.clustered.tsv \
 #		2>&1 | tee -a make.log
 
-../gene-patient-matrix.annotated.tsv: ../gene-patient-matrix.tsv dia/smg.tsv rel/smg.tsv pathscan/sm_pathways.dia.all.annotated.tsv pathscan/sm_pathways.rel.all.annotated.tsv ../cnv/impacted-genes-list.cnv.tsv pathscan/sm_pathways.rel.all.matrix.clustered.tsv ../freq-rel-ns-curated.tsv ~/hdall/scripts/annotate-gene-patient-matrix.pl
+../gene-patient-matrix.annotated.tsv: ../gene-patient-matrix.tsv dia-high-af/smg.tsv rel-high-af/smg.tsv pathscan/sm_pathways.dia.all.annotated.tsv pathscan/sm_pathways.rel.all.annotated.tsv ../cnv/impacted-genes-list.cnv.tsv pathscan/sm_pathways.rel.all.matrix.clustered.tsv ../freq-rel-ns-curated.tsv ~/hdall/scripts/annotate-gene-patient-matrix.pl
 	perl ~/hdall/scripts/annotate-gene-patient-matrix.pl \
 		--gene-patient-matrix ../gene-patient-matrix.tsv \
-		--smg-dia dia/smg.tsv \
-		--smg-rel rel/smg.tsv \
+		--smg-dia dia-high-af/smg.tsv \
+		--smg-rel rel-high-af/smg.tsv \
 		--smp-dia pathscan/sm_pathways.dia.all.annotated.tsv \
 		--smp-rel pathscan/sm_pathways.rel.all.annotated.tsv \
 		--cnv ../cnv/impacted-genes-list.cnv.tsv \
@@ -669,7 +669,7 @@ dia/mutation-relation.tsv: ../gene-patient-matrix.tsv dia/wig-list.tsv dia/rem_d
 		2>&1 1>../gene-patient-matrix.annotated.tsv.part | tee -a make.log
 	mv ../gene-patient-matrix.annotated.tsv.part ../gene-patient-matrix.annotated.tsv	
 	
-../gene-patient-matrix.high-af.annotated.tsv: ../gene-patient-matrix.high-af.tsv dia-high-af/smg.tsv rel-high-af/smg.tsv pathscan/sm_pathways.dia.all.annotated.tsv pathscan/sm_pathways.rel.all.annotated.tsv ../cnv/impacted-genes-list.cnv.tsv pathscan/sm_pathways.rel.all.matrix.clustered.tsv ~/hdall/scripts/annotate-gene-patient-matrix.pl
+../gene-patient-matrix.high-af.annotated.tsv: ../gene-patient-matrix.high-af.tsv dia-high-af/smg.tsv rel-high-af/smg.tsv pathscan/sm_pathways.dia.noRAS.noCREBBP.annotated.tsv pathscan/sm_pathways.rel.noRAS.noCREBBP.annotated.tsv ../cnv/impacted-genes-list.cnv.tsv pathscan/sm_pathways.rel.noRAS.noCREBBP.matrix.clustered.tsv ~/hdall/scripts/annotate-gene-patient-matrix.pl
 	perl ~/hdall/scripts/annotate-gene-patient-matrix.pl \
 		--gene-patient-matrix ../gene-patient-matrix.high-af.tsv \
 		--smg-dia dia-high-af-del/smg.tsv \

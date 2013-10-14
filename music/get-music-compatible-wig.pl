@@ -3,7 +3,7 @@
 use strict;
 use warnings FATAL => qw( all );
 
-my $dir = "/home/STANNANET/christian.frech/hdall/data/bam";
+my $dir = "/home/STANNANET/christian.frech/hdall/data/wig";
 
 chdir($dir);
 opendir(D, $dir) or die "ERROR: could not read directory\n";

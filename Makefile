@@ -1,7 +1,9 @@
 export SHELLOPTS:=errexit:pipefail
 SHELL=/bin/bash
 
-all: filtered-variants.tsv filtered-variants.cosmic.tsv gene-patient-matrix.tsv gene-patient-matrix.high-af.tsv gene-patient-matrix.tier1.tsv cnv/gene-patient-matrix.cnv.tsv filtered-variants.cosmic.normaf.tsv lolliplot/lolliplot_CREBBP_NM_004380_both.svg ipa/mutated_relapse.tsv
+all: filtered-variants.tsv filtered-variants.cosmic.tsv gene-patient-matrix.tsv gene-patient-matrix.high-af.tsv gene-patient-matrix.tier1.tsv cnv/gene-patient-matrix.cnv.tsv filtered-variants.cosmic.normaf.tsv lolliplot/lolliplot_CREBBP_NM_004380_both.svg ipa/mutated_relapse.tsv stats
+
+stats: stats/mutations-per-patient-dia-vs-rel.pdf
 
 nextera:
 	cat kamilla/candidate\ genes\ for\ targeted\ sequencing.tsv | perl ~/hdall/scripts/get-nextera-exons.pl --density Standard > kamilla/nextera-exons.standard.csv
@@ -121,4 +123,7 @@ ipa/mutated_relapse.noKRASpatients.tsv: music/rel-high-af/rem_rel.maf music/rel-
 	cut -f 1,9,16 music/rel-high-af/rem_rel.maf | grep -P '(1021247|818|842|C|786|X|592|D|399|446|314|792)_rel' | grep -P '(Frame_Shift|In_Frame|Missense|Nonsense|Splice_Site)' | cut -f 1 | sort | uniq | grep -f - music/rel-high-af/smg.tsv | cut -f 1,9 | sort -k 2g > ipa/mutated_relapse.noKRASpatients.tsv.tmp
 	grep -vP "^(MESP2|TTN|TBP|CSMD3|DNAH5|RYR1|RYR2|RYR3|DNAH1|DNAH8|DNAH9|MUC2|MUC16|MUC12|MUC5B|OR5H2|OR5H2|OR11H4|OR6F1|OR52R1|OR2T12|OR6V1|OR51I2|OR5I1|OR9Q1|OR9Q1|PDZD7)\t" ipa/mutated_relapse.noKRASpatients.tsv.tmp > ipa/mutated_relapse.noKRASpatients.tsv.part
 	rm ipa/mutated_relapse.noKRASpatients.tsv.tmp
-	mv ipa/mutated_relapse.noKRASpatients.tsv.part ipa/mutated_relapse.noKRASpatients.tsv		
+	mv ipa/mutated_relapse.noKRASpatients.tsv.part ipa/mutated_relapse.noKRASpatients.tsv
+
+stats/mutations-per-patient-dia-vs-rel.pdf: filtered-variants.cosmic.normaf.tsv 
+	R --no-save --quiet --slave -f ~/hdall/scripts/stats/mutations-per-patient.R 2>&1 | tee -a make.log

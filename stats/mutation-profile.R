@@ -3,7 +3,7 @@ warnings()
 patients <- c("314", "399", "430", "446", "460", "545", "592", "715", "786", "792", "818", "842", "1021247", "A", "B", "C", "D", "E", "X", "Y") 
 #patients <- c("314", "399") 
 
-t <- read.delim("~/hdall/results/filtered-variants.tsv", stringsAsFactors=F)
+t <- read.delim("filtered-variants.tsv", stringsAsFactors=F)
 min.af <- 0.10
 min.dp.leu <- 10
 min.dp.rem <- 10
@@ -15,7 +15,7 @@ rownames(m) <- c("diagnosis", "relapse")
 
 # per patient
 
-pdf("~/hdall/results/stats/mutation-profile.af10.pdf", width=15)
+pdf("stats/mutation-profile.af10.pdf", width=15)
 
 layout(matrix(c(seq(1:20),rep(21,5)), ncol=5, byrow=T), heights=c(rep(0.23, 4), 0.08))
 par(mar=c(2.0, 2.5, 3, 0))
@@ -53,7 +53,7 @@ for(p in patients) {
 	barplot(mrel, beside=T, legend=F, main=paste("patient ", p, " (n=", sum(m[1,]), "+", sum(m[2,]), ")", sep=""), ylim=c(0, 0.4), col=c("black", "white"))
 }
 
-write.table(df, file="~/hdall/results/stats/mutation-profile.data.af10.tsv", col.names=NA, row.names=T, sep="\t", quote=F)
+write.table(df, file="stats/mutation-profile.data.af10.tsv", col.names=NA, row.names=T, sep="\t", quote=F)
 
 par(xpd=TRUE, mai=c(0,0,0,0))
 plot.new()
@@ -67,7 +67,7 @@ m.mean <- m
 m.mean[1,] <- tapply(as.numeric(df$freq.dia), df$mutation, mean)
 m.mean[2,] <- tapply(as.numeric(df$freq.rel), df$mutation, mean)
 
-pdf("~/hdall/results/stats/mutation-profile-average.af10.pdf")
+pdf("stats/mutation-profile-average.af10.pdf")
 layout(matrix(c(1, 2), ncol=1, byrow=T), heights=c(0.9, 0.1))
 barplot(m.mean, beside=T, legend=F, main="average over all patients (n=20)", ylim=c(0, 0.4), col=c("black", "white"))
 par(xpd=TRUE, mai=c(0,0,0,0))

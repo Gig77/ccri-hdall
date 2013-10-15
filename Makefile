@@ -3,7 +3,7 @@ SHELL=/bin/bash
 
 all: filtered-variants.tsv filtered-variants.cosmic.tsv gene-patient-matrix.tsv gene-patient-matrix.high-af.tsv gene-patient-matrix.tier1.tsv cnv/gene-patient-matrix.cnv.tsv filtered-variants.cosmic.normaf.tsv lolliplot/lolliplot_CREBBP_NM_004380_both.svg ipa/mutated_relapse.tsv stats
 
-stats: stats/mutations-per-patient-dia-vs-rel.pdf
+stats: stats/variants-per-chrom-and-ploidy.pdf stats/mutations-per-patient-dia-vs-rel.pdf stats/mutation-profile.af10.pdf
 
 nextera:
 	cat kamilla/candidate\ genes\ for\ targeted\ sequencing.tsv | perl ~/hdall/scripts/get-nextera-exons.pl --density Standard > kamilla/nextera-exons.standard.csv
@@ -97,10 +97,6 @@ cnv/gene-patient-matrix.cnv.tsv: cnv/impacted-genes-list.cnv.tsv ~/hdall/scripts
 		2>&1 1>cnv/gene-patient-matrix.cnv.tsv.part | tee -a make.log
 	mv cnv/gene-patient-matrix.cnv.tsv.part cnv/gene-patient-matrix.cnv.tsv
 
-stats/variants-per-chrom-and-ploidy.pdf: filtered-variants.cosmic.normaf.tsv ~/hdall/scripts/somatic-variants-stat.R
-	R --no-save --quiet --slave -f ~/hdall/scripts/somatic-variants-stat.R \
-		2>&1 | tee -a make.log
-
 clonal-analysis/allelic-freq-prob.distributions.pdf: ~/hdall/scripts/clonal-analysis/estimate-af-dist.R
 	R --no-save --quiet --slave -f ~/hdall/scripts/clonal-analysis/estimate-af-dist.R \
 		2>&1 | tee -a make.log
@@ -125,5 +121,15 @@ ipa/mutated_relapse.noKRASpatients.tsv: music/rel-high-af/rem_rel.maf music/rel-
 	rm ipa/mutated_relapse.noKRASpatients.tsv.tmp
 	mv ipa/mutated_relapse.noKRASpatients.tsv.part ipa/mutated_relapse.noKRASpatients.tsv
 
-stats/mutations-per-patient-dia-vs-rel.pdf: filtered-variants.cosmic.normaf.tsv 
-	R --no-save --quiet --slave -f ~/hdall/scripts/stats/mutations-per-patient.R 2>&1 | tee -a make.log
+stats/variants-per-chrom-and-ploidy.pdf: filtered-variants.cosmic.normaf.tsv ~/hdall/scripts/stats/variants-per-chrom-and-ploidy.R
+	R --no-save --quiet --slave -f ~/hdall/scripts/stats/variants-per-chrom-and-ploidy.R \
+		2>&1 | tee -a make.log
+
+stats/mutations-per-patient-dia-vs-rel.pdf: filtered-variants.cosmic.normaf.tsv ~/hdall/scripts/stats/mutations-per-patient.R
+	R --no-save --quiet --slave -f ~/hdall/scripts/stats/mutations-per-patient.R \
+		2>&1 | tee -a make.log
+
+stats/mutation-profile.af10.pdf: filtered-variants.tsv ~/hdall/scripts/stats/mutation-profile.R
+	R --no-save --quiet --slave -f ~/hdall/scripts/stats/mutation-profile.R \
+		2>&1 | tee -a make.log
+		

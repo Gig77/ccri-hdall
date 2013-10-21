@@ -12,7 +12,6 @@ all:
 	bgzip -c ~/hdall/data/hg19/hg19.snp137Common.txt > ~/hdall/data/hg19/hg19.snp137Common.txt.gz
 	tabix ~/hdall/data/hg19/hg19.snp137Common.txt.gz -s 2 -b 3 -e 4
 
-
 SAMPLES = 545_rel 545_rem D_rem
 varscan: $(foreach S, $(SAMPLES), ~/hdall/data/varscan/$S.merged.duplicate_marked.realigned.recalibrated.varscan.vcf)
 

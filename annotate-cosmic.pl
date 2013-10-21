@@ -57,8 +57,7 @@ while(<>)
 {
 	chomp;
 	my ($patient, $sample, $var_type, $status, $chr, $pos, $dbSNP, $ref, $alt, $gene, $add_genes, $impact, $effect, $exons, 
-		$dp_rem_tot, $dp_rem_ref, $dp_rem_var, $freq_rem, $dp_leu_tot, $dp_leu_ref, $dp_leu_var, $freq_leu, $aa_change, $snpeff,
-		$polyphen2, $sift, $gerp, $siphy, $interpro, $af_1000g) = split("\t");
+		$dp_rem_tot, $dp_rem_ref, $dp_rem_var, $freq_rem, $dp_leu_tot, $dp_leu_ref, $dp_leu_var, $freq_leu, $aa_change, $snpeff) = split("\t");
 
 	my $loc = "$chr:$pos-$pos";
 	$loc =~ s/^chr//;

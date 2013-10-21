@@ -304,7 +304,7 @@ rel-high-af-del/smg.tsv: rel-high-af-del/gene_mrs
 #--- GENOME MUSIC PATH-SCAN (using only high allelic frequency variants)
 #-----------------------------------------------------------------------
 
-pathscan-dia: pathscan/sm_pathways.dia.all.annotated.tsv pathscan/sm_pathways.dia.noRAS.noCREBBP.annotated.tsv pathscan/sm_pathways.dia.all.cnv.annotated.tsv pathscan/sm_pathways.dia.all.matrix.clustered.tsv pathscan/sm_pathways.dia.noRAS.matrix.clustered.tsv pathscan/sm_pathways.dia.noCREBBP.matrix.clustered.tsv pathscan/sm_pathways.dia.noRAS.noCREBBP.matrix.clustered.tsv 
+pathscan-dia: pathscan/sm_pathways.dia.all.annotated.tsv pathscan/sm_pathways.dia.noRAS.noCREBBP.annotated.tsv pathscan/sm_pathways.dia.all.cnv.annotated.tsv pathscan/sm_pathways.dia.all.matrix.clustered.tsv pathscan/sm_pathways.dia.noRAS.matrix.clustered.tsv pathscan/sm_pathways.dia.noCREBBP.matrix.clustered.tsv pathscan/sm_pathways.dia.noRAS.noCREBBP.matrix.clustered.tsv  
 pathscan-rel: pathscan/sm_pathways.rel.all.annotated.tsv pathscan/sm_pathways.rel.noRAS.noCREBBP.annotated.tsv pathscan/sm_pathways.rel.all.cnv.annotated.tsv pathscan/sm_pathways.rel.all.matrix.clustered.tsv pathscan/sm_pathways.rel.noRAS.matrix.clustered.tsv pathscan/sm_pathways.rel.noCREBBP.matrix.clustered.tsv pathscan/sm_pathways.rel.noRAS.noCREBBP.matrix.clustered.tsv
 pathscan-dia-del: pathscan/sm_pathways.dia.all.del.matrix.clustered.tsv pathscan/sm_pathways.dia.all.del.annotated.tsv pathscan/sm_pathways.dia.all.cnv.del.annotated.tsv 
 pathscan-rel-del: pathscan/sm_pathways.rel.all.del.matrix.clustered.tsv pathscan/sm_pathways.rel.all.del.annotated.tsv pathscan/sm_pathways.rel.all.cnv.del.annotated.tsv 
@@ -359,9 +359,9 @@ pathscan/pathways-wikipathways.tsv: ~/hdall/data/wikipathways/wikipathways_Homo_
 	mv pathscan/pathways-wikipathways.tsv.part pathscan/pathways-wikipathways.tsv
 
 pathscan/pathways-kegg.jerry.hugo.tsv: pathscan/pathways-kegg.jerry.ensembl.tsv
-	perl ~/hdall/scripts/pathway-analysis/kegg-jerry-ensembl-to-hugo.pl > pathscan/pathways-kegg.jerry.hugo.tsv.part
-	mv pathscan/pathways-kegg.jerry.hugo.tsv.part pathscan/pathways-kegg.jerry.hugo.tsv
-		
+	perl ~/hdall/scripts/pathway-analysis/kegg-jerry-ensembl-to-hugo.pl > $@.part
+	mv $@.part $@
+
 pathscan/pathways-all.tsv: pathscan/pathways-david-complete.tsv pathscan/gene-sets.mutsigdb4.0.tsv pathscan/pathways-nci.tsv pathscan/pathways-wikipathways.tsv pathscan/pathways-kegg.jerry.hugo.tsv
 	cp pathscan/pathways-david-complete.tsv pathscan/pathways-all.tsv.part
 	cat pathscan/gene-sets.mutsigdb4.0.tsv pathscan/pathways-nci.tsv pathscan/pathways-manual.tsv pathscan/pathways-wikipathways.tsv >> pathscan/pathways-all.tsv.part
@@ -537,7 +537,7 @@ pathscan/sm_pathways.rel.noRAS.noCREBBP.raw.tsv: rel-high-af-del/smg.tsv pathsca
 
 pathscan/sm_pathways.dia.%.annotated.tsv: pathscan/sm_pathways.dia.%.raw.tsv ~/hdall/scripts/pathway-analysis/annotate-pathscan-result.pl
 	perl ~/hdall/scripts/pathway-analysis/annotate-pathscan-result.pl \
-		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
+		--pathway-file pathscan/pathways-all.tsv \
 		--sm-pathways pathscan/sm_pathways.dia.$*.raw.tsv \
 		--sm-pathways-detail pathscan/sm_pathways.dia.$*.raw.tsv_detailed \
 		--maf-file dia-high-af/rem_dia.cnv.maf \
@@ -546,7 +546,7 @@ pathscan/sm_pathways.dia.%.annotated.tsv: pathscan/sm_pathways.dia.%.raw.tsv ~/h
 
 pathscan/sm_pathways.rel.%.annotated.tsv: pathscan/sm_pathways.rel.%.raw.tsv ~/hdall/scripts/pathway-analysis/annotate-pathscan-result.pl
 	perl ~/hdall/scripts/pathway-analysis/annotate-pathscan-result.pl \
-		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
+		--pathway-file pathscan/pathways-all.tsv \
 		--sm-pathways pathscan/sm_pathways.rel.$*.raw.tsv \
 		--sm-pathways-detail pathscan/sm_pathways.rel.$*.raw.tsv_detailed \
 		--maf-file rel-high-af/rem_rel.cnv.maf \

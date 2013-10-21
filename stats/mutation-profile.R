@@ -3,6 +3,7 @@ warnings()
 patients <- c("314", "399", "430", "446", "460", "545", "592", "715", "786", "792", "818", "842", "1021247", "A", "B", "C", "D", "E", "X", "Y") 
 #patients <- c("314", "399") 
 
+# TABLE: filtered-variants.tsv
 t <- read.delim("filtered-variants.tsv", stringsAsFactors=F)
 min.af <- 0.10
 min.dp.leu <- 10

@@ -1,4 +1,0 @@
-hdall
-=====
-
-hdall

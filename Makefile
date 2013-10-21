@@ -1,7 +1,7 @@
 export SHELLOPTS:=errexit:pipefail
 SHELL=/bin/bash
 
-all: filtered-variants.tsv filtered-variants.cosmic.tsv gene-patient-matrix.tsv gene-patient-matrix.high-af.tsv gene-patient-matrix.tier1.tsv cnv/gene-patient-matrix.cnv.tsv filtered-variants.cosmic.normaf.tsv lolliplot/lolliplot_CREBBP_NM_004380_both.svg ipa/mutated_relapse.tsv stats
+all: filtered-variants.tsv filtered-variants.cosmic.tsv filtered-variants.cosmic.normaf.tsv filtered-variants.cosmic.normaf.mapp.tsv gene-patient-matrix.tsv gene-patient-matrix.high-af.tsv gene-patient-matrix.tier1.tsv cnv/gene-patient-matrix.cnv.tsv lolliplot/lolliplot_CREBBP_NM_004380_both.svg ipa/mutated_relapse.tsv stats
 
 stats: stats/variants-per-chrom-and-ploidy.pdf stats/mutations-per-patient-dia-vs-rel.pdf stats/mutation-profile.af10.pdf
 
@@ -21,15 +21,39 @@ filtered-variants.tsv:	$(foreach P, $(PATIENTS), filtered_variants/$P_rem_dia.sn
 	cat filtered_variants/*.filtered.tsv >> filtered-variants.tsv.part
 	mv filtered-variants.tsv.part filtered-variants.tsv
 	
-filtered_variants/%.snp.filtered.tsv: ~/hdall/data/mutect_vcf/%_calls_snpeff_snpsift.vcf curated-recected-variants.tsv ~/hdall/scripts/filter-variants.pl
-	perl ~/hdall/scripts/filter-variants.pl $* $< snp --vcf-out filtered_variants/$*.snp.filtered.vcf --rejected-variants-file curated-recected-variants.tsv \
+filtered_variants/%.snp.filtered.tsv: ~/hdall/data/mutect_vcf/%_calls_snpeff_snpsift.dbsnp.vcf curated-recected-variants.tsv ~/hdall/scripts/filter-variants.pl
+	perl ~/hdall/scripts/filter-variants.pl $* $< snp \
+		--vcf-out filtered_variants/$*.snp.filtered.vcf \
+		--rmsk-file ~/hdall/data/hg19/hg19.rmsk.txt.gz \
+		--simpleRepeat-file ~/hdall/data/hg19/hg19.simpleRepeat.txt.gz \
+		--segdup-file ~/hdall/data/hg19/hg19.genomicSuperDups.txt.gz \
+		--blacklist-file ~/hdall/data/hg19/hg19.wgEncodeDacMapabilityConsensusExcludable.txt.gz \
+		--g1k-accessible ~/hdall/data/hg19/paired.end.mapping.1000G..pilot.bed.gz \
+		--rejected-variants-file curated-recected-variants.tsv \
 		2>&1 1>$@.part | grep -v -P '(Leading or trailing space|variant.Format|on which the variant locates)' | tee -a make.log
 	mv $@.part $@
 
-filtered_variants/%.indel.filtered.tsv: ~/hdall/data/somatic_indel_vcf/%_snpeff.vcf curated-recected-variants.tsv ~/hdall/scripts/filter-variants.pl
-	perl ~/hdall/scripts/filter-variants.pl $* $< indel --vcf-out filtered_variants/$*.indel.filtered.vcf --rejected-variants-file curated-recected-variants.tsv \
+.PRECIOUS: ~/hdall/data/mutect_vcf/%_calls_snpeff_snpsift.dbsnp.vcf
+~/hdall/data/mutect_vcf/%_calls_snpeff_snpsift.dbsnp.vcf: ~/hdall/data/mutect_vcf/%_calls_snpeff_snpsift.vcf ~/tools/snpEff-3.3h/common_no_known_medical_impact_20130930.chr.vcf
+	(cd ~/tools/snpEff-3.3h; java -jar SnpSift.jar annotate -v ~/tools/snpEff-3.3h/common_no_known_medical_impact_20130930.chr.vcf $< > $@.part) 
+	mv $@.part $@
+
+filtered_variants/%.indel.filtered.tsv: ~/hdall/data/somatic_indel_vcf/%_snpeff.dbsnp.vcf curated-recected-variants.tsv ~/hdall/scripts/filter-variants.pl
+	perl ~/hdall/scripts/filter-variants.pl $* $< indel \
+		--vcf-out filtered_variants/$*.indel.filtered.vcf \
+		--rmsk-file ~/hdall/data/hg19/hg19.rmsk.txt.gz \
+		--simpleRepeat-file ~/hdall/data/hg19/hg19.simpleRepeat.txt.gz \
+		--segdup-file ~/hdall/data/hg19/hg19.genomicSuperDups.txt.gz \
+		--blacklist-file ~/hdall/data/hg19/hg19.wgEncodeDacMapabilityConsensusExcludable.txt.gz \
+		--g1k-accessible ~/hdall/data/hg19/paired.end.mapping.1000G..pilot.bed.gz \
+		--rejected-variants-file curated-recected-variants.tsv \
 		2>&1 1>$@.part | grep -v -P '(Leading or trailing space|variant.Format|on which the variant locates)' | tee -a make.log
 	mv $@.part $@	
+
+.PRECIOUS: ~/hdall/data/somatic_indel_vcf/%_snpeff.dbsnp.vcf
+~/hdall/data/somatic_indel_vcf/%_snpeff.dbsnp.vcf: ~/hdall/data/somatic_indel_vcf/%_snpeff.vcf ~/tools/snpEff-3.3h/common_no_known_medical_impact_20130930.chr.vcf
+	(cd ~/tools/snpEff-3.3h; java -jar SnpSift.jar annotate -v ~/tools/snpEff-3.3h/common_no_known_medical_impact_20130930.chr.vcf $< > $@.part) 
+	mv $@.part $@
 
 filtered-variants.cosmic.tsv: filtered-variants.tsv ~/hdall/data/cosmic/v65/CosmicMutantExport_v65_280513.tsv ~/hdall/scripts/annotate-cosmic.pl
 	cat ~/hdall/results/filtered-variants.tsv | perl ~/hdall/scripts/annotate-cosmic.pl \
@@ -44,6 +68,36 @@ filtered-variants.cosmic.normaf.tsv: filtered-variants.cosmic.tsv cnv/hdall.cnv.
 		2>&1 1>$@.part | tee -a make.log
 	mv $@.part $@ 
 
+	
+# annotate mappability regions
+
+~/hdall/data/hg19/hg19.simpleRepeat.txt.gz.tbi: ~/hdall/data/hg19/hg19.simpleRepeat.txt
+	#mysql -h genome-mysql.cse.ucsc.edu -u genome -D hg19 -N -A -e 'select * from simpleRepeat' > ~/hdall/data/hg19/hg19.simpleRepeat.txt
+	bgzip -c ~/hdall/data/hg19/hg19.simpleRepeat.txt > ~/hdall/data/hg19/hg19.simpleRepeat.txt.gz
+	tabix ~/hdall/data/hg19/hg19.simpleRepeat.txt.gz -s 2 -b 3 -e 4
+
+~/hdall/data/hg19/hg19.rmsk.txt.gz.tbi: ~/hdall/data/hg19/hg19.rmsk.txt
+	#mysql -h genome-mysql.cse.ucsc.edu -u genome -D hg19 -N -A -e 'select * from rmsk' > ~/hdall/data/hg19/hg19.rmsk.txt
+	bgzip -c ~/hdall/data/hg19/hg19.rmsk.txt > ~/hdall/data/hg19/hg19.rmsk.txt.gz
+	tabix ~/hdall/data/hg19/hg19.rmsk.txt.gz -s 6 -b 7 -e 8
+
+~/hdall/data/hg19/hg19.genomicSuperDups.txt.gz.tbi: ~/hdall/data/hg19/hg19.genomicSuperDups.txt
+	#mysql -h genome-mysql.cse.ucsc.edu -u genome -D hg19 -N -A -e 'select * from genomicSuperDups' > ~/hdall/data/hg19/hg19.genomicSuperDups.txt
+	bgzip -c ~/hdall/data/hg19/hg19.genomicSuperDups.txt > ~/hdall/data/hg19/hg19.genomicSuperDups.txt.gz
+	tabix ~/hdall/data/hg19/hg19.genomicSuperDups.txt.gz -s 2 -b 3 -e 4
+
+~/hdall/data/hg19/hg19.wgEncodeDacMapabilityConsensusExcludable.txt.gz.tbi: ~/hdall/data/hg19/hg19.wgEncodeDacMapabilityConsensusExcludable.txt
+	#mysql -h genome-mysql.cse.ucsc.edu -u genome -D hg19 -N -A -e 'select * from wgEncodeDacMapabilityConsensusExcludable' > ~/hdall/data/hg19/hg19.wgEncodeDacMapabilityConsensusExcludable.txt
+	bgzip -c ~/hdall/data/hg19/hg19.wgEncodeDacMapabilityConsensusExcludable.txt > ~/hdall/data/hg19/hg19.wgEncodeDacMapabilityConsensusExcludable.txt.gz
+	tabix ~/hdall/data/hg19/hg19.wgEncodeDacMapabilityConsensusExcludable.txt.gz -s 2 -b 3 -e 4
+
+~/hdall/data/hg19/paired.end.mapping.1000G..pilot.bed.gz.tbi: ~/hdall/data/hg19/paired.end.mapping.1000G..pilot.bb
+	#curl -o ~/hdall/data/hg19/paired.end.mapping.1000G..pilot.bb http://hgdownload.cse.ucsc.edu/gbdb/hg19/1000Genomes/paired.end.mapping.1000G..pilot.bb
+	#curl -o ~/hdall/tools/ucsc/bigBedToBed http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64.v287/bigBedToBed
+	~/hdall/tools/ucsc/bigBedToBed ~/hdall/data/hg19/paired.end.mapping.1000G..pilot.bb ~/hdall/data/hg19/paired.end.mapping.1000G..pilot.bed
+	bgzip -c ~/hdall/data/hg19/paired.end.mapping.1000G..pilot.bed > ~/hdall/data/hg19/paired.end.mapping.1000G..pilot.bed.gz
+	tabix ~/hdall/data/hg19/paired.end.mapping.1000G..pilot.bed.gz -s 1 -b 2 -e 3
+	
 impacted-genes-list.tsv: filtered-variants.tsv ~/hdall/scripts/impacted-genes.pl
 	cat filtered-variants.tsv | perl ~/hdall/scripts/impacted-genes.pl \
 		2>&1 1>impacted-genes-list.tsv.part | tee -a make.log
@@ -120,6 +174,10 @@ ipa/mutated_relapse.noKRASpatients.tsv: music/rel-high-af/rem_rel.maf music/rel-
 	grep -vP "^(MESP2|TTN|TBP|CSMD3|DNAH5|RYR1|RYR2|RYR3|DNAH1|DNAH8|DNAH9|MUC2|MUC16|MUC12|MUC5B|OR5H2|OR5H2|OR11H4|OR6F1|OR52R1|OR2T12|OR6V1|OR51I2|OR5I1|OR9Q1|OR9Q1|PDZD7)\t" ipa/mutated_relapse.noKRASpatients.tsv.tmp > ipa/mutated_relapse.noKRASpatients.tsv.part
 	rm ipa/mutated_relapse.noKRASpatients.tsv.tmp
 	mv ipa/mutated_relapse.noKRASpatients.tsv.part ipa/mutated_relapse.noKRASpatients.tsv
+
+ipa/genesize.genelist.ipa.tsv: ~/hdall/scripts/pathway-analysis/get-size-genesets.pl
+	perl ~/hdall/scripts/pathway-analysis/get-size-genesets.pl > $@.part
+	mv $@.part $@
 
 stats/variants-per-chrom-and-ploidy.pdf: filtered-variants.cosmic.normaf.tsv ~/hdall/scripts/stats/variants-per-chrom-and-ploidy.R
 	R --no-save --quiet --slave -f ~/hdall/scripts/stats/variants-per-chrom-and-ploidy.R \

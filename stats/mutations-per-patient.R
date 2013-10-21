@@ -1,6 +1,7 @@
 options(warn=1)
 library(beeswarm)
 
+# TABLE: filtered-variants.cosmic.normaf.tsv
 sv <- read.delim("filtered-variants.cosmic.normaf.tsv")
 
 sv.pass <- subset(sv, status != "REJECT")

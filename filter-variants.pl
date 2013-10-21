@@ -7,13 +7,20 @@ use Log::Log4perl qw(:easy);
 use Vcf;
 use Data::Dumper;
 use Getopt::Long;
+use Tabix;
 use Carp;
 
 my ($vcf_out, $header, $rejected_variants_file);
+my ($rmsk_file, $simplerepeat_file, $blacklist_file, $segdup_file, $g1k_accessible_file);
 GetOptions
 (
 	"vcf-out=s" => \$vcf_out,  # filtered VCF output file
 	"header" => \$header,  # if set, write header line to output
+	"rmsk-file=s" => \$rmsk_file, # TABIX indexed UCSC table rmsk
+	"simpleRepeat-file=s" => \$simplerepeat_file, # TABIX indexed UCSC table rmsk
+	"blacklist-file=s" => \$blacklist_file, # TABIX indexed UCSC table wgEncodeDacMapabilityConsensusExcludable
+	"segdup-file=s" => \$segdup_file, # TABIX indexed UCSC table genomicSuperDups
+	"g1k-accessible=s" => \$g1k_accessible_file, # TABIX indexed UCSC table tgpPhase1AccessibilityPilotCriteria
 	"rejected-variants-file=s" => \$rejected_variants_file # file with variants rejected based on manual curation; will be filtered from output
 );
 
@@ -49,16 +56,26 @@ if ($header)
 	print "GERP++\t";
 	print "SiPhy\t";
 	print "InterPro\t";
-	print "AF_1000G\n";
-	exit;	
+	print "AF_1000G\t";
+	print "repeat\t";
+	print "tsegdup\t";
+	print "blacklist\t";
+	print "g1k-accessible\n";	
+	exit;
 }
 
 my $debug = 1;
 
-my ($patient, $rem_sample, $cmp_sample) = split("_", $ARGV[0]) or die "ERROR: comparison type not specified\n";
-my $vcf_file = $ARGV[1] or die "ERROR: VCF file not specified\n";
-my $var_type = $ARGV[2] or die "ERROR: variant type not specified ('snp' or 'indel')\n";
-die "ERROR: invalid variant type: $var_type\n" if ($var_type ne 'snp' and $var_type ne 'indel');
+my ($patient, $rem_sample, $cmp_sample) = split("_", $ARGV[0]) or croak "ERROR: comparison type not specified\n";
+my $vcf_file = $ARGV[1] or croak "ERROR: VCF file not specified\n";
+my $var_type = $ARGV[2] or croak "ERROR: variant type not specified ('snp' or 'indel')\n";
+croak "ERROR: invalid variant type: $var_type\n" if ($var_type ne 'snp' and $var_type ne 'indel');
+
+croak "ERROR: --rmsk-file not specified" if (!$rmsk_file);
+croak "ERROR: --simpleRepeat-file not specified" if (!$simplerepeat_file);
+croak "ERROR: --blacklist-file not specified" if (!$blacklist_file);
+croak "ERROR: --segdup-file not specified" if (!$segdup_file);
+croak "ERROR: --g1k-accessible not specified" if (!$g1k_accessible_file);
 
 my %patient2sample = (
 	'A_rem' => 'A13324_rem',
@@ -130,6 +147,12 @@ if ($rejected_variants_file)
 	INFO(scalar(keys(%rejected_variants))." variants read from file $rejected_variants_file");
 }
 
+my $rmsk = Tabix->new(-data => $rmsk_file);
+my $simpleRepeat = Tabix->new(-data => $simplerepeat_file);
+my $blacklistdb = Tabix->new(-data => $blacklist_file);
+my $segdup = Tabix->new(-data => $segdup_file);
+my $g1kAcc = Tabix->new(-data => $g1k_accessible_file);
+
 $| = 1; # turn on autoflush
 
 my %variant_stati = 
@@ -160,6 +183,7 @@ die "ERROR: Sample name $rem_sample not found!\n" if ($rem_sample ne $samples[0]
 die "ERROR: Sample name $cmp_sample not found!\n" if ($cmp_sample ne $samples[0] and $cmp_sample ne $samples[1]);
 
 my ($tot_var, $filtered_qual, $filtered_gt, $filtered_alt, $filtered_germ) = (0, 0, 0, 0, 0);
+my ($numrep, $num_blacklist, $numsegdup, $num_not_accessible) = (0, 0, 0, 0);
 my %qual_num;
 
 while (my $line = $vcf->next_line())
@@ -192,7 +216,7 @@ while (my $line = $vcf->next_line())
 	my $status = $x->{FILTER}->[0];
 	$status = "MISSED" if ($patient eq "C" and $x->{CHROM} eq "chr16" and $x->{POS} eq "3789627"); # keep mutation CREBBP mutation falsely rejected by MuTect
 	
-	if ($status eq "REJECT")
+	if ($status eq "REJECT") # rejected by MuTect
 	{
 		$filtered_qual ++;
 		next;
@@ -288,6 +312,79 @@ while (my $line = $vcf->next_line())
 	}
 
 	my $reject = $rejected_variants{"$patient\t$cmp_type\t".$x->{CHROM}."\t".$x->{POS}};
+	
+	my (@repeats, @dups, @blacklist);
+	my ($chr, $pos) = ($x->{CHROM}, $x->{POS});
+
+	# ----- annotate overlapping repeat regions
+	{
+		my $iter = $rmsk->query($chr, $pos-1, $pos+1);
+		if ($iter and $iter->{_})
+		{
+			while (my $line = $rmsk->read($iter)) 
+			{
+				my @s = split("\t", $line);
+				push(@repeats, "$s[10]:$s[11]:$s[12]");
+			}
+		}		
+	}
+
+	{
+		my $iter = $simpleRepeat->query($chr, $pos-1, $pos+1);
+		if ($iter and $iter->{_})
+		{
+			while (my $line = $simpleRepeat->read($iter)) 
+			{
+				my @s = split("\t", $line);
+				push(@repeats, "$s[16]($s[6])");
+			}
+		}		
+	}
+	$numrep ++ if (@repeats > 0);
+
+	# ----- annotate segmental duplications
+	{
+		my $iter = $segdup->query($chr, $pos-1, $pos+1);
+		if ($iter and $iter->{_})
+		{
+			while (my $line = $segdup->read($iter)) 
+			{
+				my @s = split("\t", $line);
+				push(@dups, "$s[4]:".sprintf("%.2f", $s[26]));
+			}		
+		}		
+		$numsegdup ++ if (@dups > 0);
+	}	
+	
+	# ----- annotate overlapping DAC blacklisted regions
+	{
+		my $iter = $blacklistdb->query($chr, $pos-1, $pos+1);
+		if ($iter and $iter->{_})
+		{
+			while (my $line = $blacklistdb->read($iter)) 
+			{
+				my @s = split("\t", $line);
+				push(@blacklist, "$s[4]");
+			}		
+		}
+		$num_blacklist ++ if (@blacklist > 0);		
+	}
+
+	# ----- annotate overlapping g1k accessible regions
+	my $accessible = "no";
+	{
+		my $iter = $g1kAcc->query($chr, $pos-1, $pos+1);
+		if ($iter and $iter->{_})
+		{
+			while (my $line = $g1kAcc->read($iter)) 
+			{
+				$accessible = "";
+				last;
+			}		
+		}
+		$num_not_accessible ++ if ($accessible eq "no");		
+	}
+	
 	$line =~ s/^([^\t]+\t[^\t]+\t[^\t]+\t[^\t]+\t[^\t]+\t[^\t]+\t)[^\t]+/$1REJECT/ if ($reject);
 	
 	print VCFOUT "$line" if ($vcf_out);
@@ -335,6 +432,7 @@ while (my $line = $vcf->next_line())
 		print "\t";
 	}
 	print defined $x->{INFO}{'dbNSFP_1000Gp1_AF'} ? $x->{INFO}{'dbNSFP_1000Gp1_AF'} : "";  # Alternative allele frequency in the whole 1000Gp1 data
+	print "\t", join(',', @repeats), "\t", join(',', @dups), "\t", join(',', @blacklist), "\t$accessible";
 	print "\n";
 		
 #	print "\n"; print Dumper($x); exit;
@@ -354,6 +452,10 @@ if ($debug)
 	INFO("  Excluded due to equal genotype: $filtered_gt");
 	INFO("  Excluded due to missing alternative allele: $filtered_alt");
 	INFO("  Excluded germline variants: $filtered_germ");
+	INFO("  $numrep variants annotated with overlapping repeat.");
+	INFO("  $num_blacklist variants annotated with overlapping blacklisted region.");
+	INFO("  $numsegdup variants annotated with overlapping segmental duplication.");
+	INFO("  $num_not_accessible variants fall into G1K non-accessible region.");
 }
 
 # ------------------------------------------

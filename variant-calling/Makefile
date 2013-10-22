@@ -4,20 +4,20 @@ SHELL=/bin/bash  # required to make pipefail work
 all:
 
 # download dbSNP data from UCSC
-~/hdall/data/hg19/hg19.snp137Common.txt: 
-	#mysql -h genome-mysql.cse.ucsc.edu -u genome -D hg19 -N -A -e 'select * from snp137Common' > ~/hdall/data/hg19/hg19.snp137Common.txt
-	#bgzip -c ~/hdall/data/hg19/hg19.snp137Common.txt > ~/hdall/data/hg19/hg19.snp137Common.txt.gz
-	curl -o ~/hdall/data/hg19/hg19.snp137Common.txt.gz http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/snp137Common.txt.gz
-	gunzip ~/hdall/data/hg19/hg19.snp137Common.txt.gz
-	bgzip -c ~/hdall/data/hg19/hg19.snp137Common.txt > ~/hdall/data/hg19/hg19.snp137Common.txt.gz
-	tabix ~/hdall/data/hg19/hg19.snp137Common.txt.gz -s 2 -b 3 -e 4
+~/generic/data/hg19/hg19.snp137Common.txt: 
+	#mysql -h genome-mysql.cse.ucsc.edu -u genome -D hg19 -N -A -e 'select * from snp137Common' > ~/generic/data/hg19/hg19.snp137Common.txt
+	#bgzip -c ~/generic/data/hg19/hg19.snp137Common.txt > ~/generic/data/hg19/hg19.snp137Common.txt.gz
+	curl -o ~/generic/data/hg19/hg19.snp137Common.txt.gz http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/snp137Common.txt.gz
+	gunzip ~/generic/data/hg19/hg19.snp137Common.txt.gz
+	bgzip -c ~/generic/data/hg19/hg19.snp137Common.txt > ~/generic/data/hg19/hg19.snp137Common.txt.gz
+	tabix ~/generic/data/hg19/hg19.snp137Common.txt.gz -s 2 -b 3 -e 4
 
 SAMPLES = 545_rel 545_rem D_rem
 varscan: $(foreach S, $(SAMPLES), ~/hdall/data/varscan/$S.merged.duplicate_marked.realigned.recalibrated.varscan.vcf)
 
 # relapse samples; more stringent filtering
 ~/hdall/data/varscan/%_rel.merged.duplicate_marked.realigned.recalibrated.varscan.vcf: ~/hdall/data/bam/%_rel.merged.duplicate_marked.realigned.recalibrated.bam
-	~/tools/samtools-0.1.19/samtools mpileup -q 40 -f ~/hdall/data/hg19/ucsc.hg19.fasta $< \
+	~/tools/samtools-0.1.19/samtools mpileup -q 40 -f ~/generic/data/hg19/ucsc.hg19.fasta $< \
 		| java -jar ~/tools/varscan-2.3.6/VarScan.v2.3.6.jar mpileup2cns --variants --strand-filter 1 --min-coverage 10 --min-avg-qual 25 --p-value 1 --min-var-freq 0.1 --min-reads2 4 --output-vcf 1 - \
 			> $@.part
 	mv $@.part $@
@@ -26,7 +26,7 @@ varscan: $(foreach S, $(SAMPLES), ~/hdall/data/varscan/$S.merged.duplicate_marke
 
 # remission samples; less stringent filtering
 ~/hdall/data/varscan/%_rem.merged.duplicate_marked.realigned.recalibrated.varscan.vcf: ~/hdall/data/bam/%_rem.merged.duplicate_marked.realigned.recalibrated.bam
-	~/tools/samtools-0.1.19/samtools mpileup -q 1 -f ~/hdall/data/hg19/ucsc.hg19.fasta $< \
+	~/tools/samtools-0.1.19/samtools mpileup -q 1 -f ~/generic/data/hg19/ucsc.hg19.fasta $< \
 		| java -jar ~/tools/varscan-2.3.6/VarScan.v2.3.6.jar mpileup2cns --variants --strand-filter 0 --min-coverage 2 --min-avg-qual 15 --p-value 1 --min-var-freq 0.05 --min-reads2 2 --output-vcf 1 - \
 			> $@.part
 	mv $@.part $@

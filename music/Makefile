@@ -132,24 +132,24 @@ maf-high-af-del/%.maf: ../filtered_variants/%.snp.filtered.vcf ../filtered_varia
 # GENOME MUSIC CALC-WIG-COVG
 #-----------------------------------------------------------------------
 	
-dia/total_covgs: dia/wig-list.tsv ~/hdall/data/hg19/ucsc.hg19.nochr.fasta
+dia/total_covgs: dia/wig-list.tsv ~/generic/data/hg19/ucsc.hg19.nochr.fasta
 	rm -f dia/total_covgs
 	rm -rf dia/roi_covgs
 	rm -rf dia/gene_covgs
 	genome music bmr calc-wig-covg \
 		--wig-list dia/wig-list.tsv \
 		--output-dir dia/ \
-		--reference-sequence ~/hdall/data/hg19/ucsc.hg19.nochr.fasta \
+		--reference-sequence ~/generic/data/hg19/ucsc.hg19.nochr.fasta \
 		--roi-file ucsc-genes.hg19.roi
 
-rel/total_covgs: rel/wig-list.tsv ~/hdall/data/hg19/ucsc.hg19.nochr.fasta
+rel/total_covgs: rel/wig-list.tsv ~/generic/data/hg19/ucsc.hg19.nochr.fasta
 	rm -f rel/total_covgs
 	rm -rf rel/roi_covgs
 	rm -rf rel/gene_covgs
 	genome music bmr calc-wig-covg \
 		--wig-list rel/wig-list.tsv \
 		--output-dir rel/ \
-		--reference-sequence ~/hdall/data/hg19/ucsc.hg19.nochr.fasta \
+		--reference-sequence ~/generic/data/hg19/ucsc.hg19.nochr.fasta \
 		--roi-file ucsc-genes.hg19.roi
 
 dia-high-af/total_covgs: dia/total_covgs
@@ -188,58 +188,58 @@ rel-high-af-del/total_covgs: rel/total_covgs
 # GENOME MUSIC CALC-BMR
 #-----------------------------------------------------------------------
 
-dia/gene_mrs: dia/total_covgs dia/wig-list.tsv dia/rem_dia.maf ~/hdall/data/hg19/ucsc.hg19.nochr.fasta ucsc-genes.hg19.roi
+dia/gene_mrs: dia/total_covgs dia/wig-list.tsv dia/rem_dia.maf ~/generic/data/hg19/ucsc.hg19.nochr.fasta ucsc-genes.hg19.roi
 	rm -f dia/overall_bmrs
 	genome music bmr calc-bmr \
 		--bam-list dia/wig-list.tsv \
 		--maf-file dia/rem_dia.maf \
 		--output-dir dia/ \
-		--reference-sequence ~/hdall/data/hg19/ucsc.hg19.nochr.fasta \
+		--reference-sequence ~/generic/data/hg19/ucsc.hg19.nochr.fasta \
 		--roi-file ucsc-genes.hg19.roi
 
-rel/gene_mrs: rel/total_covgs rel/wig-list.tsv rel/rem_rel.maf ~/hdall/data/hg19/ucsc.hg19.nochr.fasta ucsc-genes.hg19.roi
+rel/gene_mrs: rel/total_covgs rel/wig-list.tsv rel/rem_rel.maf ~/generic/data/hg19/ucsc.hg19.nochr.fasta ucsc-genes.hg19.roi
 	rm -f rel/overall_bmrs
 	genome music bmr calc-bmr \
 		--bam-list rel/wig-list.tsv \
 		--maf-file rel/rem_rel.maf \
 		--output-dir rel/ \
-		--reference-sequence ~/hdall/data/hg19/ucsc.hg19.nochr.fasta \
+		--reference-sequence ~/generic/data/hg19/ucsc.hg19.nochr.fasta \
 		--roi-file ucsc-genes.hg19.roi
 
-dia-high-af/gene_mrs: dia-high-af/total_covgs dia/wig-list.tsv dia-high-af/rem_dia.maf ~/hdall/data/hg19/ucsc.hg19.nochr.fasta ucsc-genes.hg19.roi
+dia-high-af/gene_mrs: dia-high-af/total_covgs dia/wig-list.tsv dia-high-af/rem_dia.maf ~/generic/data/hg19/ucsc.hg19.nochr.fasta ucsc-genes.hg19.roi
 	rm -f dia-high-af/overall_bmrs
 	genome music bmr calc-bmr \
 		--bam-list dia/wig-list.tsv \
 		--maf-file dia-high-af/rem_dia.maf \
 		--output-dir dia-high-af/ \
-		--reference-sequence ~/hdall/data/hg19/ucsc.hg19.nochr.fasta \
+		--reference-sequence ~/generic/data/hg19/ucsc.hg19.nochr.fasta \
 		--roi-file ucsc-genes.hg19.roi
 
-dia-high-af-del/gene_mrs: dia-high-af-del/total_covgs dia/wig-list.tsv dia-high-af-del/rem_dia.maf ~/hdall/data/hg19/ucsc.hg19.nochr.fasta ucsc-genes.hg19.roi
+dia-high-af-del/gene_mrs: dia-high-af-del/total_covgs dia/wig-list.tsv dia-high-af-del/rem_dia.maf ~/generic/data/hg19/ucsc.hg19.nochr.fasta ucsc-genes.hg19.roi
 	rm -f dia-high-af-del/overall_bmrs
 	genome music bmr calc-bmr \
 		--bam-list dia/wig-list.tsv \
 		--maf-file dia-high-af-del/rem_dia.maf \
 		--output-dir dia-high-af-del/ \
-		--reference-sequence ~/hdall/data/hg19/ucsc.hg19.nochr.fasta \
+		--reference-sequence ~/generic/data/hg19/ucsc.hg19.nochr.fasta \
 		--roi-file ucsc-genes.hg19.roi
 
-rel-high-af/gene_mrs: rel-high-af/total_covgs rel/wig-list.tsv rel-high-af/rem_rel.maf ~/hdall/data/hg19/ucsc.hg19.nochr.fasta ucsc-genes.hg19.roi
+rel-high-af/gene_mrs: rel-high-af/total_covgs rel/wig-list.tsv rel-high-af/rem_rel.maf ~/generic/data/hg19/ucsc.hg19.nochr.fasta ucsc-genes.hg19.roi
 	rm -f rel-high-af/overall_bmrs
 	genome music bmr calc-bmr \
 		--bam-list rel/wig-list.tsv \
 		--maf-file rel-high-af/rem_rel.maf \
 		--output-dir rel-high-af/ \
-		--reference-sequence ~/hdall/data/hg19/ucsc.hg19.nochr.fasta \
+		--reference-sequence ~/generic/data/hg19/ucsc.hg19.nochr.fasta \
 		--roi-file ucsc-genes.hg19.roi
 
-rel-high-af-del/gene_mrs: rel-high-af-del/total_covgs rel/wig-list.tsv rel-high-af-del/rem_rel.maf ~/hdall/data/hg19/ucsc.hg19.nochr.fasta ucsc-genes.hg19.roi
+rel-high-af-del/gene_mrs: rel-high-af-del/total_covgs rel/wig-list.tsv rel-high-af-del/rem_rel.maf ~/generic/data/hg19/ucsc.hg19.nochr.fasta ucsc-genes.hg19.roi
 	rm -f rel-high-af-del/overall_bmrs
 	genome music bmr calc-bmr \
 		--bam-list rel/wig-list.tsv \
 		--maf-file rel-high-af-del/rem_rel.maf \
 		--output-dir rel-high-af-del/ \
-		--reference-sequence ~/hdall/data/hg19/ucsc.hg19.nochr.fasta \
+		--reference-sequence ~/generic/data/hg19/ucsc.hg19.nochr.fasta \
 		--roi-file ucsc-genes.hg19.roi
 
 #-----------------------------------------------------------------------
@@ -317,44 +317,44 @@ pathscan/pathways-david-complete.tsv: pathscan/pathways-david.tsv pathscan/pathw
 		> pathscan/pathways-david-complete.tsv.part
 	mv pathscan/pathways-david-complete.tsv.part pathscan/pathways-david-complete.tsv
 
-pathscan/gene-sets.mutsigdb4.0.tsv: ~/hdall/data/msigdb/msigdb.v4.0.entrez.gmt ~/hdall/scripts/pathway-analysis/msigdb2pathscan.pl
-	cat ~/hdall/data/msigdb/c1.all.v4.0.symbols.gmt | perl ~/hdall/scripts/pathway-analysis/msigdb2pathscan.pl \
-		--entrez-id-file ~/hdall/data/msigdb/msigdb.v4.0.entrez.gmt \
+pathscan/gene-sets.mutsigdb4.0.tsv: ~/generic/data/msigdb/msigdb.v4.0.entrez.gmt ~/hdall/scripts/pathway-analysis/msigdb2pathscan.pl
+	cat ~/generic/data/msigdb/c1.all.v4.0.symbols.gmt | perl ~/hdall/scripts/pathway-analysis/msigdb2pathscan.pl \
+		--entrez-id-file ~/generic/data/msigdb/msigdb.v4.0.entrez.gmt \
 		--category c1_positional \
 		2>&1 1>pathscan/gene-sets.mutsigdb4.0.tsv.part | tee -a make.log 
-	cat ~/hdall/data/msigdb/c2.all.v4.0.symbols.gmt | perl ~/hdall/scripts/pathway-analysis/msigdb2pathscan.pl \
-		--entrez-id-file ~/hdall/data/msigdb/msigdb.v4.0.entrez.gmt \
+	cat ~/generic/data/msigdb/c2.all.v4.0.symbols.gmt | perl ~/hdall/scripts/pathway-analysis/msigdb2pathscan.pl \
+		--entrez-id-file ~/generic/data/msigdb/msigdb.v4.0.entrez.gmt \
 		--category c2_curated \
 		2>&1 1>>pathscan/gene-sets.mutsigdb4.0.tsv.part | tee -a make.log 
-	cat ~/hdall/data/msigdb/c3.all.v4.0.symbols.gmt | perl ~/hdall/scripts/pathway-analysis/msigdb2pathscan.pl \
-		--entrez-id-file ~/hdall/data/msigdb/msigdb.v4.0.entrez.gmt \
+	cat ~/generic/data/msigdb/c3.all.v4.0.symbols.gmt | perl ~/hdall/scripts/pathway-analysis/msigdb2pathscan.pl \
+		--entrez-id-file ~/generic/data/msigdb/msigdb.v4.0.entrez.gmt \
 		--category c3_motif \
 		2>&1 1>>pathscan/gene-sets.mutsigdb4.0.tsv.part | tee -a make.log 
-	cat ~/hdall/data/msigdb/c4.all.v4.0.symbols.gmt | perl ~/hdall/scripts/pathway-analysis/msigdb2pathscan.pl \
-		--entrez-id-file ~/hdall/data/msigdb/msigdb.v4.0.entrez.gmt \
+	cat ~/generic/data/msigdb/c4.all.v4.0.symbols.gmt | perl ~/hdall/scripts/pathway-analysis/msigdb2pathscan.pl \
+		--entrez-id-file ~/generic/data/msigdb/msigdb.v4.0.entrez.gmt \
 		--category c4_computational \
 		2>&1 1>>pathscan/gene-sets.mutsigdb4.0.tsv.part | tee -a make.log 
-	cat ~/hdall/data/msigdb/c5.all.v4.0.symbols.gmt | perl ~/hdall/scripts/pathway-analysis/msigdb2pathscan.pl \
-		--entrez-id-file ~/hdall/data/msigdb/msigdb.v4.0.entrez.gmt \
+	cat ~/generic/data/msigdb/c5.all.v4.0.symbols.gmt | perl ~/hdall/scripts/pathway-analysis/msigdb2pathscan.pl \
+		--entrez-id-file ~/generic/data/msigdb/msigdb.v4.0.entrez.gmt \
 		--category c5_GO \
 		2>&1 1>>pathscan/gene-sets.mutsigdb4.0.tsv.part | tee -a make.log 
-	cat ~/hdall/data/msigdb/c6.all.v4.0.symbols.gmt | perl ~/hdall/scripts/pathway-analysis/msigdb2pathscan.pl \
-		--entrez-id-file ~/hdall/data/msigdb/msigdb.v4.0.entrez.gmt \
+	cat ~/generic/data/msigdb/c6.all.v4.0.symbols.gmt | perl ~/hdall/scripts/pathway-analysis/msigdb2pathscan.pl \
+		--entrez-id-file ~/generic/data/msigdb/msigdb.v4.0.entrez.gmt \
 		--category c6_oncogenic_signature \
 		2>&1 1>>pathscan/gene-sets.mutsigdb4.0.tsv.part | tee -a make.log 
-	cat ~/hdall/data/msigdb/c7.all.v4.0.symbols.gmt | perl ~/hdall/scripts/pathway-analysis/msigdb2pathscan.pl \
-		--entrez-id-file ~/hdall/data/msigdb/msigdb.v4.0.entrez.gmt \
+	cat ~/generic/data/msigdb/c7.all.v4.0.symbols.gmt | perl ~/hdall/scripts/pathway-analysis/msigdb2pathscan.pl \
+		--entrez-id-file ~/generic/data/msigdb/msigdb.v4.0.entrez.gmt \
 		--category c7_immunologic_signature \
 		2>&1 1>>pathscan/gene-sets.mutsigdb4.0.tsv.part | tee -a make.log
 
-pathscan/pathways-nci.tsv: ~/hdall/data/nci-pathway/uniprot.tab ~/hdall/scripts/pathway-analysis/nci2pathscan.pl
-	cat ~/hdall/data/nci-pathway/uniprot.tab | perl ~/hdall/scripts/pathway-analysis/nci2pathscan.pl \
+pathscan/pathways-nci.tsv: ~/generic/data/nci-pathway/uniprot.tab ~/hdall/scripts/pathway-analysis/nci2pathscan.pl
+	cat ~/generic/data/nci-pathway/uniprot.tab | perl ~/hdall/scripts/pathway-analysis/nci2pathscan.pl \
 		2>&1 1>>pathscan/pathways-nci.tsv.part | tee -a make.log
 	mv pathscan/pathways-nci.tsv.part pathscan/pathways-nci.tsv
 
-pathscan/pathways-wikipathways.tsv: ~/hdall/data/wikipathways/wikipathways_Homo_sapiens_Curation-AnalysisCollection__txt.zip
+pathscan/pathways-wikipathways.tsv: ~/generic/data/wikipathways/wikipathways_Homo_sapiens_Curation-AnalysisCollection__txt.zip
 	perl ~/hdall/scripts/pathway-analysis/wikipathways2pathscan.pl \
-		--wiki-dir ~/hdall/data/wikipathways/ \
+		--wiki-dir ~/generic/data/wikipathways/ \
 		2>&1 1>>pathscan/pathways-wikipathways.tsv.part | tee -a make.log
 	mv pathscan/pathways-wikipathways.tsv.part pathscan/pathways-wikipathways.tsv
 

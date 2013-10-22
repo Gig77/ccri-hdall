@@ -21,7 +21,7 @@ INFO(scalar(keys(%id2sym))." id mappgins read from file $ENV{HOME}/hdall/results
 
 # read kgXref
 my (%uni2sym);
-open(G,"$ENV{HOME}/hdall/data/hg19/hg19.kgXref.txt") or die "could not open file $ENV{HOME}/hdall/data/hg19/hg19.kgXref.txt";
+open(G,"$ENV{HOME}/generic/data/hg19/hg19.kgXref.txt") or die "could not open file $ENV{HOME}/generic/data/hg19/hg19.kgXref.txt";
 while(<G>)
 {
 	chomp;
@@ -34,7 +34,7 @@ while(<G>)
 	$uni2sym{$spID} = $geneSymbol if ($spID);
 }
 close(G);
-INFO(scalar(keys(%uni2sym))." id mappgins read from file $ENV{HOME}/hdall/data/hg19/hg19.kgXref.txt");
+INFO(scalar(keys(%uni2sym))." id mappgins read from file $ENV{HOME}/generic/data/hg19/hg19.kgXref.txt");
 
 # read biomart id mapping to get entrez ids and additional uniprot ids
 my %sym2entrez;

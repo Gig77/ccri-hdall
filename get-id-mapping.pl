@@ -88,7 +88,7 @@ foreach (my ($k, $v) = each(%remap))
 }
 
 # next kgXref
-open(G,"$ENV{HOME}/hdall/data/hg19/hg19.kgXref.txt") or die "could not open file $ENV{HOME}/hdall/data/hg19/hg19.kgXref.txt";
+open(G,"$ENV{HOME}/generic/data/hg19/hg19.kgXref.txt") or die "could not open file $ENV{HOME}/generic/data/hg19/hg19.kgXref.txt";
 while(<G>)
 {
 	chomp;

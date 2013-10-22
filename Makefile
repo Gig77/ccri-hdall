@@ -1,7 +1,7 @@
 export SHELLOPTS:=errexit:pipefail
 SHELL=/bin/bash
 
-all: filtered-variants.tsv filtered-variants.cosmic.tsv filtered-variants.cosmic.normaf.tsv filtered-variants.cosmic.normaf.mapp.tsv gene-patient-matrix.tsv gene-patient-matrix.high-af.tsv gene-patient-matrix.tier1.tsv cnv/gene-patient-matrix.cnv.tsv lolliplot/lolliplot_CREBBP_NM_004380_both.svg ipa/mutated_relapse.tsv stats
+all: filtered-variants.tsv filtered-variants.cosmic.tsv filtered-variants.cosmic.normaf.tsv gene-patient-matrix.tsv gene-patient-matrix.high-af.tsv gene-patient-matrix.tier1.tsv cnv/gene-patient-matrix.cnv.tsv lolliplot/lolliplot_CREBBP_NM_004380_both.svg ipa/mutated_relapse.tsv stats
 
 stats: stats/variants-per-chrom-and-ploidy.pdf stats/mutations-per-patient-dia-vs-rel.pdf stats/mutation-profile.af10.pdf
 
@@ -24,11 +24,11 @@ filtered-variants.tsv:	$(foreach P, $(PATIENTS), filtered_variants/$P_rem_dia.sn
 filtered_variants/%.snp.filtered.tsv: ~/hdall/data/mutect_vcf/%_calls_snpeff_snpsift.dbsnp.vcf curated-recected-variants.tsv ~/hdall/scripts/filter-variants.pl
 	perl ~/hdall/scripts/filter-variants.pl $* $< snp \
 		--vcf-out filtered_variants/$*.snp.filtered.vcf \
-		--rmsk-file ~/hdall/data/hg19/hg19.rmsk.txt.gz \
-		--simpleRepeat-file ~/hdall/data/hg19/hg19.simpleRepeat.txt.gz \
-		--segdup-file ~/hdall/data/hg19/hg19.genomicSuperDups.txt.gz \
-		--blacklist-file ~/hdall/data/hg19/hg19.wgEncodeDacMapabilityConsensusExcludable.txt.gz \
-		--g1k-accessible ~/hdall/data/hg19/paired.end.mapping.1000G..pilot.bed.gz \
+		--rmsk-file ~/generic/data/hg19/hg19.rmsk.txt.gz \
+		--simpleRepeat-file ~/generic/data/hg19/hg19.simpleRepeat.txt.gz \
+		--segdup-file ~/generic/data/hg19/hg19.genomicSuperDups.txt.gz \
+		--blacklist-file ~/generic/data/hg19/hg19.wgEncodeDacMapabilityConsensusExcludable.txt.gz \
+		--g1k-accessible ~/generic/data/hg19/paired.end.mapping.1000G..pilot.bed.gz \
 		--rejected-variants-file curated-recected-variants.tsv \
 		2>&1 1>$@.part | grep -v -P '(Leading or trailing space|variant.Format|on which the variant locates)' | tee -a make.log
 	mv $@.part $@
@@ -41,11 +41,11 @@ filtered_variants/%.snp.filtered.tsv: ~/hdall/data/mutect_vcf/%_calls_snpeff_snp
 filtered_variants/%.indel.filtered.tsv: ~/hdall/data/somatic_indel_vcf/%_snpeff.dbsnp.vcf curated-recected-variants.tsv ~/hdall/scripts/filter-variants.pl
 	perl ~/hdall/scripts/filter-variants.pl $* $< indel \
 		--vcf-out filtered_variants/$*.indel.filtered.vcf \
-		--rmsk-file ~/hdall/data/hg19/hg19.rmsk.txt.gz \
-		--simpleRepeat-file ~/hdall/data/hg19/hg19.simpleRepeat.txt.gz \
-		--segdup-file ~/hdall/data/hg19/hg19.genomicSuperDups.txt.gz \
-		--blacklist-file ~/hdall/data/hg19/hg19.wgEncodeDacMapabilityConsensusExcludable.txt.gz \
-		--g1k-accessible ~/hdall/data/hg19/paired.end.mapping.1000G..pilot.bed.gz \
+		--rmsk-file ~/generic/data/hg19/hg19.rmsk.txt.gz \
+		--simpleRepeat-file ~/generic/data/hg19/hg19.simpleRepeat.txt.gz \
+		--segdup-file ~/generic/data/hg19/hg19.genomicSuperDups.txt.gz \
+		--blacklist-file ~/generic/data/hg19/hg19.wgEncodeDacMapabilityConsensusExcludable.txt.gz \
+		--g1k-accessible ~/generic/data/hg19/paired.end.mapping.1000G..pilot.bed.gz \
 		--rejected-variants-file curated-recected-variants.tsv \
 		2>&1 1>$@.part | grep -v -P '(Leading or trailing space|variant.Format|on which the variant locates)' | tee -a make.log
 	mv $@.part $@	
@@ -55,9 +55,9 @@ filtered_variants/%.indel.filtered.tsv: ~/hdall/data/somatic_indel_vcf/%_snpeff.
 	(cd ~/tools/snpEff-3.3h; java -jar SnpSift.jar annotate -v ~/tools/snpEff-3.3h/common_no_known_medical_impact_20130930.chr.vcf $< > $@.part) 
 	mv $@.part $@
 
-filtered-variants.cosmic.tsv: filtered-variants.tsv ~/hdall/data/cosmic/v65/CosmicMutantExport_v65_280513.tsv ~/hdall/scripts/annotate-cosmic.pl
+filtered-variants.cosmic.tsv: filtered-variants.tsv ~/generic/data/cosmic/v65/CosmicMutantExport_v65_280513.tsv ~/hdall/scripts/annotate-cosmic.pl
 	cat ~/hdall/results/filtered-variants.tsv | perl ~/hdall/scripts/annotate-cosmic.pl \
-		--cosmic-mutation-file ~/hdall/data/cosmic/v65/CosmicMutantExport_v65_280513.tsv \
+		--cosmic-mutation-file ~/generic/data/cosmic/v65/CosmicMutantExport_v65_280513.tsv \
 		--only-confirmed \
 		2>&1 1>$@.part | tee -a make.log
 	mv $@.part $@ 
@@ -71,32 +71,32 @@ filtered-variants.cosmic.normaf.tsv: filtered-variants.cosmic.tsv cnv/hdall.cnv.
 	
 # annotate mappability regions
 
-~/hdall/data/hg19/hg19.simpleRepeat.txt.gz.tbi: ~/hdall/data/hg19/hg19.simpleRepeat.txt
-	#mysql -h genome-mysql.cse.ucsc.edu -u genome -D hg19 -N -A -e 'select * from simpleRepeat' > ~/hdall/data/hg19/hg19.simpleRepeat.txt
-	bgzip -c ~/hdall/data/hg19/hg19.simpleRepeat.txt > ~/hdall/data/hg19/hg19.simpleRepeat.txt.gz
-	tabix ~/hdall/data/hg19/hg19.simpleRepeat.txt.gz -s 2 -b 3 -e 4
+~/generic/data/hg19/hg19.simpleRepeat.txt.gz.tbi: ~/generic/data/hg19/hg19.simpleRepeat.txt
+	#mysql -h genome-mysql.cse.ucsc.edu -u genome -D hg19 -N -A -e 'select * from simpleRepeat' > ~/generic/data/hg19/hg19.simpleRepeat.txt
+	bgzip -c ~/generic/data/hg19/hg19.simpleRepeat.txt > ~/generic/data/hg19/hg19.simpleRepeat.txt.gz
+	tabix ~/generic/data/hg19/hg19.simpleRepeat.txt.gz -s 2 -b 3 -e 4
 
-~/hdall/data/hg19/hg19.rmsk.txt.gz.tbi: ~/hdall/data/hg19/hg19.rmsk.txt
-	#mysql -h genome-mysql.cse.ucsc.edu -u genome -D hg19 -N -A -e 'select * from rmsk' > ~/hdall/data/hg19/hg19.rmsk.txt
-	bgzip -c ~/hdall/data/hg19/hg19.rmsk.txt > ~/hdall/data/hg19/hg19.rmsk.txt.gz
-	tabix ~/hdall/data/hg19/hg19.rmsk.txt.gz -s 6 -b 7 -e 8
+~/generic/data/hg19/hg19.rmsk.txt.gz.tbi: ~/generic/data/hg19/hg19.rmsk.txt
+	#mysql -h genome-mysql.cse.ucsc.edu -u genome -D hg19 -N -A -e 'select * from rmsk' > ~/generic/data/hg19/hg19.rmsk.txt
+	bgzip -c ~/generic/data/hg19/hg19.rmsk.txt > ~/generic/data/hg19/hg19.rmsk.txt.gz
+	tabix ~/generic/data/hg19/hg19.rmsk.txt.gz -s 6 -b 7 -e 8
 
-~/hdall/data/hg19/hg19.genomicSuperDups.txt.gz.tbi: ~/hdall/data/hg19/hg19.genomicSuperDups.txt
-	#mysql -h genome-mysql.cse.ucsc.edu -u genome -D hg19 -N -A -e 'select * from genomicSuperDups' > ~/hdall/data/hg19/hg19.genomicSuperDups.txt
-	bgzip -c ~/hdall/data/hg19/hg19.genomicSuperDups.txt > ~/hdall/data/hg19/hg19.genomicSuperDups.txt.gz
-	tabix ~/hdall/data/hg19/hg19.genomicSuperDups.txt.gz -s 2 -b 3 -e 4
+~/generic/data/hg19/hg19.genomicSuperDups.txt.gz.tbi: ~/generic/data/hg19/hg19.genomicSuperDups.txt
+	#mysql -h genome-mysql.cse.ucsc.edu -u genome -D hg19 -N -A -e 'select * from genomicSuperDups' > ~/generic/data/hg19/hg19.genomicSuperDups.txt
+	bgzip -c ~/generic/data/hg19/hg19.genomicSuperDups.txt > ~/generic/data/hg19/hg19.genomicSuperDups.txt.gz
+	tabix ~/generic/data/hg19/hg19.genomicSuperDups.txt.gz -s 2 -b 3 -e 4
 
-~/hdall/data/hg19/hg19.wgEncodeDacMapabilityConsensusExcludable.txt.gz.tbi: ~/hdall/data/hg19/hg19.wgEncodeDacMapabilityConsensusExcludable.txt
-	#mysql -h genome-mysql.cse.ucsc.edu -u genome -D hg19 -N -A -e 'select * from wgEncodeDacMapabilityConsensusExcludable' > ~/hdall/data/hg19/hg19.wgEncodeDacMapabilityConsensusExcludable.txt
-	bgzip -c ~/hdall/data/hg19/hg19.wgEncodeDacMapabilityConsensusExcludable.txt > ~/hdall/data/hg19/hg19.wgEncodeDacMapabilityConsensusExcludable.txt.gz
-	tabix ~/hdall/data/hg19/hg19.wgEncodeDacMapabilityConsensusExcludable.txt.gz -s 2 -b 3 -e 4
+~/generic/data/hg19/hg19.wgEncodeDacMapabilityConsensusExcludable.txt.gz.tbi: ~/generic/data/hg19/hg19.wgEncodeDacMapabilityConsensusExcludable.txt
+	#mysql -h genome-mysql.cse.ucsc.edu -u genome -D hg19 -N -A -e 'select * from wgEncodeDacMapabilityConsensusExcludable' > ~/generic/data/hg19/hg19.wgEncodeDacMapabilityConsensusExcludable.txt
+	bgzip -c ~/generic/data/hg19/hg19.wgEncodeDacMapabilityConsensusExcludable.txt > ~/generic/data/hg19/hg19.wgEncodeDacMapabilityConsensusExcludable.txt.gz
+	tabix ~/generic/data/hg19/hg19.wgEncodeDacMapabilityConsensusExcludable.txt.gz -s 2 -b 3 -e 4
 
-~/hdall/data/hg19/paired.end.mapping.1000G..pilot.bed.gz.tbi: ~/hdall/data/hg19/paired.end.mapping.1000G..pilot.bb
-	#curl -o ~/hdall/data/hg19/paired.end.mapping.1000G..pilot.bb http://hgdownload.cse.ucsc.edu/gbdb/hg19/1000Genomes/paired.end.mapping.1000G..pilot.bb
+~/generic/data/hg19/paired.end.mapping.1000G..pilot.bed.gz.tbi: ~/generic/data/hg19/paired.end.mapping.1000G..pilot.bb
+	#curl -o ~/generic/data/hg19/paired.end.mapping.1000G..pilot.bb http://hgdownload.cse.ucsc.edu/gbdb/hg19/1000Genomes/paired.end.mapping.1000G..pilot.bb
 	#curl -o ~/hdall/tools/ucsc/bigBedToBed http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64.v287/bigBedToBed
-	~/hdall/tools/ucsc/bigBedToBed ~/hdall/data/hg19/paired.end.mapping.1000G..pilot.bb ~/hdall/data/hg19/paired.end.mapping.1000G..pilot.bed
-	bgzip -c ~/hdall/data/hg19/paired.end.mapping.1000G..pilot.bed > ~/hdall/data/hg19/paired.end.mapping.1000G..pilot.bed.gz
-	tabix ~/hdall/data/hg19/paired.end.mapping.1000G..pilot.bed.gz -s 1 -b 2 -e 3
+	~/hdall/tools/ucsc/bigBedToBed ~/generic/data/hg19/paired.end.mapping.1000G..pilot.bb ~/generic/data/hg19/paired.end.mapping.1000G..pilot.bed
+	bgzip -c ~/generic/data/hg19/paired.end.mapping.1000G..pilot.bed > ~/generic/data/hg19/paired.end.mapping.1000G..pilot.bed.gz
+	tabix ~/generic/data/hg19/paired.end.mapping.1000G..pilot.bed.gz -s 1 -b 2 -e 3
 	
 impacted-genes-list.tsv: filtered-variants.tsv ~/hdall/scripts/impacted-genes.pl
 	cat filtered-variants.tsv | perl ~/hdall/scripts/impacted-genes.pl \
@@ -155,7 +155,7 @@ clonal-analysis/allelic-freq-prob.distributions.pdf: ~/hdall/scripts/clonal-anal
 	R --no-save --quiet --slave -f ~/hdall/scripts/clonal-analysis/estimate-af-dist.R \
 		2>&1 | tee -a make.log
 
-lolliplot/pfam-regions.filtered.tsv: ~/hdall/data/pfam-27.0/pfamA.txt ~/hdall/data/pfam-27.0/Pfam-A.regions.tsv.gz ~/hdall/scripts/lolliplot/filter-and-annotate-pfam-regions.pl
+lolliplot/pfam-regions.filtered.tsv: ~/generic/data/pfam-27.0/pfamA.txt ~/generic/data/pfam-27.0/Pfam-A.regions.tsv.gz ~/hdall/scripts/lolliplot/filter-and-annotate-pfam-regions.pl
 	perl ~/hdall/scripts/lolliplot/filter-and-annotate-pfam-regions.pl > lolliplot/pfam-regions.filtered.tsv
 
 lolliplot/lolliplot_CREBBP_NM_004380_both.svg: id-mappings.tsv lolliplot/pfam-regions.filtered.tsv filtered-variants.cosmic.tsv ~/hdall/scripts/lolliplot/lolliplot.pl

@@ -1,7 +1,7 @@
 # download required tables from UCSC genome browser:
-# mysql -h genome-mysql.cse.ucsc.edu -u genome -D hg19 -N -A -e 'select * from knownGene' > ~/hdall/data/hg19/hg19.knownGene.txt
-# mysql -h genome-mysql.cse.ucsc.edu -u genome -D hg19 -N -A -e 'select * from knownCanonical' > ~/hdall/data/hg19/hg19.knownCanonical.txt
-# mysql -h genome-mysql.cse.ucsc.edu -u genome -D hg19 -N -A -e 'select * from kgXref' > ~/hdall/data/hg19/hg19.kgXref.txt
+# mysql -h genome-mysql.cse.ucsc.edu -u genome -D hg19 -N -A -e 'select * from knownGene' > ~/generic/data/hg19/hg19.knownGene.txt
+# mysql -h genome-mysql.cse.ucsc.edu -u genome -D hg19 -N -A -e 'select * from knownCanonical' > ~/generic/data/hg19/hg19.knownCanonical.txt
+# mysql -h genome-mysql.cse.ucsc.edu -u genome -D hg19 -N -A -e 'select * from kgXref' > ~/generic/data/hg19/hg19.kgXref.txt
 # perl ~/hdall/scripts/get-id-mapping.pl > ~/hdall/results/id-mappings.tsv
 
 SCRIPT=~/git/hdall/filter-variants.pl

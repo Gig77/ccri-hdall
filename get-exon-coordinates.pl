@@ -33,7 +33,7 @@ close(M);
 INFO(scalar(keys(%id2sym))." id mappgins read from file $ENV{HOME}/hdall/results/id-mappings.tsv");
 
 my (%canonical, %sym2size);
-open(G,"$ENV{HOME}/hdall/data/hg19/hg19.knownCanonical.txt") or die "could not open file $ENV{HOME}/hdall/data/hg19/hg19.knownCanonical.txt";
+open(G,"$ENV{HOME}/generic/data/hg19/hg19.knownCanonical.txt") or die "could not open file $ENV{HOME}/generic/data/hg19/hg19.knownCanonical.txt";
 while(<G>)
 {
 	chomp;
@@ -49,11 +49,11 @@ while(<G>)
 	$sym2size{$geneSymbol} = $size;
 }
 close(G);
-INFO(scalar(keys(%canonical))." canonical genes read from file $ENV{HOME}/hdall/data/hg19/hg19.knownCanonical.txt");
+INFO(scalar(keys(%canonical))." canonical genes read from file $ENV{HOME}/generic/data/hg19/hg19.knownCanonical.txt");
 
 my $lines = 0;
 my %sym2info;
-open(G,"$ENV{HOME}/hdall/data/hg19/hg19.knownGene.txt") or die "could not open file $ENV{HOME}/hdall/data/hg19/hg19.knownGene.txt";
+open(G,"$ENV{HOME}/generic/data/hg19/hg19.knownGene.txt") or die "could not open file $ENV{HOME}/generic/data/hg19/hg19.knownGene.txt";
 while(<G>)
 {
 	chomp;
@@ -94,7 +94,7 @@ while(<G>)
 	}	
 }
 close(G);
-INFO("$lines genes read from file $ENV{HOME}/hdall/data/hg19/hg19.knownGene.txt");
+INFO("$lines genes read from file $ENV{HOME}/generic/data/hg19/hg19.knownGene.txt");
 
 print "Chromosome,StartCoordinate,StopCoordinate,TargetType,Density,Labels\n" if ($format eq 'nextera');
 

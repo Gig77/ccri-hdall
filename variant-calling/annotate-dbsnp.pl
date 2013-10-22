@@ -3,7 +3,7 @@ use strict;
 
 use Tabix;
 
-my $dbsnp = Tabix->new(-data => $ENV{HOME}.'/hdall/data/hg19/hg19.snp137Common.txt.gz');
+my $dbsnp = Tabix->new(-data => $ENV{HOME}.'/generic/data/hg19/hg19.snp137Common.txt.gz');
 
 while (<>)
 {

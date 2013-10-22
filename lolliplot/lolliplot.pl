@@ -26,7 +26,7 @@ INFO(scalar(keys(%id2sym))." id mappgins read from file $ENV{HOME}/hdall/results
 # refseq/ucsc mapping
 my %transcripts;
 my %refseq2ucsc;
-open(G,"$ENV{HOME}/hdall/data/hg19/hg19.kgXref.txt") or die "ERROR: could not open file $ENV{HOME}/hdall/data/hg19/hg19.kgXref.txt";
+open(G,"$ENV{HOME}/generic/data/hg19/hg19.kgXref.txt") or die "ERROR: could not open file $ENV{HOME}/generic/data/hg19/hg19.kgXref.txt";
 while(<G>)
 {
 	chomp;
@@ -46,7 +46,7 @@ while(<G>)
 close(G);
 
 my $lines = 0;
-open(G,"$ENV{HOME}/hdall/data/hg19/hg19.knownGene.txt") or die "could not open file $ENV{HOME}/hdall/data/hg19/hg19.knownGene.txt";
+open(G,"$ENV{HOME}/generic/data/hg19/hg19.knownGene.txt") or die "could not open file $ENV{HOME}/generic/data/hg19/hg19.knownGene.txt";
 while(<G>)
 {
 	chomp;
@@ -76,7 +76,7 @@ while(<G>)
 	$lines++;
 }
 close(G);
-INFO("$lines genes read from file $ENV{HOME}/hdall/data/hg19/hg19.knownGene.txt");
+INFO("$lines genes read from file $ENV{HOME}/generic/data/hg19/hg19.knownGene.txt");
 
 open(D,"$ENV{HOME}/hdall/results/lolliplot/pfam-regions.filtered.tsv") or die "could not open file $ENV{HOME}/hdall/results/lolliplot/pfam-regions.filtered.tsv";
 my %domains;

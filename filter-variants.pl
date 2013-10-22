@@ -108,7 +108,7 @@ $cmp_sample = $patient2sample{$patient."_$cmp_sample"} ? $patient2sample{$patien
 
 # read kgXref, knownCanonical to determine UCSC canonical transcripts affected by variant
 my %kgID2refSeq;
-open(G,"$ENV{HOME}/hdall/data/hg19/hg19.kgXref.txt") or die "could not open file $ENV{HOME}/hdall/data/hg19/hg19.kgXref.txt";
+open(G,"$ENV{HOME}/generic/data/hg19/hg19.kgXref.txt") or die "could not open file $ENV{HOME}/generic/data/hg19/hg19.kgXref.txt";
 while(<G>)
 {
 	chomp;
@@ -117,10 +117,10 @@ while(<G>)
 	$kgID2refSeq{$kgID} = $refSeq if ($refSeq);
 }
 close(G);
-INFO(scalar(keys(%kgID2refSeq))." gene descriptions read from file $ENV{HOME}/hdall/data/hg19/hg19.kgXref.txt");
+INFO(scalar(keys(%kgID2refSeq))." gene descriptions read from file $ENV{HOME}/generic/data/hg19/hg19.kgXref.txt");
 
 my %canonical;
-open(G,"$ENV{HOME}/hdall/data/hg19/hg19.knownCanonical.txt") or die "could not open file $ENV{HOME}/hdall/data/hg19/hg19.knownCanonical.txt";
+open(G,"$ENV{HOME}/generic/data/hg19/hg19.knownCanonical.txt") or die "could not open file $ENV{HOME}/generic/data/hg19/hg19.knownCanonical.txt";
 <G>; # skip header
 while(<G>)
 {
@@ -130,7 +130,7 @@ while(<G>)
 	$canonical{$kgID2refSeq{$transcript}} = 1 if ($kgID2refSeq{$transcript});
 }
 close(G);
-INFO(scalar(keys(%canonical))." canonical genes read from file $ENV{HOME}/hdall/data/hg19/hg19.knownCanonical.txt");
+INFO(scalar(keys(%canonical))." canonical genes read from file $ENV{HOME}/generic/data/hg19/hg19.knownCanonical.txt");
 
 my %rejected_variants;
 if ($rejected_variants_file)

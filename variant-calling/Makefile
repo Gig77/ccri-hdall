@@ -45,7 +45,7 @@ varscan: $(foreach S, $(SAMPLES), ~/hdall/data/varscan/$S.merged.duplicate_marke
 # annotate mutation impact on genes using snpEff
 
 ~/hdall/data/varscan/545_rel.merged.duplicate_marked.realigned.recalibrated.varscan.somatic.snpeff.vcf: ~/hdall/data/varscan/545_rel.merged.duplicate_marked.realigned.recalibrated.varscan.somatic.vcf
-	(cd ~/tools/snpEff-3.3h; java -Xmx2g -jar ~/tools/snpEff-3.3h/snpEff.jar -v -lof -hgvs hg19 $< > $@.part)
+	(cd ~/tools/snpEff-3.3h; java -Xmx2g -jar ~/tools/snpEff-3.3h/snpEff.jar -v -lof hg19 $< > $@.part)
 	mv $@.part $@
 
 # annotate dbSnp variants using SnpSift

@@ -31,6 +31,7 @@ while(<C>)
 		$tumour_origin, $age, $comments) = split /\t/;
 	
 	next if ($only_confirmed and $mutation_somatic_status ne "Confirmed somatic variant");
+	$gene_name =~ s/_ENST.*//;
 	
 	$cosmic{$mutation_GRCh37_genome_position} = defined $cosmic{$mutation_GRCh37_genome_position} ? $cosmic{$mutation_GRCh37_genome_position} + 1 : 1;
 	$cosmic_leuk{$mutation_GRCh37_genome_position} = defined $cosmic_leuk{$mutation_GRCh37_genome_position} ? $cosmic_leuk{$mutation_GRCh37_genome_position} + 1 : 1
@@ -56,7 +57,7 @@ print "$header\tcosmic_hits_nt\tcosmic_hits_aa\tcosmic_hits_leu_nt\tcosmic_hits_
 while(<>)
 {
 	chomp;
-	my ($patient, $sample, $var_type, $status, $chr, $pos, $dbSNP, $ref, $alt, $gene, $add_genes, $impact, $effect, $exons, 
+	my ($patient, $sample, $var_type, $status, $rejected_because, $chr, $pos, $dbSNP, $ref, $alt, $gene, $add_genes, $impact, $effect, $exons, 
 		$dp_rem_tot, $dp_rem_ref, $dp_rem_var, $freq_rem, $dp_leu_tot, $dp_leu_ref, $dp_leu_var, $freq_leu, $aa_change, $snpeff) = split("\t");
 
 	my $loc = "$chr:$pos-$pos";

@@ -35,7 +35,10 @@ filtered_variants/%.snp.filtered.tsv: ~/hdall/data/mutect_vcf/%_calls_snpeff_snp
 
 .PRECIOUS: ~/hdall/data/mutect_vcf/%_calls_snpeff_snpsift.dbsnp.vcf
 ~/hdall/data/mutect_vcf/%_calls_snpeff_snpsift.dbsnp.vcf: ~/hdall/data/mutect_vcf/%_calls_snpeff_snpsift.vcf ~/tools/snpEff-3.3h/common_no_known_medical_impact_20130930.chr.vcf
-	(cd ~/tools/snpEff-3.3h; java -jar SnpSift.jar annotate -v ~/tools/snpEff-3.3h/common_no_known_medical_impact_20130930.chr.vcf $< > $@.part) 
+	(cd ~/tools/snpEff-3.3h; java -jar SnpSift.jar annotate \
+		-v ~/tools/snpEff-3.3h/common_no_known_medical_impact_20130930.chr.vcf \
+		<(cat $< | perl -ne 's/\trs\d+\t/\t.\t/; print $$_;' -) \
+		> $@.part)
 	mv $@.part $@
 
 filtered_variants/%.indel.filtered.tsv: ~/hdall/data/somatic_indel_vcf/%_snpeff.dbsnp.vcf curated-recected-variants.tsv ~/hdall/scripts/filter-variants.pl
@@ -159,7 +162,7 @@ lolliplot/pfam-regions.filtered.tsv: ~/generic/data/pfam-27.0/pfamA.txt ~/generi
 	perl ~/hdall/scripts/lolliplot/filter-and-annotate-pfam-regions.pl > lolliplot/pfam-regions.filtered.tsv
 
 lolliplot/lolliplot_CREBBP_NM_004380_both.svg: id-mappings.tsv lolliplot/pfam-regions.filtered.tsv filtered-variants.cosmic.tsv ~/hdall/scripts/lolliplot/lolliplot.pl
-	rm lolliplot/*.svg 
+	rm -f lolliplot/*.svg 
 	perl ~/hdall/scripts/lolliplot/lolliplot.pl \
 		2>&1 | tee -a make.log
 

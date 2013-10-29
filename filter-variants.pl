@@ -31,6 +31,7 @@ if ($header)
 	print "sample\t";
 	print "var_type\t";
 	print "status\t";
+	print "rejected_because\t";
 	print "chr\t";
 	print "pos\t";
 	print "dbSNP\t";
@@ -311,7 +312,7 @@ while (my $line = $vcf->next_line())
 		croak "ERROR: Invalid variant type: $var_type\n";
 	}
 
-	my $reject = $rejected_variants{"$patient\t$cmp_type\t".$x->{CHROM}."\t".$x->{POS}};
+	my $reject_because = $rejected_variants{"$patient\t$cmp_type\t".$x->{CHROM}."\t".$x->{POS}};
 	
 	my (@repeats, @dups, @blacklist);
 	my ($chr, $pos) = ($x->{CHROM}, $x->{POS});
@@ -385,14 +386,15 @@ while (my $line = $vcf->next_line())
 		$num_not_accessible ++ if ($accessible eq "no");		
 	}
 	
-	$line =~ s/^([^\t]+\t[^\t]+\t[^\t]+\t[^\t]+\t[^\t]+\t[^\t]+\t)[^\t]+/$1REJECT/ if ($reject);
+	$line =~ s/^([^\t]+\t[^\t]+\t[^\t]+\t[^\t]+\t[^\t]+\t[^\t]+\t)[^\t]+/$1REJECT/ if ($reject_because);
 	
 	print VCFOUT "$line" if ($vcf_out);
 	
 	print "$patient\t";		
 	print "$cmp_type\t";
 	print "$var_type\t";
-	print $reject ? "REJECT\t" : "$status\t";
+	print $reject_because ? "REJECT\t" : "$status\t";
+	print $reject_because ? "$reject_because\t" : "\t";
 	print $x->{CHROM},"\t";
 	print $x->{POS},"\t";
 	print $x->{ID},"\t";

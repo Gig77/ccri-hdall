@@ -8,6 +8,7 @@ options(warn=1)
 patients <- c("314", "399", "430", "446", "460", "545", "592", "715", "786", "792", "818", "842", "1021247", "A", "B", "C", "D", "E", "X", "Y") 
 #patients <- c("399", "314")
 t <- read.csv("~/hdall/results/filtered-variants.cosmic.normaf.tsv", sep="\t", stringsAsFactors=F)
+t <- t[t$status != "REJECT",]
 
 pdf("~/hdall/results/clonal-analysis/freq-scatter.pdf", width=12, paper='A4r')
 par(mfrow=c(4,5), mar=c(2,1,2,1))

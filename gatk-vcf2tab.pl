@@ -34,36 +34,35 @@ while (my $x = $vcf->next_data_hash())
 {	
 	my $chr = $x->{CHROM};
 	my $pos = $x->{POS};
-
 	my $ref_allele = $x->{REF};
-	my $alt_allele = join(",", @{$x->{ALT}});
-	my $dbSNP = ($x->{ID} and $x->{ID} ne '.') ? $x->{ID} : "";
-	
+
 	##FORMAT=<ID=AD,Number=.,Type=Integer,Description="Allelic depths for the ref and alt alleles in the order listed">
 	##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Approximate read depth (reads with MQ=255 or with bad mates are filtered)">
 	##FORMAT=<ID=GQ,Number=1,Type=Integer,Description="Genotype Quality">
 	##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
 	##FORMAT=<ID=PL,Number=G,Type=Integer,Description="Normalized, Phred-scaled likelihoods for genotypes as d
-	my $ad = $x->{gtypes}{'1021247_rem'}{AD};
-	my $dp = $x->{gtypes}{'1021247_rem'}{DP};
-	my $gq = $x->{gtypes}{'1021247_rem'}{GQ};
-	my $gt = $x->{gtypes}{'1021247_rem'}{GT};
-	my $pl = $x->{gtypes}{'1021247_rem'}{PL};
 
-	next if ($gt eq "./.");
-	
-	my $ad_ref = (split(",", $ad))[0];
-	my $ad_alt = $gt =~ /2/ ? (split(",", $ad))[2] : (split(",", $ad))[1];
-	 
-	next if ($dp < 3);
-	
-	if (!$ad)
+	foreach my $sample (@samples)
 	{
-		print "$chr:$pos\n";
-		print Dumper($x->{gtypes}{'1021247_rem'});
-		exit;
+		next if ($sample !~ /_rem/);
+		
+		my $gt = $x->{gtypes}{$sample}{GT};
+		my $dp = $x->{gtypes}{$sample}{DP};
+		my $gq = $x->{gtypes}{$sample}{GQ};
+	
+		next if ($gt eq "./.");	
+		next if ($dp < 3);
+	
+		for(my $i = 0; $i < @{$x->{ALT}}; $i ++)
+		{
+			my $ad = (split(",", $x->{gtypes}{$sample}{AD}))[$i+1];
+			next if ($ad < 2);
+			
+			my $alt_allele = $x->{ALT}->[$i];
+			
+			print "$sample\t$chr\t$pos\t$ref_allele\t$alt_allele\t$dp\t$ad\t$gt\n";
+		}			
 	}
-	print "$chr\t$pos\t$ref_allele\t$alt_allele\t$ad\t$dp\t$gq\t$gt\t$pl\t$ad_ref\t$ad_alt\n";
 }
 $vcf->close();
 

@@ -5,6 +5,7 @@ patients <- c("314", "399", "430", "446", "460", "545", "592", "715", "786", "79
 
 # TABLE: filtered-variants.tsv
 t <- read.delim("filtered-variants.tsv", stringsAsFactors=F)
+t <- t[t$status != "REJECT",]
 min.af <- 0.10
 min.dp.leu <- 10
 min.dp.rem <- 10

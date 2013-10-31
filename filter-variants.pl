@@ -11,7 +11,7 @@ use Tabix;
 use Carp;
 
 my ($vcf_out, $header, $rejected_variants_file);
-my ($rmsk_file, $simplerepeat_file, $blacklist_file, $segdup_file, $g1k_accessible_file);
+my ($rmsk_file, $simplerepeat_file, $blacklist_file, $segdup_file, $g1k_accessible_file, $ucsc_retro_file, $remission_variants_file);
 GetOptions
 (
 	"vcf-out=s" => \$vcf_out,  # filtered VCF output file
@@ -21,7 +21,9 @@ GetOptions
 	"blacklist-file=s" => \$blacklist_file, # TABIX indexed UCSC table wgEncodeDacMapabilityConsensusExcludable
 	"segdup-file=s" => \$segdup_file, # TABIX indexed UCSC table genomicSuperDups
 	"g1k-accessible=s" => \$g1k_accessible_file, # TABIX indexed UCSC table tgpPhase1AccessibilityPilotCriteria
-	"rejected-variants-file=s" => \$rejected_variants_file # file with variants rejected based on manual curation; will be filtered from output
+	"ucscRetro=s" => \$ucsc_retro_file, # TABIX indexed UCSC table ucscRetroAli5
+	"rejected-variants-file=s" => \$rejected_variants_file, # file with variants rejected based on manual curation; will be filtered from output
+	"remission-variants-file=s" => \$remission_variants_file # TABIX indexed file with variants found in remission samples (GATK)
 );
 
 # TABLE: filtered-variants
@@ -59,9 +61,11 @@ if ($header)
 	print "InterPro\t";
 	print "AF_1000G\t";
 	print "repeat\t";
-	print "tsegdup\t";
+	print "segdup\t";
 	print "blacklist\t";
-	print "g1k-accessible\n";	
+	print "g1k-accessible\t";	
+	print "retro\t";
+	print "rem_samples\n";	
 	exit;
 }
 
@@ -77,6 +81,8 @@ croak "ERROR: --simpleRepeat-file not specified" if (!$simplerepeat_file);
 croak "ERROR: --blacklist-file not specified" if (!$blacklist_file);
 croak "ERROR: --segdup-file not specified" if (!$segdup_file);
 croak "ERROR: --g1k-accessible not specified" if (!$g1k_accessible_file);
+croak "ERROR: --ucscRetro not specified" if (!$ucsc_retro_file);
+croak "ERROR: --remission-variants-file not specified" if (!$remission_variants_file);
 
 my %patient2sample = (
 	'A_rem' => 'A13324_rem',
@@ -153,6 +159,8 @@ my $simpleRepeat = Tabix->new(-data => $simplerepeat_file);
 my $blacklistdb = Tabix->new(-data => $blacklist_file);
 my $segdup = Tabix->new(-data => $segdup_file);
 my $g1kAcc = Tabix->new(-data => $g1k_accessible_file);
+my $ucscRetro = Tabix->new(-data => $ucsc_retro_file);
+my $remission = Tabix->new(-data => $remission_variants_file);
 
 $| = 1; # turn on autoflush
 
@@ -184,7 +192,7 @@ die "ERROR: Sample name $rem_sample not found!\n" if ($rem_sample ne $samples[0]
 die "ERROR: Sample name $cmp_sample not found!\n" if ($cmp_sample ne $samples[0] and $cmp_sample ne $samples[1]);
 
 my ($tot_var, $filtered_qual, $filtered_gt, $filtered_alt, $filtered_germ) = (0, 0, 0, 0, 0);
-my ($numrep, $num_blacklist, $numsegdup, $num_not_accessible) = (0, 0, 0, 0);
+my ($numrep, $num_blacklist, $numsegdup, $num_not_accessible, $num_retro, $num_remission) = (0, 0, 0, 0, 0, 0);
 my %qual_num;
 
 while (my $line = $vcf->next_line())
@@ -312,9 +320,7 @@ while (my $line = $vcf->next_line())
 		croak "ERROR: Invalid variant type: $var_type\n";
 	}
 
-	my $reject_because = $rejected_variants{"$patient\t$cmp_type\t".$x->{CHROM}."\t".$x->{POS}};
-	
-	my (@repeats, @dups, @blacklist);
+	my (@repeats, @dups, @blacklist, @retro, @rem_samples);
 	my ($chr, $pos) = ($x->{CHROM}, $x->{POS});
 
 	# ----- annotate overlapping repeat regions
@@ -385,16 +391,57 @@ while (my $line = $vcf->next_line())
 		}
 		$num_not_accessible ++ if ($accessible eq "no");		
 	}
+
+	# ----- annotate overlapping retrotransposed (pseudo) genes
+	{
+		my $iter = $ucscRetro->query($chr, $pos-1, $pos+1);
+		if ($iter and $iter->{_})
+		{
+			while (my $line = $ucscRetro->read($iter)) 
+			{
+				my @s = split("\t", $line);
+				push(@retro, $s[10]);
+			}		
+		}
+		$num_retro ++ if (@retro > 0);
+	}
+
+	# ----- annotate variants found in remission samples
+	{
+		my $iter = $remission->query($chr, $pos-1, $pos);
+		if ($iter and $iter->{_})
+		{
+			while (my $line = $remission->read($iter)) 
+			{
+				my ($sample, $rchr, $rpos, $ref_allele, $alt_allele, $dp, $ad, $gt) = split("\t", $line);
+				if ($pos eq $rpos and $x->{REF} eq $ref_allele and $x->{ALT}->[0] eq $alt_allele and $ad >= 3 and $ad/$dp > 0.05)
+				{
+					push(@rem_samples, "$sample($ad)");
+				}
+			}		
+		}
+		$num_remission ++ if (@rem_samples > 0);
+	}
 	
-	$line =~ s/^([^\t]+\t[^\t]+\t[^\t]+\t[^\t]+\t[^\t]+\t[^\t]+\t)[^\t]+/$1REJECT/ if ($reject_because);
+	my @rejected_because;
+	if ($rejected_variants{"$patient\t$cmp_type\t".$x->{CHROM}."\t".$x->{POS}}) { push(@rejected_because, "manual inspection (".$rejected_variants{"$patient\t$cmp_type\t".$x->{CHROM}."\t".$x->{POS}}.")")}
+	if (@repeats > 0) { push(@rejected_because, "repetitive region"); }
+	if (@dups > 0) { push(@rejected_because, "segmental duplication"); }
+	if (@blacklist > 0) { push(@rejected_because, "blacklisted region"); }
+	if (@retro > 0) { push(@rejected_because, "retrotransposon"); }
+	if (@rem_samples > 1) { push(@rejected_because, "present remissions"); }
+	if ($x->{ID} and $x->{ID} ne ".")  { push(@rejected_because, "dbSNP"); }  
+	if (defined $x->{INFO}{'dbNSFP_1000Gp1_AF'} and $x->{INFO}{'dbNSFP_1000Gp1_AF'} > 0) { push(@rejected_because, "g1k"); }
+	
+	$line =~ s/^([^\t]+\t[^\t]+\t[^\t]+\t[^\t]+\t[^\t]+\t[^\t]+\t)[^\t]+/$1REJECT/ if (@rejected_because > 0);
 	
 	print VCFOUT "$line" if ($vcf_out);
 	
 	print "$patient\t";		
 	print "$cmp_type\t";
 	print "$var_type\t";
-	print $reject_because ? "REJECT\t" : "$status\t";
-	print $reject_because ? "$reject_because\t" : "\t";
+	print @rejected_because > 0 ? "REJECT\t" : "$status\t";
+	print @rejected_because > 0 ? join(";", @rejected_because) : "", "\t";
 	print $x->{CHROM},"\t";
 	print $x->{POS},"\t";
 	print $x->{ID},"\t";
@@ -434,7 +481,7 @@ while (my $line = $vcf->next_line())
 		print "\t";
 	}
 	print defined $x->{INFO}{'dbNSFP_1000Gp1_AF'} ? $x->{INFO}{'dbNSFP_1000Gp1_AF'} : "";  # Alternative allele frequency in the whole 1000Gp1 data
-	print "\t", join(',', @repeats), "\t", join(',', @dups), "\t", join(',', @blacklist), "\t$accessible";
+	print "\t", join(',', @repeats), "\t", join(',', @dups), "\t", join(',', @blacklist), "\t$accessible\t", join(",", @retro), "\t", join(",", @rem_samples);
 	print "\n";
 		
 #	print "\n"; print Dumper($x); exit;
@@ -458,6 +505,8 @@ if ($debug)
 	INFO("  $num_blacklist variants annotated with overlapping blacklisted region.");
 	INFO("  $numsegdup variants annotated with overlapping segmental duplication.");
 	INFO("  $num_not_accessible variants fall into G1K non-accessible region.");
+	INFO("  $num_retro variants annotated with overlapping retrotransposed (pseudo)gene.");
+	INFO("  $num_remission variants present in remission sample(s).");
 }
 
 # ------------------------------------------

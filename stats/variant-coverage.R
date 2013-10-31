@@ -1,5 +1,6 @@
 # TABLE: filtered-variants.cosmic.normaf.tsv
 v <- read.delim("~/hdall/results/filtered-variants.cosmic.normaf.tsv")
+v <- v[v$status != "REJECT",]
 
 dp.dia <- v[v$sample=="rem_dia", c("patient", "dp_leu_tot")]
 dp.rel <- v[v$sample=="rem_rel", c("patient", "dp_leu_tot")]

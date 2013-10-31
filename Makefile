@@ -3,7 +3,7 @@ SHELL=/bin/bash
 
 all: filtered-variants.tsv filtered-variants.cosmic.tsv filtered-variants.cosmic.normaf.tsv gene-patient-matrix.tsv gene-patient-matrix.high-af.tsv gene-patient-matrix.tier1.tsv cnv/gene-patient-matrix.cnv.tsv lolliplot/lolliplot_CREBBP_NM_004380_both.svg ipa/mutated_relapse.tsv stats
 
-stats: stats/variants-per-chrom-and-ploidy.pdf stats/mutations-per-patient-dia-vs-rel.pdf stats/mutation-profile.af10.pdf
+stats: stats/variants-per-chrom-and-ploidy.pdf stats/mutations-per-patient-dia-vs-rel.pdf stats/mutation-profile.af10.pdf stats/variant-coverage.pdf
 
 nextera:
 	cat kamilla/candidate\ genes\ for\ targeted\ sequencing.tsv | perl ~/hdall/scripts/get-nextera-exons.pl --density Standard > kamilla/nextera-exons.standard.csv
@@ -21,7 +21,7 @@ filtered-variants.tsv:	$(foreach P, $(PATIENTS), filtered_variants/$P_rem_dia.sn
 	cat filtered_variants/*.filtered.tsv >> filtered-variants.tsv.part
 	mv filtered-variants.tsv.part filtered-variants.tsv
 	
-filtered_variants/%.snp.filtered.tsv: ~/hdall/data/mutect_vcf/%_calls_snpeff_snpsift.dbsnp.vcf curated-recected-variants.tsv ~/hdall/scripts/filter-variants.pl
+filtered_variants/%.snp.filtered.tsv: ~/hdall/data/mutect_vcf/%_calls_snpeff_snpsift.dbsnp.vcf curated-recected-variants.tsv ~/hdall/scripts/filter-variants.pl remission-variants.tsv.gz.tbi
 	perl ~/hdall/scripts/filter-variants.pl $* $< snp \
 		--vcf-out filtered_variants/$*.snp.filtered.vcf \
 		--rmsk-file ~/generic/data/hg19/hg19.rmsk.txt.gz \
@@ -29,7 +29,9 @@ filtered_variants/%.snp.filtered.tsv: ~/hdall/data/mutect_vcf/%_calls_snpeff_snp
 		--segdup-file ~/generic/data/hg19/hg19.genomicSuperDups.txt.gz \
 		--blacklist-file ~/generic/data/hg19/hg19.wgEncodeDacMapabilityConsensusExcludable.txt.gz \
 		--g1k-accessible ~/generic/data/hg19/paired.end.mapping.1000G..pilot.bed.gz \
+		--ucscRetro ~/generic/data/hg19/hg19.ucscRetroAli5.txt.gz \
 		--rejected-variants-file curated-recected-variants.tsv \
+		--remission-variants-file remission-variants.tsv.gz \
 		2>&1 1>$@.part | grep -v -P '(Leading or trailing space|variant.Format|on which the variant locates)' | tee -a make.log
 	mv $@.part $@
 
@@ -41,7 +43,7 @@ filtered_variants/%.snp.filtered.tsv: ~/hdall/data/mutect_vcf/%_calls_snpeff_snp
 		> $@.part)
 	mv $@.part $@
 
-filtered_variants/%.indel.filtered.tsv: ~/hdall/data/somatic_indel_vcf/%_snpeff.dbsnp.vcf curated-recected-variants.tsv ~/hdall/scripts/filter-variants.pl
+filtered_variants/%.indel.filtered.tsv: ~/hdall/data/somatic_indel_vcf/%_snpeff.dbsnp.vcf curated-recected-variants.tsv ~/hdall/scripts/filter-variants.pl remission-variants.tsv.gz.tbi
 	perl ~/hdall/scripts/filter-variants.pl $* $< indel \
 		--vcf-out filtered_variants/$*.indel.filtered.vcf \
 		--rmsk-file ~/generic/data/hg19/hg19.rmsk.txt.gz \
@@ -49,7 +51,9 @@ filtered_variants/%.indel.filtered.tsv: ~/hdall/data/somatic_indel_vcf/%_snpeff.
 		--segdup-file ~/generic/data/hg19/hg19.genomicSuperDups.txt.gz \
 		--blacklist-file ~/generic/data/hg19/hg19.wgEncodeDacMapabilityConsensusExcludable.txt.gz \
 		--g1k-accessible ~/generic/data/hg19/paired.end.mapping.1000G..pilot.bed.gz \
+		--ucscRetro ~/generic/data/hg19/hg19.ucscRetroAli5.txt.gz \
 		--rejected-variants-file curated-recected-variants.tsv \
+		--remission-variants-file remission-variants.tsv.gz \
 		2>&1 1>$@.part | grep -v -P '(Leading or trailing space|variant.Format|on which the variant locates)' | tee -a make.log
 	mv $@.part $@	
 
@@ -57,6 +61,18 @@ filtered_variants/%.indel.filtered.tsv: ~/hdall/data/somatic_indel_vcf/%_snpeff.
 ~/hdall/data/somatic_indel_vcf/%_snpeff.dbsnp.vcf: ~/hdall/data/somatic_indel_vcf/%_snpeff.vcf ~/tools/snpEff-3.3h/common_no_known_medical_impact_20130930.chr.vcf
 	(cd ~/tools/snpEff-3.3h; java -jar SnpSift.jar annotate -v ~/tools/snpEff-3.3h/common_no_known_medical_impact_20130930.chr.vcf $< > $@.part) 
 	mv $@.part $@
+
+remission-variants.tsv: ~/hdall/data/gatk_vcf_all_patients/analysis_ready_vcf.snpEff.vcf ~/hdall/scripts/gatk-vcf2tab.pl
+	cat ~/hdall/data/gatk_vcf_all_patients/analysis_ready_vcf.snpEff.vcf \
+		| perl ~/hdall/scripts/gatk-vcf2tab.pl 2>&1 1> $@.part | tee -a make.log
+	mv $@.part $@
+
+remission-variants.tsv.gz: remission-variants.tsv
+	bgzip -c $^ > $@.part
+	mv $@.part $@
+
+remission-variants.tsv.gz.tbi: remission-variants.tsv.gz
+	tabix $^ -s 2 -b 3 -e 3
 
 filtered-variants.cosmic.tsv: filtered-variants.tsv ~/generic/data/cosmic/v65/CosmicMutantExport_v65_280513.tsv ~/hdall/scripts/annotate-cosmic.pl
 	cat ~/hdall/results/filtered-variants.tsv | perl ~/hdall/scripts/annotate-cosmic.pl \
@@ -100,6 +116,11 @@ filtered-variants.cosmic.normaf.tsv: filtered-variants.cosmic.tsv cnv/hdall.cnv.
 	~/hdall/tools/ucsc/bigBedToBed ~/generic/data/hg19/paired.end.mapping.1000G..pilot.bb ~/generic/data/hg19/paired.end.mapping.1000G..pilot.bed
 	bgzip -c ~/generic/data/hg19/paired.end.mapping.1000G..pilot.bed > ~/generic/data/hg19/paired.end.mapping.1000G..pilot.bed.gz
 	tabix ~/generic/data/hg19/paired.end.mapping.1000G..pilot.bed.gz -s 1 -b 2 -e 3
+
+~/generic/data/hg19/hg19.ucscRetroAli5.txt.gz.tbi: ~/generic/data/hg19/hg19.ucscRetroAli5.txt
+	#mysql -h genome-mysql.cse.ucsc.edu -u genome -D hg19 -N -A -e 'select * from ucscRetroAli5' > ~/generic/data/hg19/hg19.ucscRetroAli5.txt
+	bgzip -c ~/generic/data/hg19/hg19.ucscRetroAli5.txt > ~/generic/data/hg19/hg19.ucscRetroAli5.txt.gz
+	tabix ~/generic/data/hg19/hg19.ucscRetroAli5.txt.gz -s 15 -b 17 -e 18
 	
 impacted-genes-list.tsv: filtered-variants.tsv ~/hdall/scripts/impacted-genes.pl
 	cat filtered-variants.tsv | perl ~/hdall/scripts/impacted-genes.pl \
@@ -192,5 +213,9 @@ stats/mutations-per-patient-dia-vs-rel.pdf: filtered-variants.cosmic.normaf.tsv 
 
 stats/mutation-profile.af10.pdf: filtered-variants.tsv ~/hdall/scripts/stats/mutation-profile.R
 	R --no-save --quiet --slave -f ~/hdall/scripts/stats/mutation-profile.R \
+		2>&1 | tee -a make.log
+
+stats/variant-coverage.pdf: filtered-variants.cosmic.normaf.tsv ~/hdall/scripts/stats/variant-coverage.R
+	R --no-save --quiet --slave -f ~/hdall/scripts/stats/variant-coverage.R \
 		2>&1 | tee -a make.log
 		

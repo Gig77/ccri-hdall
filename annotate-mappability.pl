@@ -32,7 +32,7 @@ my $g1kAcc = Tabix->new(-data => $g1k_accessible_file);
 my ($numrep, $num_blacklist, $numsegdup, $num_not_accessible) = (0, 0, 0, 0);
 my $header = <>;
 chomp($header);
-print "$header\trepeat\tsegdup\tblacklist\tg1k-accessible\n";
+print "$header\trepeat\segdup\tblacklist\tg1k-accessible\n";
 while(<>)
 {
 	chomp;

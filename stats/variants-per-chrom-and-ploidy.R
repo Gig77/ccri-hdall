@@ -4,6 +4,7 @@ chr <- c("chr1", "chr2", "chr3", "chr4", "chr5", "chr6", "chr7", "chr8", "chr9",
 
 #TABLE: filtered-variants.cosmic.normaf.tsv
 sv <- read.delim("filtered-variants.cosmic.normaf.tsv")
+sv <- sv[sv$status != "REJECT",]
 
 pdf("stats/variants-per-chrom-and-ploidy.pdf", height=10)
 

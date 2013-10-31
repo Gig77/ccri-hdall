@@ -1,4 +1,5 @@
 data <- read.csv("~/hdall/results/filtered-variants.cosmic.normaf.tsv", sep="\t")
+data <- data[data$status != "REJECT",]
 
 patients <- levels(data$patient)
 samples <- levels(data$sample)

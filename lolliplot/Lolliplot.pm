@@ -1,4 +1,3 @@
-#TODO:: Remove the dependancies on the MG namespace
 #----------------------------------
 # $Authors: dlarson bshore $
 # $Date: 2008-09-16 16:33:54 -0500 (Tue, 16 Sep 2008) $
@@ -11,7 +10,8 @@ package Lolliplot;
 our $VERSION = '1.0';
 #------------------------------------------------
 use strict;
-use warnings;
+#use warnings;
+no warnings;
 use Carp;
 
 use lib '/home/christian/tools/gms-core/lib/perl';

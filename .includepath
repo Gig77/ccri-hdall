@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <includepath>
   <includepathentry path="/mnt/suse/home/STANNANET/christian.frech/tools/vcftools_0.1.10/lib/perl5/site_perl" />
-  <includepathentry path="/mnt/suse/home/STANNANET/christian.frech/tools/tabix-0.2.6/perl" />
   <includepathentry path="/mnt/suse/home/STANNANET/christian.frech/git/gms-core/lib/perl" />
+  <includepathentry path="/home/christian/tools/tabix-0.2.6/perl" />
+  <includepathentry path="/home/christian/perl5/lib/perl5/x86_64-linux-gnu-thread-multi/auto/Tabix/" />
 </includepath>
 

@@ -3,7 +3,7 @@ SHELL=/bin/bash
 
 all: filtered-variants.tsv filtered-variants.cosmic.tsv filtered-variants.cosmic.normaf.tsv gene-patient-matrix.tsv gene-patient-matrix.high-af.tsv gene-patient-matrix.tier1.tsv cnv/gene-patient-matrix.cnv.tsv lolliplot/lolliplot_CREBBP_NM_004380_both.svg ipa/mutated_relapse.tsv stats
 
-stats: stats/variants-per-chrom-and-ploidy.pdf stats/mutations-per-patient-dia-vs-rel.pdf stats/mutation-profile.af10.pdf stats/variant-coverage.pdf
+stats: stats/variants-per-chrom-and-ploidy.pdf stats/mutations-per-patient-dia-vs-rel.pdf stats/mutation-profile.af10.pdf stats/variant-coverage.pdf stats/gene-length-bias.pdf
 
 nextera:
 	cat kamilla/candidate\ genes\ for\ targeted\ sequencing.tsv | perl ~/hdall/scripts/get-nextera-exons.pl --density Standard > kamilla/nextera-exons.standard.csv
@@ -218,4 +218,12 @@ stats/mutation-profile.af10.pdf: filtered-variants.tsv ~/hdall/scripts/stats/mut
 stats/variant-coverage.pdf: filtered-variants.cosmic.normaf.tsv ~/hdall/scripts/stats/variant-coverage.R
 	R --no-save --quiet --slave -f ~/hdall/scripts/stats/variant-coverage.R \
 		2>&1 | tee -a make.log
+
+stats/gene-length-bias.pdf: gene-size.txt gene-patient-matrix.annotated.tsv ~/generic/data/illumina/truseq_exome_targeted_regions.hg19.bed.chr
+	R --no-save --quiet --slave -f ~/hdall/scripts/stats/gene-length-bias.R \
+		2>&1 | tee -a make.log
 		
+gene-size.txt: id-mappings.tsv ~/generic/data/hg19/hg19.knownGene.txt ~/hdall/scripts/get-gene-size.pl
+	perl ~/hdall/scripts/get-gene-size.pl > ~/hdall/results/gene-size.txt
+	
+	

@@ -20,7 +20,7 @@ m.rel <- m.dia
 
 # per patient
 
-#pdf("stats/mutation-profile-stacked.pdf", width=15)
+pdf("stats/mutation-profile-stacked.pdf", width=15)
 
 #layout(matrix(c(seq(1:20),rep(21,5)), ncol=5, byrow=T), heights=c(rep(0.23, 4), 0.08))
 #par(mar=c(2.0, 2.5, 3, 0))
@@ -33,7 +33,7 @@ for(p in patients) {
 	m.dia[p,4] <- nrow(tdia[(tdia$ref=="A" & tdia$alt=="C")|(tdia$ref=="C" & tdia$alt=="A"),])
 	m.dia[p,5] <- nrow(tdia[(tdia$ref=="G" & tdia$alt=="C")|(tdia$ref=="C" & tdia$alt=="G"),])
 	m.dia[p,6] <- nrow(tdia[(tdia$ref=="A" & tdia$alt=="T")|(tdia$ref=="T" & tdia$alt=="A"),])
-	#m.dia[p,] <- m.dia[p,]/sum(m.dia[p,])
+	m.dia[p,] <- m.dia[p,]/sum(m.dia[p,])
 	
 	# relapse
 	trel <- t[t$patient==p & t$sample=="rem_rel" & t$freq_leu>=min.af & t$freq_leu<=max.af & t$dp_rem_tot>=min.dp.rem & t$dp_leu_tot>=min.dp.leu,]
@@ -43,7 +43,7 @@ for(p in patients) {
 	m.rel[p,4] <- nrow(trel[(trel$ref=="A" & trel$alt=="C")|(trel$ref=="C" & trel$alt=="A"),])
 	m.rel[p,5] <- nrow(trel[(trel$ref=="G" & trel$alt=="C")|(trel$ref=="C" & trel$alt=="G"),])
 	m.rel[p,6] <- nrow(trel[(trel$ref=="A" & trel$alt=="T")|(trel$ref=="T" & trel$alt=="A"),])
-	#m.rel[p,] <- m.rel[p,]/sum(m.rel[p,])
+	m.rel[p,] <- m.rel[p,]/sum(m.rel[p,])
 }
 
 layout(matrix(c(1,2,3,3), nrow = 2), widths = c(0.8, 0.2))
@@ -61,4 +61,4 @@ legend("topleft", rev(colnames(m.dia)), fill=rev(brewer.pal(6, color)))
 #plot.new()
 #legend(x="center", legend=c("diagnosis", "relapse"), fill=c("black", "white"), horiz=T)
 
-#dev.off()
+dev.off()

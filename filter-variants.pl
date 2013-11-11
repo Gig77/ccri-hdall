@@ -10,11 +10,14 @@ use Getopt::Long;
 use Tabix;
 use Carp;
 
-my ($vcf_out, $header, $rejected_variants_file);
+my ($vcf_out, $header, $rejected_variants_file, $sample_identifier, $vcf_in, $var_type);
 my ($rmsk_file, $simplerepeat_file, $blacklist_file, $segdup_file, $g1k_accessible_file, $ucsc_retro_file, $remission_variants_file);
 GetOptions
 (
+	"sample=s" => \$sample_identifier, # e.g. 314_rem_dia
+	"vcf-in=s" => \$vcf_in,  # VCF input file
 	"vcf-out=s" => \$vcf_out,  # filtered VCF output file
+	"variant-type=s" => \$var_type,  # 'snp' or 'indel'
 	"header" => \$header,  # if set, write header line to output
 	"rmsk-file=s" => \$rmsk_file, # TABIX indexed UCSC table rmsk
 	"simpleRepeat-file=s" => \$simplerepeat_file, # TABIX indexed UCSC table rmsk
@@ -71,11 +74,10 @@ if ($header)
 
 my $debug = 1;
 
-my ($patient, $rem_sample, $cmp_sample) = split("_", $ARGV[0]) or croak "ERROR: comparison type not specified\n";
-my $vcf_file = $ARGV[1] or croak "ERROR: VCF file not specified\n";
-my $var_type = $ARGV[2] or croak "ERROR: variant type not specified ('snp' or 'indel')\n";
+croak "ERROR: --sample not specified" if (!$sample_identifier);
+croak "ERROR: --vcf-in not specified" if (!$vcf_in);
+croak "ERROR: --variant-type not specified ('snp' or 'indel')" if (!$var_type);
 croak "ERROR: invalid variant type: $var_type\n" if ($var_type ne 'snp' and $var_type ne 'indel');
-
 croak "ERROR: --rmsk-file not specified" if (!$rmsk_file);
 croak "ERROR: --simpleRepeat-file not specified" if (!$simplerepeat_file);
 croak "ERROR: --blacklist-file not specified" if (!$blacklist_file);
@@ -84,34 +86,36 @@ croak "ERROR: --g1k-accessible not specified" if (!$g1k_accessible_file);
 croak "ERROR: --ucscRetro not specified" if (!$ucsc_retro_file);
 croak "ERROR: --remission-variants-file not specified" if (!$remission_variants_file);
 
-my %patient2sample = (
-	'A_rem' => 'A13324_rem',
-	'A_dia' => 'A12642_dia',
-	'A_rel' => 'A12886_rel',
-	'B_rem' => 'B20946_rem',
-	'B_dia' => 'B19668_dia',
-	'B_rel' => 'B15010_rel',
-	'C_rem' => 'C20499_rem',
-	'C_dia' => 'C19797_dia',
-	'C_rel' => 'C15050_rel',
-	'D_rem' => 'D4502_rem',
-	'D_dia' => 'D3826_dia',
-	'D_rel' => 'D10183_rel',
-	'E_rem' => 'E13861_rem',
-	'E_dia' => 'E13174_dia',
-	'E_rel' => 'E13479_rel',
-	'X_rem' => 'X1847_rem',
-	'X_dia' => 'X1286_dia',
-	'X_rel' => 'X12831_rel',
-	'Y_rem' => 'Y3767_rem',
-	'Y_dia' => 'Y3141_dia',
-	'Y_rel' => 'Y10284_rel'
-);
+my ($patient, $rem_sample, $cmp_sample) = split("_", $sample_identifier) or croak "ERROR: could not parse sample identifier\n";
 my $cmp_type = $rem_sample."_".$cmp_sample;
 die "ERROR: invalid comparison type: $cmp_type\n" if ($cmp_type ne 'rem_dia' and $cmp_type ne 'rem_rel');
 
-$rem_sample = $patient2sample{$patient."_$rem_sample"} ? $patient2sample{$patient."_$rem_sample"} : $patient."_$rem_sample"; 
-$cmp_sample = $patient2sample{$patient."_$cmp_sample"} ? $patient2sample{$patient."_$cmp_sample"} : $patient."_$cmp_sample"; 
+#my %patient2sample = (
+#	'A_rem' => 'A13324_rem',
+#	'A_dia' => 'A12642_dia',
+#	'A_rel' => 'A12886_rel',
+#	'B_rem' => 'B20946_rem',
+#	'B_dia' => 'B19668_dia',
+#	'B_rel' => 'B15010_rel',
+#	'C_rem' => 'C20499_rem',
+#	'C_dia' => 'C19797_dia',
+#	'C_rel' => 'C15050_rel',
+#	'D_rem' => 'D4502_rem',
+#	'D_dia' => 'D3826_dia',
+#	'D_rel' => 'D10183_rel',
+#	'E_rem' => 'E13861_rem',
+#	'E_dia' => 'E13174_dia',
+#	'E_rel' => 'E13479_rel',
+#	'X_rem' => 'X1847_rem',
+#	'X_dia' => 'X1286_dia',
+#	'X_rel' => 'X12831_rel',
+#	'Y_rem' => 'Y3767_rem',
+#	'Y_dia' => 'Y3141_dia',
+#	'Y_rel' => 'Y10284_rel'
+#);
+
+#$rem_sample = $patient2sample{$patient."_$rem_sample"} ? $patient2sample{$patient."_$rem_sample"} : $patient."_$rem_sample"; 
+#$cmp_sample = $patient2sample{$patient."_$cmp_sample"} ? $patient2sample{$patient."_$cmp_sample"} : $patient."_$cmp_sample"; 
 
 # read kgXref, knownCanonical to determine UCSC canonical transcripts affected by variant
 my %kgID2refSeq;
@@ -174,15 +178,22 @@ my %variant_stati =
 	5 => 'unknown'
 );
 
-INFO("Processing file $vcf_file...");
+INFO("Processing file $vcf_in...");
 
-my $vcf = Vcf->new(file => "$vcf_file");
+my $vcf = Vcf->new(file => "$vcf_in");
 $vcf->parse_header();
+
+my $mutect = $vcf->get_header_line(key => 'GATKCommandLine', ID => 'MuTect')->[0]->{'CommandLineOptions'};
+($rem_sample) = $mutect =~ /normal_sample_name=(\S+)/;
+($cmp_sample) = $mutect =~ /tumor_sample_name=(\S+)/;
+print STDERR "Normal sample name: $rem_sample\n";
+print STDERR "Tumor sample name: $cmp_sample\n";
+
 my (@samples) = $vcf->get_samples();
 
 if ($vcf_out) 
 {
-	my $cmd = "grep -P '^#' $vcf_file > $vcf_out";
+	my $cmd = "grep -P '^#' $vcf_in > $vcf_out";
 	system($cmd) == 0 or die "ERROR: grep vcf header failed: $cmd\n";
 	open(VCFOUT,">>$vcf_out") or die "ERROR: could not write to file $vcf_out\n";
 }
@@ -209,7 +220,7 @@ while (my $line = $vcf->next_line())
 	}
 	
 	my $gt_rem = $x->{gtypes}{$rem_sample}{GT};
-	die "ERROR: Could not determine genotype of sample $rem_sample in file $vcf_file\n" if (!defined $gt_rem or $gt_rem eq "");
+	die "ERROR: Could not determine genotype of sample $rem_sample in file $vcf_in\n" if (!defined $gt_rem or $gt_rem eq "");
 
 	if ($gt_rem =~ /1/) # germline variant?
 	{

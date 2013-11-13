@@ -22,7 +22,10 @@ filtered-variants.tsv:	$(foreach P, $(PATIENTS), filtered_variants/$P_rem_dia.sn
 	mv filtered-variants.tsv.part filtered-variants.tsv
 	
 filtered_variants/%.snp.filtered.tsv: ~/hdall/data/mutect_vcf/%_calls_snpeff_snpsift.dbsnp.vcf curated-recected-variants.tsv ~/hdall/scripts/filter-variants.pl remission-variants.tsv.gz.tbi
-	perl ~/hdall/scripts/filter-variants.pl $* $< snp \
+	perl ~/hdall/scripts/filter-variants.pl \
+		--sample $* \
+		--vcf-in $< \
+		--variant-type snp \
 		--vcf-out filtered_variants/$*.snp.filtered.vcf \
 		--rmsk-file ~/generic/data/hg19/hg19.rmsk.txt.gz \
 		--simpleRepeat-file ~/generic/data/hg19/hg19.simpleRepeat.txt.gz \
@@ -44,7 +47,10 @@ filtered_variants/%.snp.filtered.tsv: ~/hdall/data/mutect_vcf/%_calls_snpeff_snp
 	mv $@.part $@
 
 filtered_variants/%.indel.filtered.tsv: ~/hdall/data/somatic_indel_vcf/%_snpeff.dbsnp.vcf curated-recected-variants.tsv ~/hdall/scripts/filter-variants.pl remission-variants.tsv.gz.tbi
-	perl ~/hdall/scripts/filter-variants.pl $* $< indel \
+	perl ~/hdall/scripts/filter-variants.pl \
+		--sample $* \
+		--vcf-in $< \
+		--variant-type indel \
 		--vcf-out filtered_variants/$*.indel.filtered.vcf \
 		--rmsk-file ~/generic/data/hg19/hg19.rmsk.txt.gz \
 		--simpleRepeat-file ~/generic/data/hg19/hg19.simpleRepeat.txt.gz \

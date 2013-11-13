@@ -90,32 +90,32 @@ my ($patient, $rem_sample, $cmp_sample) = split("_", $sample_identifier) or croa
 my $cmp_type = $rem_sample."_".$cmp_sample;
 die "ERROR: invalid comparison type: $cmp_type\n" if ($cmp_type ne 'rem_dia' and $cmp_type ne 'rem_rel');
 
-#my %patient2sample = (
-#	'A_rem' => 'A13324_rem',
-#	'A_dia' => 'A12642_dia',
-#	'A_rel' => 'A12886_rel',
-#	'B_rem' => 'B20946_rem',
-#	'B_dia' => 'B19668_dia',
-#	'B_rel' => 'B15010_rel',
-#	'C_rem' => 'C20499_rem',
-#	'C_dia' => 'C19797_dia',
-#	'C_rel' => 'C15050_rel',
-#	'D_rem' => 'D4502_rem',
-#	'D_dia' => 'D3826_dia',
-#	'D_rel' => 'D10183_rel',
-#	'E_rem' => 'E13861_rem',
-#	'E_dia' => 'E13174_dia',
-#	'E_rel' => 'E13479_rel',
-#	'X_rem' => 'X1847_rem',
-#	'X_dia' => 'X1286_dia',
-#	'X_rel' => 'X12831_rel',
-#	'Y_rem' => 'Y3767_rem',
-#	'Y_dia' => 'Y3141_dia',
-#	'Y_rel' => 'Y10284_rel'
-#);
+my %patient2sample = (
+	'A_rem' => 'A13324_rem',
+	'A_dia' => 'A12642_dia',
+	'A_rel' => 'A12886_rel',
+	'B_rem' => 'B20946_rem',
+	'B_dia' => 'B19668_dia',
+	'B_rel' => 'B15010_rel',
+	'C_rem' => 'C20499_rem',
+	'C_dia' => 'C19797_dia',
+	'C_rel' => 'C15050_rel',
+	'D_rem' => 'D4502_rem',
+	'D_dia' => 'D3826_dia',
+	'D_rel' => 'D10183_rel',
+	'E_rem' => 'E13861_rem',
+	'E_dia' => 'E13174_dia',
+	'E_rel' => 'E13479_rel',
+	'X_rem' => 'X1847_rem',
+	'X_dia' => 'X1286_dia',
+	'X_rel' => 'X12831_rel',
+	'Y_rem' => 'Y3767_rem',
+	'Y_dia' => 'Y3141_dia',
+	'Y_rel' => 'Y10284_rel'
+);
 
-#$rem_sample = $patient2sample{$patient."_$rem_sample"} ? $patient2sample{$patient."_$rem_sample"} : $patient."_$rem_sample"; 
-#$cmp_sample = $patient2sample{$patient."_$cmp_sample"} ? $patient2sample{$patient."_$cmp_sample"} : $patient."_$cmp_sample"; 
+$rem_sample = $patient2sample{$patient."_$rem_sample"} ? $patient2sample{$patient."_$rem_sample"} : $patient."_$rem_sample"; 
+$cmp_sample = $patient2sample{$patient."_$cmp_sample"} ? $patient2sample{$patient."_$cmp_sample"} : $patient."_$cmp_sample"; 
 
 # read kgXref, knownCanonical to determine UCSC canonical transcripts affected by variant
 my %kgID2refSeq;
@@ -184,8 +184,12 @@ my $vcf = Vcf->new(file => "$vcf_in");
 $vcf->parse_header();
 
 my $mutect = $vcf->get_header_line(key => 'GATKCommandLine', ID => 'MuTect')->[0]->{'CommandLineOptions'};
-($rem_sample) = $mutect =~ /normal_sample_name=(\S+)/;
-($cmp_sample) = $mutect =~ /tumor_sample_name=(\S+)/;
+$mutect = $vcf->get_header_line(key => 'MuTect')->[0]->[0]->{'value'} if (!$mutect);
+if ($mutect)
+{
+	($rem_sample) = $mutect =~ /normal_sample_name=(\S+)/;
+	($cmp_sample) = $mutect =~ /tumor_sample_name=(\S+)/;
+}
 print STDERR "Normal sample name: $rem_sample\n";
 print STDERR "Tumor sample name: $cmp_sample\n";
 

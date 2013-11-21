@@ -7,9 +7,20 @@ use lib "$ENV{HOME}/generic/scripts";
 use Carp;
 use Generic;
 use Log::Log4perl qw(:easy);
+use Getopt::Long;
 use Lolliplot;
 
-my $hugos = "CREBBP,KRAS,NRAS,TRRAP,CDC42EP1,SCN5A,CTBS,FRG1,TBP,USP9X,CACNA1B";
+my ($hugos, $filtered_variants_file, $output_directory);
+GetOptions
+(
+	"hugos=s" => \$hugos, # HUGO gene symbols, e.g. CREBBP,KRAS,NRAS
+	"filtered-variants=s" => \$filtered_variants_file, # file with filtered variants
+	"output-directory=s" => \$output_directory # output directory
+);
+
+die "ERROR: --hugos not specified\n" if (!$hugos);
+die "ERROR: --filtered-variants not specified\n" if (!$filtered_variants_file);
+die "ERROR: --output-directory not specified\n" if (!$output_directory);
 
 # ucsc/HUGO mapping
 my %id2sym;
@@ -103,7 +114,7 @@ INFO("$lines domain annotations read from file $ENV{HOME}/hdall/results/lolliplo
 # TABLE: filtered-variants
 $lines = 0;
 my %variants;
-open(V, "$ENV{HOME}/hdall/results/filtered-variants.cosmic.tsv") or die "could not open file $ENV{HOME}/hdall/results/filtered-variants.cosmic.tsv";
+open(V, $filtered_variants_file) or die "could not open file $filtered_variants_file\n";
 <V>; # skip header
 while(<V>)
 {
@@ -161,7 +172,7 @@ while(<V>)
 	$lines ++;
 }
 close(V);
-INFO("$lines variants read from file $ENV{HOME}/hdall/results/filtered-variants.cosmic.tsv");
+INFO("$lines variants read from file $filtered_variants_file");
 
 
 Lolliplot->new
@@ -170,7 +181,7 @@ Lolliplot->new
 	variants => $variants{"dia"}, 
 	transcripts => \%transcripts, 
 	domains => \%domains,
-	output_directory => "$ENV{HOME}/hdall/results/lolliplot",
+	output_directory => $output_directory,
 	basename => "lolliplot_",
 	suffix => "_dia",
 	lolli_shape => "circle"
@@ -182,7 +193,7 @@ Lolliplot->new
 	variants => $variants{"rel"}, 
 	transcripts => \%transcripts, 
 	domains => \%domains,
-	output_directory => "$ENV{HOME}/hdall/results/lolliplot",
+	output_directory => $output_directory,
 	basename => "lolliplot_",
 	suffix => "_rel",
 	lolli_shape => "circle"
@@ -194,7 +205,7 @@ Lolliplot->new
 	variants => $variants{"both"}, 
 	transcripts => \%transcripts, 
 	domains => \%domains,
-	output_directory => "$ENV{HOME}/hdall/results/lolliplot",
+	output_directory => $output_directory,
 	basename => "lolliplot_",
 	suffix => "_both",
 	lolli_shape => "circle"

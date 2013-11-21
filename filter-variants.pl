@@ -88,7 +88,7 @@ croak "ERROR: --remission-variants-file not specified" if (!$remission_variants_
 
 my ($patient, $rem_sample, $cmp_sample) = split("_", $sample_identifier) or croak "ERROR: could not parse sample identifier\n";
 my $cmp_type = $rem_sample."_".$cmp_sample;
-die "ERROR: invalid comparison type: $cmp_type\n" if ($cmp_type ne 'rem_dia' and $cmp_type ne 'rem_rel');
+die "ERROR: invalid comparison type: $cmp_type\n" if ($cmp_type ne 'rem_dia' and $cmp_type ne 'rem_rel' and $cmp_type ne 'rem_rel2');
 
 my %patient2sample = (
 	'A_rem' => 'A13324_rem',
@@ -113,9 +113,6 @@ my %patient2sample = (
 	'Y_dia' => 'Y3141_dia',
 	'Y_rel' => 'Y10284_rel'
 );
-
-$rem_sample = $patient2sample{$patient."_$rem_sample"} ? $patient2sample{$patient."_$rem_sample"} : $patient."_$rem_sample"; 
-$cmp_sample = $patient2sample{$patient."_$cmp_sample"} ? $patient2sample{$patient."_$cmp_sample"} : $patient."_$cmp_sample"; 
 
 # read kgXref, knownCanonical to determine UCSC canonical transcripts affected by variant
 my %kgID2refSeq;
@@ -190,10 +187,34 @@ if ($mutect)
 	($rem_sample) = $mutect =~ /normal_sample_name=(\S+)/;
 	($cmp_sample) = $mutect =~ /tumor_sample_name=(\S+)/;
 }
+
+my (@samples) = $vcf->get_samples();
+
+if ($samples[0] =~ /Diagnosis/ or $samples[1] =~ /Diagnosis/) { $cmp_sample =~ s/dia/Diagnosis/; }
+if ($samples[0] =~ /Relapse/ or $samples[1] =~ /Relapse/) { $cmp_sample =~ s/rel/Relapse/; }
+if ($samples[0] =~ /Remission/ or $samples[1] =~ /Remission/) { $rem_sample =~ s/rem/Remission/; }
+
+if ($samples[0] =~ /1020540_Diagosnosis/ or $samples[1] =~ /1020540_Diagosnosis/) { $cmp_sample = "1020540_Diagosnosis"; } # typo
+if ($samples[0] =~ /G_Diagnosis_/ or $samples[1] =~ /G_Diagnosis_/) { $cmp_sample = "G_Diagnosis_"; } # typo
+if ($samples[0] =~ /K_Diagnosis_/ or $samples[1] =~ /K_Diagnosis_/) { $cmp_sample = "K_Diagnosis_"; } # typo
+if ($samples[0] =~ /715_Relapse_2/ or $samples[1] =~ /715_Relapse_2/) { $cmp_sample = "715_Relapse_2"; }
+
+if ($rem_sample ne $samples[0] and $rem_sample ne $samples[1])
+{
+	$rem_sample = $patient2sample{$patient."_$rem_sample"} ? $patient2sample{$patient."_$rem_sample"} : $patient."_$rem_sample"; 
+}
+if ($cmp_sample ne $samples[0] and $cmp_sample ne $samples[1])
+{
+	$cmp_sample = $patient2sample{$patient."_$cmp_sample"} ? $patient2sample{$patient."_$cmp_sample"} : $patient."_$cmp_sample"; 
+}
+
 print STDERR "Normal sample name: $rem_sample\n";
 print STDERR "Tumor sample name: $cmp_sample\n";
 
-my (@samples) = $vcf->get_samples();
+# sanity checks
+die "ERROR: Sample name $rem_sample not found!\n" if ($rem_sample ne $samples[0] and $rem_sample ne $samples[1]);
+die "ERROR: Sample name $cmp_sample not found!\n" if ($cmp_sample ne $samples[0] and $cmp_sample ne $samples[1]);
+die "ERROR: Sample names identical: $cmp_sample!\n" if ($cmp_sample eq $rem_sample);
 
 if ($vcf_out) 
 {
@@ -202,9 +223,6 @@ if ($vcf_out)
 	open(VCFOUT,">>$vcf_out") or die "ERROR: could not write to file $vcf_out\n";
 }
 
-# sanity check
-die "ERROR: Sample name $rem_sample not found!\n" if ($rem_sample ne $samples[0] and $rem_sample ne $samples[1]);
-die "ERROR: Sample name $cmp_sample not found!\n" if ($cmp_sample ne $samples[0] and $cmp_sample ne $samples[1]);
 
 my ($tot_var, $filtered_qual, $filtered_gt, $filtered_alt, $filtered_germ) = (0, 0, 0, 0, 0);
 my ($numrep, $num_blacklist, $numsegdup, $num_not_accessible, $num_retro, $num_remission) = (0, 0, 0, 0, 0, 0);

@@ -17,10 +17,10 @@ INFO("START: ", join(" ", @ARGV));
 my ($music_roi, $keep_variants_file, $entrez_mapping, $sample, $header, $min_af, $deleterious);
 GetOptions
 (
+	"sample=s" => \$sample,  # e.g. 314_rem_dia
 	"music-roi=s" => \$music_roi,  # MuSiC region of interest (ROI) file (must be tabix accessible, i.e. compressed and indexed)
 #	"keep-variants-file=s" => \$keep_variants_file,  # tab-separated file with variants to keep (chr, start)
 	"mapping-entrez=s" => \$entrez_mapping,  # file with mappings from gene symbol to entrez ids
-	"sample=s" => \$sample,  # e.g. 314_rem_dia
 	"header" => \$header,  # output header yes/no
 	"deleterious" => \$deleterious,  # output only variants predicted to be deleterious by PolyPhen or SIFT
 	"min-af=s" => \$min_af  # minimum allelic frequency
@@ -32,9 +32,10 @@ if ($header)
 	exit;
 }
 
+die "ERROR: --sample not specified\n" if (!$sample);
 die "ERROR: --music-roi not specified (.gz file)\n" if (!$music_roi);
 die "ERROR: --mapping-entrez not specified\n" if (!$entrez_mapping);
-die "ERROR: --sample not specified\n" if (!$sample);
+die "ERROR: ROI file does not exist: $music_roi\n" if (!-e $music_roi);
 
 my %patient2sample = (
 	'A_rem' => 'A13324_rem',
@@ -61,11 +62,10 @@ my %patient2sample = (
 );
 
 my ($patient, $sample_normal, $sample_tumor) = split("_", $sample) or die "ERROR: invalid sample\n";
+my $sample_normal_vcf = $sample_normal; 
+my $sample_tumor_vcf = $sample_tumor; 
 $sample_normal = $patient."_$sample_normal";
 $sample_tumor = $patient."_$sample_tumor";
-
-my $sample_normal_vcf = $patient2sample{$sample_normal} ? $patient2sample{$sample_normal} : $sample_normal; 
-my $sample_tumor_vcf = $patient2sample{$sample_tumor} ? $patient2sample{$sample_tumor} : $sample_tumor; 
 
 my $roi = Tabix->new(-data => "$music_roi");
 
@@ -132,7 +132,42 @@ close(G);
 
 my $vcf = Vcf->new(file => "-");
 $vcf->parse_header();
+
+my $mutect = $vcf->get_header_line(key => 'GATKCommandLine', ID => 'MuTect')->[0]->{'CommandLineOptions'};
+$mutect = $vcf->get_header_line(key => 'MuTect')->[0]->[0]->{'value'} if (!$mutect);
+if ($mutect)
+{
+	($sample_normal_vcf) = $mutect =~ /normal_sample_name=(\S+)/;
+	($sample_tumor_vcf) = $mutect =~ /tumor_sample_name=(\S+)/;
+}
+
 my (@samples) = $vcf->get_samples();
+
+if ($samples[0] =~ /Diagnosis/ or $samples[1] =~ /Diagnosis/) { $sample_tumor_vcf =~ s/dia/Diagnosis/; }
+if ($samples[0] =~ /Relapse/ or $samples[1] =~ /Relapse/) { $sample_tumor_vcf =~ s/rel/Relapse/; }
+if ($samples[0] =~ /Remission/ or $samples[1] =~ /Remission/) { $sample_normal_vcf =~ s/rem/Remission/; }
+
+if ($samples[0] =~ /1020540_Diagosnosis/ or $samples[1] =~ /1020540_Diagosnosis/) { $sample_tumor_vcf = "1020540_Diagosnosis"; } # typo
+if ($samples[0] =~ /G_Diagnosis_/ or $samples[1] =~ /G_Diagnosis_/) { $sample_tumor_vcf = "G_Diagnosis_"; } # typo
+if ($samples[0] =~ /K_Diagnosis_/ or $samples[1] =~ /K_Diagnosis_/) { $sample_tumor_vcf = "K_Diagnosis_"; } # typo
+if ($samples[0] =~ /715_Relapse_2/ or $samples[1] =~ /715_Relapse_2/) { $sample_tumor_vcf = "715_Relapse_2"; }
+
+if ($sample_normal_vcf ne $samples[0] and $sample_normal_vcf ne $samples[1])
+{
+	$sample_normal_vcf = $patient2sample{$patient."_$sample_normal_vcf"} ? $patient2sample{$patient."_$sample_normal_vcf"} : $patient."_$sample_normal_vcf"; 
+}
+if ($sample_tumor_vcf ne $samples[0] and $sample_tumor_vcf ne $samples[1])
+{
+	$sample_tumor_vcf = $patient2sample{$patient."_$sample_tumor_vcf"} ? $patient2sample{$patient."_$sample_tumor_vcf"} : $patient."_$sample_tumor_vcf"; 
+}
+
+print STDERR "Normal sample name: $sample_normal_vcf\n";
+print STDERR "Tumor sample name: $sample_tumor_vcf\n";
+
+# sanity checks
+die "ERROR: Sample name $sample_normal_vcf not found!\n" if ($sample_normal_vcf ne $samples[0] and $sample_normal_vcf ne $samples[1]);
+die "ERROR: Sample name $sample_tumor_vcf not found!\n" if ($sample_tumor_vcf ne $samples[0] and $sample_tumor_vcf ne $samples[1]);
+die "ERROR: Sample names identical: $sample_tumor_vcf!\n" if ($sample_tumor_vcf eq $sample_normal_vcf);
 
 while (my $x = $vcf->next_data_hash())
 {	
@@ -195,6 +230,7 @@ while (my $x = $vcf->next_data_hash())
 	INFO("$sample_tumor: Variant $chr:$pos impacting multiple genes: ".join(",", keys(%$snpeff_genes)))
 		if (keys(%$snpeff_genes) > 1);
 
+	print STDERR "$chr:$pos\n";
 	my $rois = get_rois($chr, $pos, $pos+1);
 
 	INFO("$sample_tumor: Variant $chr:$pos mapping to multiple ROIs: ".join(",", keys(%$rois)))

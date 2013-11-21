@@ -191,6 +191,9 @@ lolliplot/pfam-regions.filtered.tsv: ~/generic/data/pfam-27.0/pfamA.txt ~/generi
 lolliplot/lolliplot_CREBBP_NM_004380_both.svg: id-mappings.tsv lolliplot/pfam-regions.filtered.tsv filtered-variants.cosmic.tsv ~/hdall/scripts/lolliplot/lolliplot.pl
 	rm -f lolliplot/*.svg 
 	perl ~/hdall/scripts/lolliplot/lolliplot.pl \
+		--hugos CREBBP,KRAS,NRAS,TRRAP,CDC42EP1,SCN5A,CTBS,FRG1,TBP,USP9X,CACNA1B \
+		--filtered-variants filtered-variants.cosmic.tsv \
+		--output-directory lolliplot/ \
 		2>&1 | tee -a make.log
 
 ipa/mutated_relapse.tsv: music/rel-high-af/rem_rel.maf music/rel-high-af/smg.tsv

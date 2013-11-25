@@ -10,7 +10,7 @@ all: filtered-variants.merged.tsv filtered-variants.reseq.cosmic.tsv gene-patien
 #-----------	
 # SNPEFF
 #-----------	
-snpeff/%.reseq.dbsnp.vcf: ~/hdall/data/reseq/mutect_enriched_regions_headerfix/reseq_%_calls.vcf ~/tools/snpEff-3.3h/common_no_known_medical_impact_20130930.chr.vcf
+snpeff/%.reseq.dbsnp.vcf: ~/hdall/data/reseq/somatic_mutations_20bp_padding/reseq_%_calls.vcf ~/tools/snpEff-3.3h/common_no_known_medical_impact_20130930.chr.vcf
 	PWD=$(pwd)
 	(cd ~/tools/snpEff-3.3h; java -jar SnpSift.jar annotate \
 		-v ~/tools/snpEff-3.3h/common_no_known_medical_impact_20130930.chr.vcf \
@@ -18,7 +18,7 @@ snpeff/%.reseq.dbsnp.vcf: ~/hdall/data/reseq/mutect_enriched_regions_headerfix/r
 		2>&1 1>$(PWD)/$@.part) | $(LOG)
 	mv $@.part $@
 
-snpeff/%.reseq.indel.dbsnp.vcf: ~/hdall/data/reseq/somatic_indels/reseq_%_indel.vcf ~/tools/snpEff-3.3h/common_no_known_medical_impact_20130930.chr.vcf
+snpeff/%.reseq.indel.dbsnp.vcf: ~/hdall/data/reseq/somatic_indels_20bp_padding/reseq_%_indel.vcf ~/tools/snpEff-3.3h/common_no_known_medical_impact_20130930.chr.vcf
 	PWD=$(pwd)
 	(cd ~/tools/snpEff-3.3h; java -jar SnpSift.jar annotate \
 		-v ~/tools/snpEff-3.3h/common_no_known_medical_impact_20130930.chr.vcf \

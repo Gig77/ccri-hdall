@@ -12,11 +12,11 @@ all:
 	bgzip -c ~/generic/data/hg19/hg19.snp137Common.txt > ~/generic/data/hg19/hg19.snp137Common.txt.gz
 	tabix ~/generic/data/hg19/hg19.snp137Common.txt.gz -s 2 -b 3 -e 4
 
-SAMPLES = 545_rel 545_rem D_rem
-varscan: $(foreach S, $(SAMPLES), ~/hdall/data/varscan/$S.merged.duplicate_marked.realigned.recalibrated.varscan.vcf)
+PATIENTS = 545
+varscan: $(foreach S, $(PATIENTS), ~/hdall/data/varscan/$S_rel.merged.duplicate_marked.realigned.recalibrated.varscan.vcf ~/hdall/data/varscan/$S_dia.merged.duplicate_marked.realigned.recalibrated.varscan.vcf ~/hdall/data/varscan/$S_rem.merged.duplicate_marked.realigned.recalibrated.varscan.vcf)
 
-# relapse samples; more stringent filtering
-~/hdall/data/varscan/%_rel.merged.duplicate_marked.realigned.recalibrated.varscan.vcf: ~/hdall/data/bam/%_rel.merged.duplicate_marked.realigned.recalibrated.bam
+# relapse and diagnosis samples: more stringent filtering
+~/hdall/data/varscan/%.merged.duplicate_marked.realigned.recalibrated.varscan.vcf: ~/hdall/data/bam/%.merged.duplicate_marked.realigned.recalibrated.bam
 	~/tools/samtools-0.1.19/samtools mpileup -q 40 -f ~/generic/data/hg19/ucsc.hg19.fasta $< \
 		| java -jar ~/tools/varscan-2.3.6/VarScan.v2.3.6.jar mpileup2cns --variants --strand-filter 1 --min-coverage 10 --min-avg-qual 25 --p-value 1 --min-var-freq 0.1 --min-reads2 4 --output-vcf 1 - \
 			> $@.part
@@ -27,13 +27,13 @@ varscan: $(foreach S, $(SAMPLES), ~/hdall/data/varscan/$S.merged.duplicate_marke
 # remission samples; less stringent filtering
 ~/hdall/data/varscan/%_rem.merged.duplicate_marked.realigned.recalibrated.varscan.vcf: ~/hdall/data/bam/%_rem.merged.duplicate_marked.realigned.recalibrated.bam
 	~/tools/samtools-0.1.19/samtools mpileup -q 1 -f ~/generic/data/hg19/ucsc.hg19.fasta $< \
-		| java -jar ~/tools/varscan-2.3.6/VarScan.v2.3.6.jar mpileup2cns --variants --strand-filter 0 --min-coverage 2 --min-avg-qual 15 --p-value 1 --min-var-freq 0.05 --min-reads2 2 --output-vcf 1 - \
+		| java -jar ~/tools/varscan-2.3.6/VarScan.v2.3.6.jar mpileup2cns --variants --strand-filter 0 --min-coverage 2 --min-avg-qual 15 --p-value 1 --min-var-freq 0.001 --min-reads2 2 --output-vcf 1 - \
 			> $@.part
 	mv $@.part $@
 	bgzip -c $@ > $@.gz
 	tabix -p vcf $@.gz
 
-# annotate remission variants
+# find somatic variants
  ~/hdall/data/varscan/545_rel.merged.duplicate_marked.realigned.recalibrated.varscan.somatic.vcf: ~/hdall/data/varscan/545_rel.merged.duplicate_marked.realigned.recalibrated.varscan.vcf ~/hdall/data/varscan/545_rem.merged.duplicate_marked.realigned.recalibrated.varscan.vcf.gz ~/hdall/scripts/variant-calling/annotate-remission.pl
 	cat ~/hdall/data/varscan/545_rel.merged.duplicate_marked.realigned.recalibrated.varscan.vcf \
 		| perl ~/hdall/scripts/variant-calling/annotate-remission.pl \

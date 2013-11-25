@@ -1,7 +1,10 @@
 export SHELLOPTS:=errexit:pipefail
 SHELL=/bin/bash  # required to make pipefail work
+.SECONDARY:      # do not delete any intermediate files
 
-all:
+PATIENTS = 545
+
+all: $(foreach S, $(PATIENTS), ~/hdall/data/varscan/$S_rel_rem.merged.duplicate_marked.realigned.recalibrated.varscan.vcf ~/hdall/data/varscan/$S_dia_rem.merged.duplicate_marked.realigned.recalibrated.varscan.vcf)
 
 # download dbSNP data from UCSC
 ~/generic/data/hg19/hg19.snp137Common.txt: 
@@ -11,9 +14,6 @@ all:
 	gunzip ~/generic/data/hg19/hg19.snp137Common.txt.gz
 	bgzip -c ~/generic/data/hg19/hg19.snp137Common.txt > ~/generic/data/hg19/hg19.snp137Common.txt.gz
 	tabix ~/generic/data/hg19/hg19.snp137Common.txt.gz -s 2 -b 3 -e 4
-
-PATIENTS = 545
-varscan: $(foreach S, $(PATIENTS), ~/hdall/data/varscan/$S_rel.merged.duplicate_marked.realigned.recalibrated.varscan.vcf ~/hdall/data/varscan/$S_dia.merged.duplicate_marked.realigned.recalibrated.varscan.vcf ~/hdall/data/varscan/$S_rem.merged.duplicate_marked.realigned.recalibrated.varscan.vcf)
 
 # relapse and diagnosis samples: more stringent filtering
 ~/hdall/data/varscan/%.merged.duplicate_marked.realigned.recalibrated.varscan.vcf: ~/hdall/data/bam/%.merged.duplicate_marked.realigned.recalibrated.bam
@@ -34,11 +34,19 @@ varscan: $(foreach S, $(PATIENTS), ~/hdall/data/varscan/$S_rel.merged.duplicate_
 	tabix -p vcf $@.gz
 
 # find somatic variants
- ~/hdall/data/varscan/545_rel.merged.duplicate_marked.realigned.recalibrated.varscan.somatic.vcf: ~/hdall/data/varscan/545_rel.merged.duplicate_marked.realigned.recalibrated.varscan.vcf ~/hdall/data/varscan/545_rem.merged.duplicate_marked.realigned.recalibrated.varscan.vcf.gz ~/hdall/scripts/variant-calling/annotate-remission.pl
-	cat ~/hdall/data/varscan/545_rel.merged.duplicate_marked.realigned.recalibrated.varscan.vcf \
+ ~/hdall/data/varscan/%_rel_rem.merged.duplicate_marked.realigned.recalibrated.varscan.somatic.vcf: ~/hdall/data/varscan/%_rel.merged.duplicate_marked.realigned.recalibrated.varscan.vcf ~/hdall/data/varscan/%_rem.merged.duplicate_marked.realigned.recalibrated.varscan.vcf.gz ~/hdall/scripts/variant-calling/annotate-remission.pl
+	cat $(word 1,$^) \
 		| perl ~/hdall/scripts/variant-calling/annotate-remission.pl \
-			--patient 545 \
-			--rem-sample ~/hdall/data/varscan/D_rem.merged.duplicate_marked.realigned.recalibrated.varscan.vcf.gz \
+			--patient $* \
+			--rem-sample $(word 2,$^).gz \
+			> $@.part
+	mv $@.part $@ 
+
+ ~/hdall/data/varscan/%_dia_rem.merged.duplicate_marked.realigned.recalibrated.varscan.somatic.vcf: ~/hdall/data/varscan/%_dia.merged.duplicate_marked.realigned.recalibrated.varscan.vcf ~/hdall/data/varscan/%_rem.merged.duplicate_marked.realigned.recalibrated.varscan.vcf.gz ~/hdall/scripts/variant-calling/annotate-remission.pl
+	cat $(word 1,$^) \
+		| perl ~/hdall/scripts/variant-calling/annotate-remission.pl \
+			--patient $* \
+			--rem-sample $(word 2,$^).gz \
 			> $@.part
 	mv $@.part $@ 
 

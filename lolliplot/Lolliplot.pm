@@ -14,7 +14,7 @@ use strict;
 no warnings;
 use Carp;
 
-use lib '/home/christian/tools/gms-core/lib/perl';
+use lib "$ENV{HOME}/git/gms-core/lib/perl";
 
 use FileHandle;
 use Genome;
@@ -100,7 +100,7 @@ sub _add_mutation {
     my $domains = $params{domains};
     my $frequency = $params{frequency} || 1;
 
-    print "Adding mutation $hugo $transcript_name $protein_position $mutation $class\n";
+    print "Adding mutation HUGO: $hugo TRANSCRIPT: $transcript_name POS: $protein_position MUTATION: $mutation CLASS: $class PROT_LENGTH: $protein_length\n";
 
     $data->{$hugo}{$transcript_name}{length} = $protein_length;
     push @{$data->{$hugo}{$transcript_name}{domains}}, @$domains;
@@ -243,9 +243,7 @@ sub Draw {
     my $backbone = Genome::Model::Tools::Graph::MutationDiagram::MutationDiagram::Backbone->new(parent => $document,
         gene => $hugo,
         protein_length => $length,
-        backbone_height
-        =>
-        50,
+        backbone_height => 50,
         style => {fill => 'none', stroke => 'black'},
         id => "protein_diagram",
         $document->content_view);

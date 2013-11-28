@@ -1,7 +1,11 @@
 export SHELLOPTS:=errexit:pipefail
 SHELL=/bin/bash
 
-all: filtered-variants.tsv filtered-variants.cosmic.tsv filtered-variants.cosmic.normaf.tsv gene-patient-matrix.tsv gene-patient-matrix.high-af.tsv gene-patient-matrix.tier1.tsv cnv/gene-patient-matrix.cnv.tsv lolliplot/lolliplot_CREBBP_NM_004380_both.svg ipa/mutated_relapse.tsv stats
+PATIENTS = 314 1021247 399 430 446 460 545 592 715 786 792 818 842 A B C D E X Y
+
+all: filtered-variants.tsv filtered-vcf filtered-variants.cosmic.tsv filtered-variants.cosmic.normaf.tsv gene-patient-matrix.tsv gene-patient-matrix.high-af.tsv gene-patient-matrix.tier1.tsv cnv/gene-patient-matrix.cnv.tsv lolliplot/lolliplot_CREBBP_NM_004380_both.svg ipa/mutated_relapse.tsv stats
+
+filtered-vcf: $(foreach P, $(PATIENTS), filtered_variants/$P_rem_dia.filtered.vcf.gz filtered_variants/$P_rem_rel.filtered.vcf.gz)
 
 stats: stats/variants-per-chrom-and-ploidy.pdf stats/mutations-per-patient-dia-vs-rel.pdf stats/mutation-profile.af10.pdf stats/variant-coverage.pdf stats/gene-length-bias.pdf
 
@@ -11,7 +15,6 @@ nextera:
 	cat kamilla/candidate\ genes\ for\ targeted\ sequencing.tsv | perl ~/hdall/scripts/get-nextera-exons.pl --density Standard --cds > kamilla/nextera-exons.standard.cds.csv
 	cat kamilla/candidate\ genes\ for\ targeted\ sequencing.tsv | perl ~/hdall/scripts/get-nextera-exons.pl --density Dense --cds > kamilla/nextera-exons.dense.cds.csv
 
-PATIENTS = 314 1021247 399 430 446 460 545 592 715 786 792 818 842 A B C D E X Y
 filtered-variants.tsv:	$(foreach P, $(PATIENTS), filtered_variants/$P_rem_dia.snp.filtered.tsv) \
 						$(foreach P, $(PATIENTS), filtered_variants/$P_rem_dia.indel.filtered.tsv) \
 						$(foreach P, $(PATIENTS), filtered_variants/$P_rem_rel.snp.filtered.tsv) \
@@ -62,6 +65,15 @@ filtered_variants/%.indel.filtered.tsv: ~/hdall/data/somatic_indel_vcf/%_snpeff.
 		--remission-variants-file remission-variants.tsv.gz \
 		2>&1 1>$@.part | grep -v -P '(Leading or trailing space|variant.Format|on which the variant locates)' | tee -a make.log
 	mv $@.part $@	
+	
+filtered_variants/%.filtered.vcf.gz: filtered_variants/%.snp.filtered.vcf filtered_variants/%.indel.filtered.vcf
+	bgzip -c $(word 1,$^) > $(word 1,$^).gz 
+	~/tools/tabix-0.2.6/tabix $(word 1,$^).gz -p vcf	
+	bgzip -c $(word 2,$^) > $(word 2,$^).gz 
+	~/tools/tabix-0.2.6/tabix $(word 2,$^).gz -p vcf
+	~/tools/vcftools_0.1.10/bin/vcf-concat $(word 1,$^).gz <(~/tools/vcftools_0.1.10/bin/vcf-shuffle-cols -t $(word 1,$^).gz $(word 2,$^).gz) | ~/tools/vcftools_0.1.10/bin/vcf-sort | bgzip -c >$@.part
+	mv $@.part $@
+		
 
 .PRECIOUS: ~/hdall/data/somatic_indel_vcf/%_snpeff.dbsnp.vcf
 ~/hdall/data/somatic_indel_vcf/%_snpeff.dbsnp.vcf: ~/hdall/data/somatic_indel_vcf/%_snpeff.vcf ~/tools/snpEff-3.3h/common_no_known_medical_impact_20130930.chr.vcf
@@ -78,7 +90,7 @@ remission-variants.tsv.gz: remission-variants.tsv
 	mv $@.part $@
 
 remission-variants.tsv.gz.tbi: remission-variants.tsv.gz
-	tabix $^ -s 2 -b 3 -e 3
+	~/tools/tabix-0.2.6/tabix $^ -s 2 -b 3 -e 3
 
 filtered-variants.cosmic.tsv: filtered-variants.tsv ~/generic/data/cosmic/v65/CosmicMutantExport_v65_280513.tsv ~/hdall/scripts/annotate-cosmic.pl
 	cat ~/hdall/results/filtered-variants.tsv | perl ~/hdall/scripts/annotate-cosmic.pl \
@@ -99,34 +111,34 @@ filtered-variants.cosmic.normaf.tsv: filtered-variants.cosmic.tsv cnv/hdall.cnv.
 ~/generic/data/hg19/hg19.simpleRepeat.txt.gz.tbi: ~/generic/data/hg19/hg19.simpleRepeat.txt
 	#mysql -h genome-mysql.cse.ucsc.edu -u genome -D hg19 -N -A -e 'select * from simpleRepeat' > ~/generic/data/hg19/hg19.simpleRepeat.txt
 	bgzip -c ~/generic/data/hg19/hg19.simpleRepeat.txt > ~/generic/data/hg19/hg19.simpleRepeat.txt.gz
-	tabix ~/generic/data/hg19/hg19.simpleRepeat.txt.gz -s 2 -b 3 -e 4
+	~/tools/tabix-0.2.6/tabix ~/generic/data/hg19/hg19.simpleRepeat.txt.gz -s 2 -b 3 -e 4
 
 ~/generic/data/hg19/hg19.rmsk.txt.gz.tbi: ~/generic/data/hg19/hg19.rmsk.txt
 	#mysql -h genome-mysql.cse.ucsc.edu -u genome -D hg19 -N -A -e 'select * from rmsk' > ~/generic/data/hg19/hg19.rmsk.txt
 	bgzip -c ~/generic/data/hg19/hg19.rmsk.txt > ~/generic/data/hg19/hg19.rmsk.txt.gz
-	tabix ~/generic/data/hg19/hg19.rmsk.txt.gz -s 6 -b 7 -e 8
+	~/tools/tabix-0.2.6/tabix ~/generic/data/hg19/hg19.rmsk.txt.gz -s 6 -b 7 -e 8
 
 ~/generic/data/hg19/hg19.genomicSuperDups.txt.gz.tbi: ~/generic/data/hg19/hg19.genomicSuperDups.txt
 	#mysql -h genome-mysql.cse.ucsc.edu -u genome -D hg19 -N -A -e 'select * from genomicSuperDups' > ~/generic/data/hg19/hg19.genomicSuperDups.txt
 	bgzip -c ~/generic/data/hg19/hg19.genomicSuperDups.txt > ~/generic/data/hg19/hg19.genomicSuperDups.txt.gz
-	tabix ~/generic/data/hg19/hg19.genomicSuperDups.txt.gz -s 2 -b 3 -e 4
+	~/tools/tabix-0.2.6/tabix ~/generic/data/hg19/hg19.genomicSuperDups.txt.gz -s 2 -b 3 -e 4
 
 ~/generic/data/hg19/hg19.wgEncodeDacMapabilityConsensusExcludable.txt.gz.tbi: ~/generic/data/hg19/hg19.wgEncodeDacMapabilityConsensusExcludable.txt
 	#mysql -h genome-mysql.cse.ucsc.edu -u genome -D hg19 -N -A -e 'select * from wgEncodeDacMapabilityConsensusExcludable' > ~/generic/data/hg19/hg19.wgEncodeDacMapabilityConsensusExcludable.txt
 	bgzip -c ~/generic/data/hg19/hg19.wgEncodeDacMapabilityConsensusExcludable.txt > ~/generic/data/hg19/hg19.wgEncodeDacMapabilityConsensusExcludable.txt.gz
-	tabix ~/generic/data/hg19/hg19.wgEncodeDacMapabilityConsensusExcludable.txt.gz -s 2 -b 3 -e 4
+	~/tools/tabix-0.2.6/tabix ~/generic/data/hg19/hg19.wgEncodeDacMapabilityConsensusExcludable.txt.gz -s 2 -b 3 -e 4
 
 ~/generic/data/hg19/paired.end.mapping.1000G..pilot.bed.gz.tbi: ~/generic/data/hg19/paired.end.mapping.1000G..pilot.bb
 	#curl -o ~/generic/data/hg19/paired.end.mapping.1000G..pilot.bb http://hgdownload.cse.ucsc.edu/gbdb/hg19/1000Genomes/paired.end.mapping.1000G..pilot.bb
 	#curl -o ~/hdall/tools/ucsc/bigBedToBed http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64.v287/bigBedToBed
 	~/hdall/tools/ucsc/bigBedToBed ~/generic/data/hg19/paired.end.mapping.1000G..pilot.bb ~/generic/data/hg19/paired.end.mapping.1000G..pilot.bed
 	bgzip -c ~/generic/data/hg19/paired.end.mapping.1000G..pilot.bed > ~/generic/data/hg19/paired.end.mapping.1000G..pilot.bed.gz
-	tabix ~/generic/data/hg19/paired.end.mapping.1000G..pilot.bed.gz -s 1 -b 2 -e 3
+	~/tools/tabix-0.2.6/tabix ~/generic/data/hg19/paired.end.mapping.1000G..pilot.bed.gz -s 1 -b 2 -e 3
 
 ~/generic/data/hg19/hg19.ucscRetroAli5.txt.gz.tbi: ~/generic/data/hg19/hg19.ucscRetroAli5.txt
 	#mysql -h genome-mysql.cse.ucsc.edu -u genome -D hg19 -N -A -e 'select * from ucscRetroAli5' > ~/generic/data/hg19/hg19.ucscRetroAli5.txt
 	bgzip -c ~/generic/data/hg19/hg19.ucscRetroAli5.txt > ~/generic/data/hg19/hg19.ucscRetroAli5.txt.gz
-	tabix ~/generic/data/hg19/hg19.ucscRetroAli5.txt.gz -s 15 -b 17 -e 18
+	~/tools/tabix-0.2.6/tabix ~/generic/data/hg19/hg19.ucscRetroAli5.txt.gz -s 15 -b 17 -e 18
 	
 impacted-genes-list.tsv: filtered-variants.tsv ~/hdall/scripts/impacted-genes.pl
 	cat filtered-variants.tsv | perl ~/hdall/scripts/impacted-genes.pl \

@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => qw( all );
 
-use lib '/home/christian/hdall/scripts/lolliplot';
+use lib "$ENV{HOME}/hdall/scripts/lolliplot";
 use lib "$ENV{HOME}/generic/scripts";
 
 use Carp;
@@ -51,7 +51,7 @@ while(<G>)
 	elsif ($refSeq =~ /^NM_/)
 	{
 		$transcripts{$kgID}{'refseq'} = $refSeq;
-		$refseq2ucsc{$refSeq} = $kgID;
+		$refseq2ucsc{$refSeq} = $kgID if (!$refseq2ucsc{$refSeq});
 	}	
 }
 close(G);
@@ -77,10 +77,10 @@ while(<G>)
 			$en = ($cdsEnd > $es[$i] and $cdsEnd < $ee[$i]) ? $cdsEnd : $ee[$i];
 			$cdslen += $en-$st;
 			$transcripts{$ucsc_id}{'splice_pos'}{$i+1} = int($cdslen / 3);	
-			print "SPLICE SITE ", $i+1, ": ", int($cdslen / 3), "\n" if ($ucsc_id eq "uc003xyq.3");	
 		}
 	
 		$transcripts{$ucsc_id}{'protlen'} = $cdslen/3;
+		#print "protein length NM_002834: ", $transcripts{$ucsc_id}{'protlen'}, "\n" if ($ucsc_id eq "uc001ttx.3");
 		$transcripts{$ucsc_id}{'hugo'} = $id2sym{$ucsc_id};
 	}
 	
@@ -146,6 +146,7 @@ while(<V>)
 			print STDERR "WARNING: Could not map RefSeq ID $transcript to UCSC ID.\n";
 			next;
 		}
+		#print "$transcript -> $ucsc\n";
 		
 		# map splice site mutations onto protein sequence
 		if ($effect eq "SPLICE_SITE_ACCEPTOR")
@@ -159,8 +160,7 @@ while(<V>)
 		
 		if (!$aa_change)
 		{
-			print "WARNING: Could not map following mutation to protein sequence:\n";
-			print "$transcript $eff\n";
+			print "ERROR: Could not map following mutation to protein sequence: $transcript $eff\n";
 			next;
 		}
 		

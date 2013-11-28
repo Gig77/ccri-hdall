@@ -230,7 +230,7 @@ while (my $x = $vcf->next_data_hash())
 	INFO("$sample_tumor: Variant $chr:$pos impacting multiple genes: ".join(",", keys(%$snpeff_genes)))
 		if (keys(%$snpeff_genes) > 1);
 
-	print STDERR "$chr:$pos\n";
+	#print STDERR "$chr:$pos\n";
 	my $rois = get_rois($chr, $pos, $pos+1);
 
 	INFO("$sample_tumor: Variant $chr:$pos mapping to multiple ROIs: ".join(",", keys(%$rois)))

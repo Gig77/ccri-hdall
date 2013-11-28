@@ -22,6 +22,7 @@ while(<G>)
 	chomp;
 	my ($kgID, $mRNA, $spID, $spDisplayID, $geneSymbol, $refSeq, $protAcc, $description, $rfamAcc, $tRnaName) = split(/\t/);
 
+	$spID =~ s/\-\d+//;
 	$uniprot2hugo{$spID} = $id2sym{$kgID};
 	
 	if ($mRNA =~ /^NM_/)
@@ -32,7 +33,7 @@ while(<G>)
 	elsif ($refSeq =~ /^NM_/)
 	{
 		$uniprot2refseq{$spID} = $refSeq;
-		$uniprot2ucsc{$spID} = $kgID;
+		$uniprot2ucsc{$spID} = $kgID if (!$uniprot2ucsc{$spID});
 	}	
 }
 close(G);

@@ -321,31 +321,32 @@ pathscan/gene-sets.mutsigdb4.0.tsv: ~/generic/data/msigdb/msigdb.v4.0.entrez.gmt
 	cat ~/generic/data/msigdb/c1.all.v4.0.symbols.gmt | perl ~/hdall/scripts/pathway-analysis/msigdb2pathscan.pl \
 		--entrez-id-file ~/generic/data/msigdb/msigdb.v4.0.entrez.gmt \
 		--category c1_positional \
-		2>&1 1>pathscan/gene-sets.mutsigdb4.0.tsv.part | tee -a make.log 
+		2>&1 1>$@.part | tee -a make.log 
 	cat ~/generic/data/msigdb/c2.all.v4.0.symbols.gmt | perl ~/hdall/scripts/pathway-analysis/msigdb2pathscan.pl \
 		--entrez-id-file ~/generic/data/msigdb/msigdb.v4.0.entrez.gmt \
 		--category c2_curated \
-		2>&1 1>>pathscan/gene-sets.mutsigdb4.0.tsv.part | tee -a make.log 
+		2>&1 1>>$@.part | tee -a make.log 
 	cat ~/generic/data/msigdb/c3.all.v4.0.symbols.gmt | perl ~/hdall/scripts/pathway-analysis/msigdb2pathscan.pl \
 		--entrez-id-file ~/generic/data/msigdb/msigdb.v4.0.entrez.gmt \
 		--category c3_motif \
-		2>&1 1>>pathscan/gene-sets.mutsigdb4.0.tsv.part | tee -a make.log 
+		2>&1 1>>$@.part | tee -a make.log 
 	cat ~/generic/data/msigdb/c4.all.v4.0.symbols.gmt | perl ~/hdall/scripts/pathway-analysis/msigdb2pathscan.pl \
 		--entrez-id-file ~/generic/data/msigdb/msigdb.v4.0.entrez.gmt \
 		--category c4_computational \
-		2>&1 1>>pathscan/gene-sets.mutsigdb4.0.tsv.part | tee -a make.log 
+		2>&1 1>>$@.part | tee -a make.log 
 	cat ~/generic/data/msigdb/c5.all.v4.0.symbols.gmt | perl ~/hdall/scripts/pathway-analysis/msigdb2pathscan.pl \
 		--entrez-id-file ~/generic/data/msigdb/msigdb.v4.0.entrez.gmt \
 		--category c5_GO \
-		2>&1 1>>pathscan/gene-sets.mutsigdb4.0.tsv.part | tee -a make.log 
+		2>&1 1>>$@.part | tee -a make.log 
 	cat ~/generic/data/msigdb/c6.all.v4.0.symbols.gmt | perl ~/hdall/scripts/pathway-analysis/msigdb2pathscan.pl \
 		--entrez-id-file ~/generic/data/msigdb/msigdb.v4.0.entrez.gmt \
 		--category c6_oncogenic_signature \
-		2>&1 1>>pathscan/gene-sets.mutsigdb4.0.tsv.part | tee -a make.log 
+		2>&1 1>>$@.part | tee -a make.log 
 	cat ~/generic/data/msigdb/c7.all.v4.0.symbols.gmt | perl ~/hdall/scripts/pathway-analysis/msigdb2pathscan.pl \
 		--entrez-id-file ~/generic/data/msigdb/msigdb.v4.0.entrez.gmt \
 		--category c7_immunologic_signature \
-		2>&1 1>>pathscan/gene-sets.mutsigdb4.0.tsv.part | tee -a make.log
+		2>&1 1>>$@.part | tee -a make.log
+	mv $@.part $@ 
 
 pathscan/pathways-nci.tsv: ~/generic/data/nci-pathway/uniprot.tab ~/hdall/scripts/pathway-analysis/nci2pathscan.pl
 	cat ~/generic/data/nci-pathway/uniprot.tab | perl ~/hdall/scripts/pathway-analysis/nci2pathscan.pl \

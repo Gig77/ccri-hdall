@@ -40,7 +40,7 @@ print "$header\tcopy_no\tfreq_leu_norm\n";
 while(<>)
 {
 	chomp;
-	my ($patient, $sample, $var_type, $status, $rejected_because, $chr, $pos, $dbSNP, $ref, $alt, $gene, $add_genes, $impact, $effect, $exons, 
+	my ($patient, $sample, $var_type, $status, $rejected_because, $chr, $pos, $dbSNP, $ref, $alt, $gene, $add_genes, $impact, $effect, $non_silent, $deleterious, $exons, 
 		$dp_rem_tot, $dp_rem_ref, $dp_rem_var, $freq_rem, $dp_leu_tot, $dp_leu_ref, $dp_leu_var, $freq_leu) = split("\t");
 	my $line = $_;
 

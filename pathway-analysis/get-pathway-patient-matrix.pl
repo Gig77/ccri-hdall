@@ -24,11 +24,11 @@ open(VAR,"$filtered_variants") or croak "ERROR: could not open file $filtered_va
 while(<VAR>)
 {
 	chomp;
-	my ($patient, $sample, $var_type, $status, $rejected_because, $chr, $pos, $dbSNP, $ref, $alt, $gene, $add_genes, $impact, $effect, $exons, 
+	my ($patient, $sample, $var_type, $status, $rejected_because, $chr, $pos, $dbSNP, $ref, $alt, $gene, $add_genes, $impact, $effect, $non_silent, $deleterious, $exons, 
 		$dp_rem_tot, $dp_rem_ref, $dp_rem_var, $freq_rem, $dp_leu_tot, $dp_leu_ref, $dp_leu_var, $freq_leu) = split("\t");
 
 	next if ($status eq "REJECT");
-	next if ($effect =~ /^(DOWNSTREAM|INTERGENIC|INTRON|UPSTREAM|INTERGENIC_CONSERVED|SYNONYMOUS_START|SYNONYMOUS_CODING|SYNONYMOUS_STOP|UTR_5_PRIME|UTR_5_DELETED|START_GAINED|UTR_3_PRIME|UTR_3_DELETED|INTRON_CONSERVED|INTRAGENIC|EXON)$/);
+	next if ($deleterious eq "no");
 	
 	$variants{$patient}{$sample}{$gene} = $variants{$patient}{$sample}{$gene} ? max($freq_leu, $variants{$patient}{$sample}{$gene}) : $freq_leu; 
 }

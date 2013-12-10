@@ -46,6 +46,8 @@ if ($header)
 	print "add_genes\t";
 	print "impact\t";
 	print "effect\t";
+	print "non_silent\t";
+	print "deleterious\t";
 	print "exons\t";
 	print "dp_rem_tot\t";
 	print "dp_rem_ref\t";
@@ -56,7 +58,7 @@ if ($header)
 	print "dp_leu_var\t";
 	print "freq_leu\t";
 	print "aa_change\t";
-	print "effect\t";
+	print "snpeff_effect\t";
 	print "Polyphen2\t";
 	print "SIFT\t";
 	print "GERP++\t";
@@ -468,6 +470,24 @@ while (my $line = $vcf->next_line())
 	
 	$line =~ s/^([^\t]+\t[^\t]+\t[^\t]+\t[^\t]+\t[^\t]+\t[^\t]+\t)[^\t]+/$1REJECT/ if (@rejected_because > 0);
 	
+	my $polyphen = $x->{INFO}{'dbNSFP_Polyphen2_HVAR_pred'};
+	my $sift = $x->{INFO}{'dbNSFP_SIFT_score'};
+	my $siphy = $x->{INFO}{'dbNSFP_29way_logOdds'};
+	my ($gene, $add_genes, $impact, $effect, $affected_exon, $aa_change) = get_impact($x->{INFO}{EFF});
+	
+	my $is_deleterious = "n/d";
+	$is_deleterious = "yes" if ($effect eq "NON_SYNONYMOUS_CODING" and $polyphen and $polyphen =~ /D/ and defined $sift and $sift < 0.05); # polyphen & sift
+	$is_deleterious = "yes" if ($effect eq "NON_SYNONYMOUS_CODING" and $polyphen and $polyphen =~ /D/ and defined $siphy and $siphy >= 12); # polyphen & siphy
+	$is_deleterious = "yes" if ($effect eq "NON_SYNONYMOUS_CODING" and defined $sift and $sift < 0.05 and defined $siphy and $siphy >= 12); # sift and siphy
+	$is_deleterious = "yes" if ($effect eq "NON_SYNONYMOUS_CODING" and defined $siphy and $siphy > 20); # siphy only, highly conserved (keeps GNAQ)
+	$is_deleterious = "yes" if ($effect eq "NON_SYNONYMOUS_CODING" and defined $siphy and $siphy > 20); # siphy only, highly conserved (keeps GNAQ)
+	$is_deleterious = "yes" if ($effect eq "FRAME_SHIFT" or $effect eq "SPLICE_SITE_ACCEPTOR" or $effect eq "SPLICE_SITE_DONOR" or $effect eq "STOP_GAINED");
+	$is_deleterious = "no" if ($is_deleterious ne "yes" and defined $polyphen and defined $sift);
+	$is_deleterious = "no" if ($effect eq "DOWNSTREAM" or $effect eq "UPSTREAM" or $effect eq "INTRON" or $effect eq "INTERGENIC" or $effect eq "SYNONYMOUS_CODING" or $effect eq "SYNONYMOUS_STOP" or $effect eq "SYNONYMOUS_START" or $effect eq "UTR_3_PRIME" or $effect eq "UTR_5_PRIME" or $effect eq "UTR_5_DELETED" or $effect eq "UTR_3_DELETED" or $effect eq "START_GAINED");
+	
+	my $non_silent = 0;
+	$non_silent = 1 if ($effect eq "STOP_GAINED" or $effect eq "STOP_LOST" or $effect eq "SPLICE_SITE_DONOR" or $effect eq "SPLICE_SITE_ACCEPTOR" or $effect eq "FRAME_SHIFT" or $effect eq "CODON_CHANGE_PLUS_CODON_INSERTION" or $effect eq "CODON_DELETION" or $effect eq "NON_SYNONYMOUS_CODING" or $effect eq "CODON_INSERTION" or $effect eq "CODON_CHANGE_PLUS_CODON_DELETION" or $effect eq "NON_SYNONYMOUS_START" or $effect eq "START_LOST");
+	
 	print VCFOUT "$line" if ($vcf_out);
 	
 	print "$patient\t";		
@@ -480,11 +500,12 @@ while (my $line = $vcf->next_line())
 	print $x->{ID},"\t";
 	print $x->{REF},"\t";
 	print $x->{ALT}->[0],"\t";
-	my ($gene, $add_genes, $impact, $effect, $affected_exon, $aa_change) = get_impact($x->{INFO}{EFF});
 	print "$gene\t";
 	print "$add_genes\t";
 	print "$impact\t";
 	print "$effect\t";
+	print "$non_silent\t";
+	print "$is_deleterious\t";
 	print "$affected_exon\t";
 #	print join(",", @{$x->{FILTER}}),"\t";
 #	print exists $x->{gtypes}{$cmp_sample}{SS} ? $variant_stati{$x->{gtypes}{$cmp_sample}{SS}} : "n/a", "\t";
@@ -498,10 +519,10 @@ while (my $line = $vcf->next_line())
 	print "$freq_tum\t";
 	print "$aa_change\t";
 	print "EFF=",$x->{INFO}{EFF},"\t";
-	print defined $x->{INFO}{'dbNSFP_Polyphen2_HVAR_pred'} ? $x->{INFO}{'dbNSFP_Polyphen2_HVAR_pred'} : "", "\t"; # Polyphen2 prediction based on HumVar, 'D' ('porobably damaging'), 'P' ('possibly damaging') and 'B' ('benign'). Multiple entries separated by ';' 
-	print defined $x->{INFO}{'dbNSFP_SIFT_score'} ? $x->{INFO}{'dbNSFP_SIFT_score'} : "", "\t"; # SIFT score, If a score is smaller than 0.05 the corresponding NS is predicted as 'D(amaging)'; otherwise it is predicted as 'T(olerated)'
+	print defined $polyphen ? $polyphen : "", "\t"; # Polyphen2 prediction based on HumVar, 'D' ('porobably damaging'), 'P' ('possibly damaging') and 'B' ('benign'). Multiple entries separated by ';' 
+	print defined $sift ? $sift : "", "\t"; # SIFT score, If a score is smaller than 0.05 the corresponding NS is predicted as 'D(amaging)'; otherwise it is predicted as 'T(olerated)'
 	print defined $x->{INFO}{'dbNSFP_GERP++_RS'} ? $x->{INFO}{'dbNSFP_GERP++_RS'} : "", "\t"; # GERP++ RS score, the larger the score, the more conserved the site 
-	print defined $x->{INFO}{'dbNSFP_29way_logOdds'} ? $x->{INFO}{'dbNSFP_29way_logOdds'} : "", "\t"; # SiPhy score based on 29 mammals genomes. The larger the score, the more conserved the site.
+	print defined $siphy ? $siphy : "", "\t"; # SiPhy score based on 29 mammals genomes. The larger the score, the more conserved the site.
 	my $domains = $x->{INFO}{'dbNSFP_Interpro_domain'}; # domain or conserved site on which the variant locates. Domain annotations come from Interpro database. The number in the brackets following a specific domain is the count of times Interpro assigns the variant position to that domain, typically coming from different predicting databases
 	if ($domains)
 	{

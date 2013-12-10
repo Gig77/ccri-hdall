@@ -9,12 +9,13 @@ use List::Util qw(min max);
 use Getopt::Long;
 
 # parse detailed results first
-my ($mut_count, $mut_max_freq, $mut_details);
+my ($mut_count, $mut_max_freq, $mut_details, $patient_ids);
 GetOptions
 (
 	"mut-count" => \$mut_count,
 	"mut-max-freq" => \$mut_max_freq,   
-	"mut-details" => \$mut_details   
+	"mut-details" => \$mut_details,   
+	"patient-ids=s" => \$patient_ids   
 );
 
 my %impact2flag =
@@ -30,6 +31,9 @@ die "ERROR: invalid or missing list type\n"
 
 # TABLE: impacted-genes
 my (%case_freq, %case_freq_ns, %mut_total, %mut_total_ns, %mut_gene_patient, %patients, %variants, %gene_info, %max_afs, %imp_exons, %imp_domains);
+
+map { $patients{$_} = 1 } (split(",", $patient_ids)) if ($patient_ids);
+
 <>; # skip header: patient\tcomparison\tgene\tchr\tstart\tend\ttr_len\tcds_len\texons\tcosmic\tdesc\tnum_mut\tnum_mut_nonsyn\tmax_af\tmax_af_ns\timp_exons\timp_exons_ns\tmut_effects\n
 while(<>)
 {

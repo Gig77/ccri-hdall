@@ -145,32 +145,37 @@ impacted-genes-list.tsv: filtered-variants.tsv ~/hdall/scripts/impacted-genes.pl
 		2>&1 1>impacted-genes-list.tsv.part | tee -a make.log
 	mv impacted-genes-list.tsv.part impacted-genes-list.tsv
 
+# TABLE: filtered-variants
 impacted-genes-list.high-af.tsv: filtered-variants.tsv ~/hdall/scripts/impacted-genes.pl
 	cat filtered-variants.tsv \
-		| perl -ne 'print $$_ if ((split/\t/)[19] >= 0.20)' \
+		| perl -ne 'print $$_ if ((split/\t/)[24] >= 0.20)' \
 		| perl ~/hdall/scripts/impacted-genes.pl \
 		2>&1 1>impacted-genes-list.high-af.tsv.part | tee -a make.log
 	mv impacted-genes-list.high-af.tsv.part impacted-genes-list.high-af.tsv
 
 gene-patient-matrix.tsv: impacted-genes-list.tsv ~/hdall/scripts/get-gene-patient-matrix.pl
 	cat impacted-genes-list.tsv | perl ~/hdall/scripts/get-gene-patient-matrix.pl --mut-details \
+		--patient-ids 446,314,842,E,Y,460,715,C,399,592,A,786,X,B,430,545,D,792,818,1021247 \
 		2>&1 1>gene-patient-matrix.tsv.part | tee -a make.log
 	mv gene-patient-matrix.tsv.part gene-patient-matrix.tsv
 
 gene-patient-matrix.high-af.tsv: impacted-genes-list.high-af.tsv ~/hdall/scripts/get-gene-patient-matrix.pl
 	cat impacted-genes-list.high-af.tsv | perl ~/hdall/scripts/get-gene-patient-matrix.pl --mut-details \
+		--patient-ids 446,314,842,E,Y,460,715,C,399,592,A,786,X,B,430,545,D,792,818,1021247 \
 		2>&1 1>gene-patient-matrix.high-af.tsv.part | tee -a make.log
 	mv gene-patient-matrix.high-af.tsv.part gene-patient-matrix.high-af.tsv
 
+# TABLE: filtered-variants
 impacted-genes-list.tier1.tsv: filtered-variants.tsv ~/hdall/scripts/impacted-genes.pl
 	cat filtered-variants.tsv \
-		| perl -ne 'print $$_ if (/(patient|HIGH|MODERATE)/ and (split/\t/)[19] >= 0.20)' \
+		| perl -ne 'print $$_ if (/(patient|HIGH|MODERATE)/ and (split/\t/)[24] >= 0.20)' \
 		| perl ~/hdall/scripts/impacted-genes.pl \
 		2>&1 1>impacted-genes-list.tier1.tsv.part | tee -a make.log
 	mv impacted-genes-list.tier1.tsv.part impacted-genes-list.tier1.tsv
 
 gene-patient-matrix.tier1.tsv: impacted-genes-list.tier1.tsv ~/hdall/scripts/get-gene-patient-matrix.pl
 	cat impacted-genes-list.tier1.tsv | perl ~/hdall/scripts/get-gene-patient-matrix.pl --mut-details \
+		--patient-ids 446,314,842,E,Y,460,715,C,399,592,A,786,X,B,430,545,D,792,818,1021247 \
 		2>&1 1>gene-patient-matrix.tier1.tsv.part | tee -a make.log
 	mv gene-patient-matrix.tier1.tsv.part gene-patient-matrix.tier1.tsv
 

@@ -119,7 +119,7 @@ open(V, $filtered_variants_file) or die "could not open file $filtered_variants_
 while(<V>)
 {
 	chomp;
-	my ($patient, $sample, $var_type, $status, $rejected_because, $chr, $pos, $dbSNP, $ref, $alt, $gene, $add_genes, $impact, $effect_notused, $exons, 
+	my ($patient, $sample, $var_type, $status, $rejected_because, $chr, $pos, $dbSNP, $ref, $alt, $gene, $add_genes, $impact, $effect_notused, $non_silent, $deleterious, $exons, 
 		$dp_rem_tot, $dp_rem_ref, $dp_rem_var, $freq_rem, $dp_leu_tot, $dp_leu_ref, $dp_leu_var, $freq_leu, $aa_change, $snpeff) = split("\t");
 
 	next if ($status eq "REJECT");

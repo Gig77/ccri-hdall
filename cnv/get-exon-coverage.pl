@@ -56,20 +56,23 @@ while(<>)
 open(B, "$exon_bed_file") or die "ERROR: Could not open file $exon_bed_file\n";
 while(<B>)
 {
-        next if /^#/;
-        next if /^$/;
+	next if /^#/;
+	next if /^$/;
 
 	chomp;
-        my ($chr, $start, $end) = split /\t/;
+	my ($chr, $start, $end, $name, $score, $strand) = split /\t/;
 
-        my $t = $it{$chr};
-        my $cov = $t->fetch($start, $end) if ($t);
-        if (!$cov)
-        {
-                print STDERR "INTERNAL ERROR: BED region not found in interval tree: $_\n";
-                next;
-        }
+	my $t = $it{$chr};
+	my $cov = $t->fetch($start, $end) if ($t);
+	if (!$cov)
+	{
+		print STDERR "INTERNAL ERROR: BED region not found in interval tree: $_\n";
+		next;
+	}
 
-	print $_, "\t", ${$cov->[0]}, "\t", ${$cov->[0]} / ($end-$start), "\n";
+	print "$chr\t$start\t$end\t$name\t";
+	print defined $score ? $score : ".", "\t";
+	print defined $strand ? $strand : ".", "\t";
+	print ${$cov->[0]}, "\t", ${$cov->[0]} / ($end-$start), "\n";
 }       
 close(B);

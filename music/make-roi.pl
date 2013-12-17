@@ -36,7 +36,8 @@ while(<>)
 	my ($chr, $start, $end, $region, $num_regions) = split("\t");
     $chr =~ s/^chr//;
 
-	$start = $start + 1; # convert to 1-based start coordinate
+	$start = $start - 1; # convert to 1-based start coordinate, add padding left for splice site mutations
+	$end = $end + 2; # add padding right for splice site mutations
 	$start = $chrsize{$chr} if ($start > $chrsize{$chr}); # trim coordinate to chromosome size
 	$end = $chrsize{$chr} if ($end > $chrsize{$chr}); # trim coordinate to chromosome size
 	next if ($start >= $end);

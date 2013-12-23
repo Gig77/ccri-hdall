@@ -47,6 +47,7 @@ filtered_variants/%.snp.filtered.tsv: ~/hdall/data/mutect_vcf/%_calls_snpeff_snp
 		-v ~/tools/snpEff-3.3h/common_no_known_medical_impact_20130930.chr.vcf \
 		<(cat $< | perl -ne 's/\trs\d+\t/\t.\t/; print $$_;' -) \
 		> $@.part)
+	test -s $@.part
 	mv $@.part $@
 
 filtered_variants/%.indel.filtered.tsv: ~/hdall/data/somatic_indel_vcf/%_snpeff.dbsnp.vcf curated-recected-variants.tsv ~/hdall/scripts/filter-variants.pl remission-variants.tsv.gz.tbi
@@ -78,6 +79,7 @@ filtered_variants/%.filtered.vcf.gz: filtered_variants/%.snp.filtered.vcf filter
 .PRECIOUS: ~/hdall/data/somatic_indel_vcf/%_snpeff.dbsnp.vcf
 ~/hdall/data/somatic_indel_vcf/%_snpeff.dbsnp.vcf: ~/hdall/data/somatic_indel_vcf/%_snpeff.vcf ~/tools/snpEff-3.3h/common_no_known_medical_impact_20130930.chr.vcf
 	(cd ~/tools/snpEff-3.3h; java -jar SnpSift.jar annotate -v ~/tools/snpEff-3.3h/common_no_known_medical_impact_20130930.chr.vcf $< > $@.part) 
+	test -s $@.part
 	mv $@.part $@
 
 remission-variants.tsv: ~/hdall/data/gatk_vcf_all_patients/analysis_ready_vcf.snpEff.vcf ~/hdall/scripts/gatk-vcf2tab.pl

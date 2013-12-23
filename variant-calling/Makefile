@@ -91,6 +91,7 @@ $(DATA)/varscan/%.merged.duplicate_marked.realigned.recalibrated.varscan.somatic
 		-v ~/tools/snpEff-3.3h/common_no_known_medical_impact_20130930.chr.vcf \
 		<(cat $< | perl -ne 's/\trs\d+\t/\t.\t/; print $$_;' -) \
 		2>&1 1>$@.part | $(LOG))
+	test -s $@.part
 	mv $@.part $@
  
 $(DATA)/varscan/%.merged.duplicate_marked.realigned.recalibrated.varscan.somatic.dbsnp.snpeff.vcf: $(DATA)/varscan/%.merged.duplicate_marked.realigned.recalibrated.varscan.somatic.dbsnp.vcf

@@ -10,17 +10,27 @@ use Log::Log4perl qw(:easy);
 use Getopt::Long;
 use Lolliplot;
 
-my ($hugos, $filtered_variants_file, $output_directory);
+my ($hugos, $filtered_variants_file, $output_directory, $patients_list);
 GetOptions
 (
 	"hugos=s" => \$hugos, # HUGO gene symbols, e.g. CREBBP,KRAS,NRAS
 	"filtered-variants=s" => \$filtered_variants_file, # file with filtered variants
+	"patients=s" => \$patients_list, # if specified, consider mutations only from these patients
 	"output-directory=s" => \$output_directory # output directory
 );
 
 die "ERROR: --hugos not specified\n" if (!$hugos);
 die "ERROR: --filtered-variants not specified\n" if (!$filtered_variants_file);
 die "ERROR: --output-directory not specified\n" if (!$output_directory);
+
+my %patients_hash;
+if ($patients_list)
+{
+	foreach (split(",", $patients_list))
+	{
+		$patients_hash{$_} = 1;
+	}
+}
 
 # ucsc/HUGO mapping
 my %id2sym;
@@ -122,6 +132,7 @@ while(<V>)
 	my ($patient, $sample, $var_type, $status, $rejected_because, $chr, $pos, $dbSNP, $ref, $alt, $gene, $add_genes, $impact, $effect_notused, $non_silent, $deleterious, $exons, 
 		$dp_rem_tot, $dp_rem_ref, $dp_rem_var, $freq_rem, $dp_leu_tot, $dp_leu_ref, $dp_leu_var, $freq_leu, $aa_change, $snpeff) = split("\t");
 
+	next if ($patients_list and !$patients_hash{$patient});
 	next if ($status eq "REJECT");
 	
 	$snpeff =~ s/EFF=//;

@@ -1,15 +1,22 @@
 options(warn=1)
+library(optparse)
 
-args <- commandArgs(trailingOnly = TRUE)
-if (is.na(args[1])) stop("patient not specified")
-if (is.na(args[2])) stop("diagnosis sample not specified")
-if (is.na(args[3])) stop("relapse sample not specified")
-if (is.na(args[4])) stop("remission sample not specified")
-patient <- args[1]
+option_list <- list(
+		make_option("--patient", type="character", help="patient ID"),
+		make_option("--diagnosis", type="character", help="diagnosis coverage data file"),
+		make_option("--relapse", type="character", help="relapse coverage data file"),
+		make_option("--remission", type="character", help="remission coverage data file")
+)
+opt <- parse_args(OptionParser(option_list=option_list))
 
-dia <- read.delim(args[2], check.names=F, stringsAsFactor=F, header=F)
-rel <- read.delim(args[3], check.names=F, stringsAsFactor=F, header=F)
-rem <- read.delim(args[4], check.names=F, stringsAsFactor=F, header=F)
+if (is.na(opt$patient)) stop("patient not specified")
+if (is.null(opt$diagnosis)) stop("diagnosis sample not specified")
+if (is.na(opt$relapse)) stop("relapse sample not specified")
+if (is.na(opt$remission)) stop("remission sample not specified")
+
+dia <- read.delim(opt$diagnosis, check.names=F, stringsAsFactor=F, header=F)
+rel <- read.delim(opt$relapse, check.names=F, stringsAsFactor=F, header=F)
+rem <- read.delim(opt$remission, check.names=F, stringsAsFactor=F, header=F)
 
 #dia.mito <- read.delim("~/hdall/results/cnv/592_dia.coverage.mito.tsv", check.names=F, stringsAsFactor=F, header=F)
 #rel.mito <- read.delim("~/hdall/results/cnv/592_rel.coverage.mito.tsv", check.names=F, stringsAsFactor=F, header=F)
@@ -36,12 +43,12 @@ mn$avg.rel <- mn$avg.rel / median(mn[mn$chr=="chr19", "avg.rel"]) * median(mn[mn
 
 chr <- c("chr1", "chr2", "chr3", "chr4", "chr5", "chr6", "chr7", "chr8", "chr9", "chr10", "chr11", "chr12", "chr13", "chr14", "chr15", "chr16", "chr17", "chr18", "chr19", "chr20", "chr21", "chr22", "chrX", "chrY")
 
-pdf(paste("~/hdall/results/cnv/cov-plot.", patient, ".pdf.part", sep=""))
+pdf(paste("~/hdall/results/cnv/cov-plot.", opt$patient, ".pdf.part", sep=""))
 for (c in chr)
 {
 	par(mfrow=c(2,1))
-	plot(mn[mn$chr==c,"start"],log2(mn[mn$chr==c,"avg.dia"]/mn[mn$chr==c,"avg.rem"]), ylim=c(-2, 2), col=rgb(0,0,0,0.05), main=paste(patient, c, "dia"), ylab="log fold cov", xlab="", cex=0.2)
-	plot(mn[mn$chr==c,"start"],log2(mn[mn$chr==c,"avg.rel"]/mn[mn$chr==c,"avg.rem"]), ylim=c(-2, 2), col=rgb(0,0,0,0.05), main=paste(patient, c, "rel"), ylab="log fold cov", xlab="", cex=0.2)
+	plot(mn[mn$chr==c,"start"],log2(mn[mn$chr==c,"avg.dia"]/mn[mn$chr==c,"avg.rem"]), ylim=c(-2, 2), col=rgb(0,0,0,0.05), main=paste(opt$patient, c, "dia"), ylab="log fold cov", xlab="", cex=0.2)
+	plot(mn[mn$chr==c,"start"],log2(mn[mn$chr==c,"avg.rel"]/mn[mn$chr==c,"avg.rem"]), ylim=c(-2, 2), col=rgb(0,0,0,0.05), main=paste(opt$patient, c, "rel"), ylab="log fold cov", xlab="", cex=0.2)
 }
 dev.off()
 

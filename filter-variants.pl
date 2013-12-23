@@ -90,7 +90,7 @@ croak "ERROR: --remission-variants-file not specified" if (!$remission_variants_
 
 my ($patient, $rem_sample, $cmp_sample) = split("_", $sample_identifier) or croak "ERROR: could not parse sample identifier\n";
 my $cmp_type = $rem_sample."_".$cmp_sample;
-die "ERROR: invalid comparison type: $cmp_type\n" if ($cmp_type ne 'rem_dia' and $cmp_type ne 'rem_rel' and $cmp_type ne 'rem_rel2');
+die "ERROR: invalid comparison type: $cmp_type\n" if ($cmp_type ne 'rem_dia' and $cmp_type ne 'rem_rel' and $cmp_type ne 'rem_rel1' and $cmp_type ne 'rem_rel2');
 
 my %patient2sample = (
 	'A_rem' => 'A13324_rem',
@@ -113,7 +113,80 @@ my %patient2sample = (
 	'X_rel' => 'X12831_rel',
 	'Y_rem' => 'Y3767_rem',
 	'Y_dia' => 'Y3141_dia',
-	'Y_rel' => 'Y10284_rel'
+	'Y_rel' => 'Y10284_rel',
+	'AD15_Remission' => 'AD15624_Remission',
+	'AD15_Relapse' => 'AD15248_Relapse',
+	'BL16_Remission' => 'BL16904_Remission',
+	'BL16_Relapse' => 'BL16779_Relapse',
+	'BL16_Remission' => 'BL16904_Remission',
+	'BL16_Relapse' => 'BL16779_Relapse',
+	'BM18_Remission' => 'BM18902_Remission',
+	'BM18_Relapse' => 'BM18137_Relapse',
+	'CA18_Remission' => 'CA18990_Remission',
+	'CA18_Relapse' => 'CA18875_Relapse',
+	'DM1_Remission' => 'DM15052_Remission',
+	'DM1_Relapse' => 'DM14919_Relapse',
+	'FS1_Remission' => 'FS19384_Remission',
+	'FS1_Relapse' => 'FS18689_Relapse',
+	'FE1_rem' => 'FE14193_remission',
+	'FE1_rel' => 'FE13774_relapse',
+	'GD1_Remission' => 'GD12423_Remission',
+	'GD1_Relapse' => 'GD11790_Relapse',
+	'GD18_Remission' => 'GD18932_Remission',
+	'GD18_Relapse' => 'GD18344_Relapse',
+	'HJ15_Remission' => 'HJ15795_Remission',
+	'HJ15_Relapse' => 'HJ15555_Relapse',
+	'HL1_Remission' => 'HL11524_Remission',
+	'HL1_Relapse' => 'HL10664_Relapse',
+	'HJA15_Remission' => 'HJA15372_Remission',
+	'HJA15_Relapse' => 'HJA15022_Relapse',
+	'KJ17_Remission' => 'KJ17436_Remission',
+	'KJ17_Relapse' => 'KJ17299_Relapse',
+	'KL16_Remission' => 'KL16262_Remission',
+	'KL16_Relapse' => 'KL16047_Relapse',
+	'KA17_Remission' => 'KA17485_Remission',
+	'KA17_Relapse' => 'KA17176_Relapse',
+	'LB17_Remission' => 'LB17749_Remission',
+	'LB17_Relapse' => 'LB17443_Relapse',
+	'LM18_rem' => 'LM18593_remission',
+	'LM18_Relapse' => 'LM18158_Relapse',
+	'ML10_Remission' => 'ML10437_Remission',
+	'ML10_Relapse' => 'ML10302_Relapse',
+	'MJ1_Remission' => 'MJ19244_Remission',
+	'MJ1_Relapse' => 'MJ18720_Relapse',
+	'MV16_Remission' => 'MV16741_Remission',
+	'MV16_rel' => 'MV16528_relapse',
+	'NS18_Remission' => 'NS18477_Remission',
+	'NS18_Relapse' => 'NS18247_Relapse',
+	'PC16_Remission' => 'PC16716_Remission',
+	'PC16_Relapse' => 'PC16369_Relapse',
+	'RT16_Remission' => 'RT16761_Remission',
+	'RT16_Relapse' => 'RT16627_Relapse',
+	'RT15_Remission' => 'RT15474_Remission',
+	'RT15_Relapse' => 'RT15074_Relapse',
+	'SJM16_Remission' => 'SJM16624_Remission',
+	'SJM16_Relapse' => 'SJM16481_Relapse',
+	'SL1_Remission' => 'SL16354_Remission',
+	'SL1_Relapse' => 'SL15927_Relapse',
+	'SLM1_Remission' => 'SLM11464_Remission',
+	'SLM1_Relapse' => 'SLM10676_Relapse',
+	'ST14_Remission' => 'ST14750_Remission',
+	'ST14_Relapse' => 'ST14445_Relapse',
+	'SKR1_Remission' => 'SKR15757_Remission',
+	'SKR1_Relapse' => 'SKR14988_Relapse',
+	'WA1_Remission' => 'WA18800_Remission',
+	'WA1_Relapse' => 'WA17963_Relapse',
+	'ZE13_Remission' => 'ZE13916_Remission',
+	'ZE13_Relapse' => 'ZE13355_Relapse',
+	
+	'737_rem' => '737C',
+	'737_dia' => '737D',
+	'737_rel' => '737R',
+	'737_rel2' => '737R2',
+	'108_rem' => '108C',
+	'108_dia' => '108D',
+	'108_rel' => '108R1',
+	'108_rel2' => '108R2'
 );
 
 # read kgXref, knownCanonical to determine UCSC canonical transcripts affected by variant
@@ -186,8 +259,8 @@ my $mutect = $vcf->get_header_line(key => 'GATKCommandLine', ID => 'MuTect')->[0
 $mutect = $vcf->get_header_line(key => 'MuTect')->[0]->[0]->{'value'} if (!$mutect);
 if ($mutect)
 {
-	($rem_sample) = $mutect =~ /normal_sample_name=(\S+)/;
-	($cmp_sample) = $mutect =~ /tumor_sample_name=(\S+)/;
+	($rem_sample) = $mutect =~ / normal_sample_name=(\S+)/;
+	($cmp_sample) = $mutect =~ / tumor_sample_name=(\S+)/;
 }
 
 my (@samples) = $vcf->get_samples();

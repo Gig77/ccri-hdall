@@ -19,6 +19,8 @@ while(<I>)
 	{
 		if ($labels =~ /($g)(\d+)/)
 		{
+			$start -= 2; # add padding left for splice site mutation
+			$stop += 2; # add padding left for splice site mutation
 			print "$chromosome\t$start\t$stop\t$1\t$2\n";
 		}
 	}

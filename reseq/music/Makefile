@@ -3,7 +3,9 @@ SHELL=/bin/bash  # required to make pipefail work
 .SECONDARY:      # do not delete any intermediate files
 
 LOG = perl -ne 'use POSIX qw(strftime); $$|=1; print strftime("%F %02H:%02M:%S ", localtime), $$ARGV[0], "$@: $$_";'
-PATIENTS=1009302 1019357 1020540 1020583 1021247 1021392 1021631 1022914 1023056 1023392 1024518 1024543 1025108 1025409 1187 314 399 430 446 460 545 592 715 786 792 818 842 A B C D FB11 G HS6 K MB2 X
+PATIENTS=1009302 1019357 1020540 1020583 1021247 1021392 1021631 1022914 1023056 1023392 1024518 1024543 1025108 1025409 1187 314 399 430 446 460 545 592 715 786 792 818 842 A B C D FB11 G HS6 K MB2 X 243 933 944 KA14651 KD20493 KE12025 MJ16441 NH17331 PJ13414 RD17412 RS13466 ST13892 ZA16211 Y
+PATIENTS_REL_ONLY=1017005 1021865 1023545 AD15 BL16 BM18 CA18 DM1 FE1 FS1 GD18 GD1 HJ15 HJA15 HL1 KA17 KJ17 KL16 LB17 LM18 MJ1 ML10 MV16 NS18 PC16 RT15 RT16 SJM16 SKR1 SL1 SLM1 ST14 WA1 ZE13
+PATIENTS_DIA_ONLY=1004564 1010661 1010781 1019964 1020076 1021087 1023338 1023616 1024589 1026233 1026662 B100 EF7 FB14 G44 HD7
 
 all: mutation-relation-dia mutation-relation-rel 
 
@@ -31,12 +33,17 @@ rel/maf/%.reseq.maf: ../filtered_variants/%.reseq.dbsnp.snpeff.dbNSFP.filtered.v
 		2>&1 1>>$@.part | $(LOG)
 	mv $@.part $@
 
-rel/maf/rem_rel.reseq.maf: $(foreach P, $(PATIENTS), rel/maf/$P_rem_rel.reseq.maf)
+rel/maf/rem_rel.reseq.maf: $(foreach P, $(PATIENTS), rel/maf/$P_rem_rel.reseq.maf) $(foreach P, $(PATIENTS_REL_ONLY), rel/maf/$P_rem_rel.reseq.maf)
 	perl ~/hdall/scripts/vcf2maf.pl --header 2>&1 1>$@.part | $(LOG)
 	cat rel/maf/*rem_rel.reseq.maf >> $@.part
 	mv $@.part $@
 
-dia/maf/rem_dia.reseq.maf: $(foreach P, $(PATIENTS), dia/maf/$P_rem_dia.reseq.maf)
+rel/maf/rem_rel.reseq.matched.maf: $(foreach P, $(PATIENTS), rel/maf/$P_rem_rel.reseq.maf)
+	perl ~/hdall/scripts/vcf2maf.pl --header 2>&1 1>$@.part | $(LOG)
+	cat $^ >> $@.part
+	mv $@.part $@
+
+dia/maf/rem_dia.reseq.maf: $(foreach P, $(PATIENTS), dia/maf/$P_rem_dia.reseq.maf) $(foreach P, $(PATIENTS_DIA_ONLY), dia/maf/$P_rem_dia.reseq.maf)
 	perl ~/hdall/scripts/vcf2maf.pl --header 2>&1 1>$@.part | $(LOG)
 	cat dia/maf/*rem_dia.reseq.maf >> $@.part
 	mv $@.part $@
@@ -60,7 +67,21 @@ dia/maf/%.reseq.maf: ../filtered_variants/%.reseq.dbsnp.snpeff.dbNSFP.filtered.v
 #---------------------------
 # mutation-relation relapse
 #---------------------------
-mutation-relation-rel: rel/mutation-relation.rel.af10.pathway.fine.reseq.tsv rel/mutation-relation.rel.af10.pathway.coarse.reseq.tsv rel/mutation-relation.recrel2.af10.reseq.tsv rel/mutation-relation.recrel2.combined-KRAS-PTPN11-NRAS.reseq.tsv rel/mutation-relation.recrel2.combined-KRAS-PTPN11.reseq.tsv rel/mutation-relation.recrel2.combined-CREBBP-TRRAP-KRAS-PTPN11.reseq.tsv
+mutation-relation-rel: rel/mutation-relation.rel.af10.pathway.fine.reseq.tsv rel/mutation-relation.rel.af10.pathway.coarse.reseq.tsv rel/mutation-relation.recrel2.af10.reseq.tsv rel/mutation-relation.recrel2.combined-KRAS-PTPN11-NRAS.reseq.tsv rel/mutation-relation.recrel2.combined-KRAS-PTPN11.reseq.tsv rel/mutation-relation.recrel2.combined-CREBBP-TRRAP-KRAS-PTPN11.reseq.tsv rel/mutation-relation.recrel2.af10.reseq.matched.tsv
+
+rel/wig-list.tsv:
+	rm -f $@.part
+	for P in $(PATIENTS) $(PATIENTS_REL_ONLY) ; do \
+		echo "$$P""_rel	~/hdall/data/reseq/wig/$$P""_rel.merged.duplicate_marked.realigned.recalibrated.music.wig" >> $@.part; \
+	done
+	mv $@.part $@
+
+rel/wig-list.matched.tsv:
+	rm -f $@.part
+	for P in $(PATIENTS) ; do \
+		echo "$$P""_rel	~/hdall/data/reseq/wig/$$P""_rel.merged.duplicate_marked.realigned.recalibrated.music.wig" >> $@.part; \
+	done
+	mv $@.part $@
 
 rel/maf/rem_rel.pathway.fine.reseq.maf: rel/maf/rem_rel.reseq.maf ~/hdall/scripts/reseq/aggregate-genes-to-pathways.pl
 	cat $(word 1,$^) | perl ~/hdall/scripts/reseq/aggregate-genes-to-pathways.pl --level fine > $@.part
@@ -94,7 +115,6 @@ rel/mutation-relation.rel.af10.pathway.coarse.reseq.tsv: rel/mutation-relation.r
 		2>&1 | $(LOG)
 	mv $@.part $@
 
-
 rel/mutation-relation.recrel2.af10.gene-list.txt: ../gene-patient-matrix.reseq.tsv
 	python ~/hdall/scripts/query-text.py \
 		--file ../gene-patient-matrix.reseq.tsv \
@@ -105,6 +125,15 @@ rel/mutation-relation.recrel2.af10.reseq.tsv: rel/mutation-relation.recrel2.af10
 	genome music mutation-relation \
 		--bam-list=rel/wig-list.tsv \
 		--maf-file=rel/maf/rem_rel.reseq.maf \
+		--permutations 1000 \
+		--gene-list rel/mutation-relation.recrel2.af10.gene-list.txt \
+		--output-file $@.part \
+		2>&1 | $(LOG)
+	mv $@.part $@
+rel/mutation-relation.recrel2.af10.reseq.matched.tsv: rel/mutation-relation.recrel2.af10.gene-list.txt rel/wig-list.matched.tsv rel/maf/rem_rel.reseq.matched.maf
+	genome music mutation-relation \
+		--bam-list=rel/wig-list.matched.tsv \
+		--maf-file=rel/maf/rem_rel.reseq.matched.maf \
 		--permutations 1000 \
 		--gene-list rel/mutation-relation.recrel2.af10.gene-list.txt \
 		--output-file $@.part \

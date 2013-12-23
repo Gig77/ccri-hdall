@@ -3,9 +3,15 @@ SHELL=/bin/bash  # required to make pipefail work
 .SECONDARY:      # do not delete any intermediate files
 
 LOG = perl -ne 'use POSIX qw(strftime); $$|=1; print strftime("%F %02H:%02M:%S ", localtime), $$ARGV[0], "$@: $$_";'
-PATIENTS=1009302 1019357 1020540 1020583 1021247 1021392 1021631 1022914 1023056 1023392 1024518 1024543 1025108 1025409 1187 314 399 430 446 460 545 592 715 786 792 818 842 A B C D FB11 G HS6 K MB2 X
+comma:=,
+empty:=
+space:= $(empty) $(empty)
 
-all: filtered-variants.merged.tsv filtered-variants.reseq.cosmic.tsv gene-patient-matrix.reseq.tsv lolliplot/lolliplot_CREBBP_NM_004380_both.svg
+PATIENTS=1009302 1019357 1020540 1020583 1021247 1021392 1021631 1022914 1023056 1023392 1024518 1024543 1025108 1025409 1187 314 399 430 446 460 545 592 715 786 792 818 842 A B C D FB11 G HS6 K MB2 X 243 933 944 KA14651 KD20493 KE12025 MJ16441 NH17331 PJ13414 RD17412 RS13466 ST13892 ZA16211 Y
+PATIENTS_REL_ONLY=1017005 1021865 1023545 AD15 BL16 BM18 CA18 DM1 FE1 FS1 GD18 GD1 HJ15 HJA15 HL1 KA17 KJ17 KL16 LB17 LM18 MJ1 ML10 MV16 NS18 PC16 RT15 RT16 SJM16 SKR1 SL1 SLM1 ST14 WA1 ZE13
+PATIENTS_DIA_ONLY=1004564 1010661 1010781 1019964 1020076 1021087 1023338 1023616 1024589 1026233 1026662 B100 EF7 FB14 G44 HD7
+
+all: filtered-variants.merged.tsv filtered-variants.reseq.cosmic.tsv gene-patient-matrix.reseq.tsv lolliplot/lolliplot_CREBBP_NM_004380_both.svg lolliplot/matched/lolliplot_CREBBP_NM_004380_both.svg
 
 #-----------	
 # SNPEFF
@@ -47,6 +53,16 @@ lolliplot/lolliplot_CREBBP_NM_004380_both.svg: ../id-mappings.tsv ../lolliplot/p
 		--filtered-variants filtered-variants.reseq.tsv \
 		--output-directory lolliplot/ \
 		2>&1 | $(LOG)
+		
+lolliplot/matched/lolliplot_CREBBP_NM_004380_both.svg: ../id-mappings.tsv ../lolliplot/pfam-regions.filtered.tsv filtered-variants.reseq.tsv ~/hdall/scripts/lolliplot/lolliplot.pl
+	mkdir -p lolliplot/matched
+	rm -f lolliplot/matched/*.svg 
+	perl ~/hdall/scripts/lolliplot/lolliplot.pl \
+		--hugos CREBBP,KRAS,NRAS,PTPN11,FLT3 \
+		--patients $(subst $(space),$(comma),$(foreach P, $(PATIENTS),$P)) \
+		--filtered-variants filtered-variants.reseq.tsv \
+		--output-directory lolliplot/matched \
+		2>&1 | $(LOG)
 
 #-------------
 # final lists
@@ -55,6 +71,10 @@ filtered-variants.reseq.tsv: $(foreach P, $(PATIENTS), filtered_variants/$P_rem_
 							 $(foreach P, $(PATIENTS), filtered_variants/$P_rem_dia.reseq.indel.filtered.tsv) \
 							 $(foreach P, $(PATIENTS), filtered_variants/$P_rem_rel.reseq.snp.filtered.tsv) \
 							 $(foreach P, $(PATIENTS), filtered_variants/$P_rem_rel.reseq.indel.filtered.tsv) \
+							 $(foreach P, $(PATIENTS_DIA_ONLY), filtered_variants/$P_rem_dia.reseq.snp.filtered.tsv) \
+							 $(foreach P, $(PATIENTS_DIA_ONLY), filtered_variants/$P_rem_dia.reseq.indel.filtered.tsv) \
+							 $(foreach P, $(PATIENTS_REL_ONLY), filtered_variants/$P_rem_rel.reseq.snp.filtered.tsv) \
+							 $(foreach P, $(PATIENTS_REL_ONLY), filtered_variants/$P_rem_rel.reseq.indel.filtered.tsv) \
 							 filtered_variants/715_rem_rel2.reseq.snp.filtered.tsv \
 							 filtered_variants/715_rem_rel2.reseq.indel.filtered.tsv \
 							 ~/hdall/scripts/filter-variants.pl 

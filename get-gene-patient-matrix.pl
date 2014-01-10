@@ -30,7 +30,7 @@ die "ERROR: invalid or missing list type\n"
 	if (!$mut_count and !$mut_max_freq and !$mut_details);
 
 # TABLE: impacted-genes
-my (%case_freq, %case_freq_ns, %mut_total, %mut_total_ns, %mut_gene_patient, %patients, %variants, %gene_info, %max_afs, %imp_exons, %imp_domains);
+my (%case_freq, %case_freq_ns, %case_freq_ns_af20, %mut_total, %mut_total_ns, %mut_gene_patient, %patients, %variants, %gene_info, %max_afs, %imp_exons, %imp_domains);
 
 map { $patients{$_} = 1 } (split(",", $patient_ids)) if ($patient_ids);
 
@@ -113,6 +113,18 @@ while(<>)
 		else
 		{
 			$mut_total_ns{$comp}{$gene} = $num_mutations_nonsyn;
+		}
+		
+		if ($max_af_ns >= 0.2)
+		{
+			if ($case_freq_ns_af20{$comp}{$gene})
+			{
+				$case_freq_ns_af20{$comp}{$gene} ++;
+			}
+			else
+			{
+				$case_freq_ns_af20{$comp}{$gene} = 1;
+			}			
 		}		
 	}
 }
@@ -159,10 +171,10 @@ my @sorted = sort { ($case_freq{'cons'}{$b} ? $case_freq{'cons'}{$b} : 0) <=> ($
 
 # TABLE: gene-patient-matrix
 print "gene\tdescr\tchr\tstart\tend\texons\ttr_len\tcds_len\tcosmic\t";
-print "freq-dia\ttot-dia\tfreq-dia-ns\ttot-dia-ns\tmax-af-dia\tmax-af-dia-ns\timp-ex-dia\timp-ex-dia-ns\t";
+print "freq-dia\ttot-dia\tfreq-dia-ns\tfreq-dia-ns-af20\ttot-dia-ns\tmax-af-dia\tmax-af-dia-ns\timp-ex-dia\timp-ex-dia-ns\t";
 map { print "$_-dia\t" } keys(%patients);
 
-print "freq-rel\ttot-rel\tfreq-rel-ns\ttot-rel-ns\tmax-af-rel\tmax-af-rel-ns\timp-ex-rel\timp-ex-rel-ns\t";
+print "freq-rel\ttot-rel\tfreq-rel-ns\tfreq-rel-ns-af20\ttot-rel-ns\tmax-af-rel\tmax-af-rel-ns\timp-ex-rel\timp-ex-rel-ns\t";
 map { print "$_-rel\t" } keys(%patients);
 
 print "freq-cons\t";
@@ -181,6 +193,7 @@ foreach my $g (@sorted)
 	print $case_freq{'rem_dia'}{$g} ? $case_freq{'rem_dia'}{$g} : "0", "\t";
 	print $mut_total{'rem_dia'}{$g} ? $mut_total{'rem_dia'}{$g} : "0", "\t";
 	print $case_freq_ns{'rem_dia'}{$g} ? $case_freq_ns{'rem_dia'}{$g} : "0", "\t";
+	print $case_freq_ns_af20{'rem_dia'}{$g} ? $case_freq_ns_af20{'rem_dia'}{$g} : "0", "\t";
 	print $mut_total_ns{'rem_dia'}{$g} ? $mut_total_ns{'rem_dia'}{$g} : "0", "\t";
 
 	print $max_afs{'rem_dia'}{$g}{'all'} ? sprintf("%d", $max_afs{'rem_dia'}{$g}{'all'} * 100) : "", "\t";
@@ -208,6 +221,7 @@ foreach my $g (@sorted)
 	print $case_freq{'rem_rel'}{$g} ? $case_freq{'rem_rel'}{$g} : "0", "\t";
 	print $mut_total{'rem_rel'}{$g} ? $mut_total{'rem_rel'}{$g} : "0", "\t";
 	print $case_freq_ns{'rem_rel'}{$g} ? $case_freq_ns{'rem_rel'}{$g} : "0", "\t";
+	print $case_freq_ns_af20{'rem_rel'}{$g} ? $case_freq_ns_af20{'rem_rel'}{$g} : "0", "\t";
 	print $mut_total_ns{'rem_rel'}{$g} ? $mut_total_ns{'rem_rel'}{$g} : "0", "\t";
 
 	print $max_afs{'rem_rel'}{$g}{'all'} ? sprintf("%d", $max_afs{'rem_rel'}{$g}{'all'} * 100) : "", "\t";

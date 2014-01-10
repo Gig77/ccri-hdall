@@ -48,7 +48,8 @@ while(<>)
 	my ($patient, $sample, $event, $cnumber, $chromosome, $start, $end, $size, $num_genes, $genestr) = split("\t");
 	next if ($patient =~ /^(1187|27|389|417|53|54|721|826)$/);
 	$sample =~ s/rem_//;
-
+	$genestr =~ s/\"//;
+	
 	if ($size <= $max_size_bp)
 	{
 		foreach my $gene (split(", ", $genestr))

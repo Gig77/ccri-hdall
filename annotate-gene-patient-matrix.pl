@@ -192,9 +192,9 @@ my (%gene_info, @patients_dia, @patients_rel, @patients_cons);
 my $header = <M>;
 chomp($header);
 my @hfields = split("\t", $header);
-for (my $d = 17; $d <= 36; $d ++) { push(@patients_dia, $hfields[$d]); }
-for (my $d = 45; $d <= 64; $d ++) { push(@patients_rel, $hfields[$d]); }
-for (my $d = 68; $d <= 87; $d ++) { push(@patients_cons, $hfields[$d]); }
+for (my $d = 18; $d <= 37; $d ++) { push(@patients_dia, $hfields[$d]); }
+for (my $d = 47; $d <= 66; $d ++) { push(@patients_rel, $hfields[$d]); }
+for (my $d = 70; $d <= 89; $d ++) { push(@patients_cons, $hfields[$d]); }
 
 while(<M>)
 {
@@ -215,30 +215,32 @@ while(<M>)
 	$gene_info{$g}{'freq-dia'} = $fields[9];
 	$gene_info{$g}{'tot-dia'} = $fields[10];
 	$gene_info{$g}{'freq-dia-ns'} = $fields[11];
-	$gene_info{$g}{'tot-dia-ns'} = $fields[12];
-	$gene_info{$g}{'max-af-dia'} = $fields[13];
-	$gene_info{$g}{'max-af-dia-ns'} = $fields[14];
-	$gene_info{$g}{'imp-ex-dia'} = $fields[15];
-	$gene_info{$g}{'imp-ex-dia-ns'} = $fields[16];
-	for (my $d = 17; $d <= 36; $d ++) { $gene_info{$g}{$patients_dia[$d-17]} = $fields[$d]; }
+	$gene_info{$g}{'freq-dia-ns-af20'} = $fields[12];
+	$gene_info{$g}{'tot-dia-ns'} = $fields[13];
+	$gene_info{$g}{'max-af-dia'} = $fields[14];
+	$gene_info{$g}{'max-af-dia-ns'} = $fields[15];
+	$gene_info{$g}{'imp-ex-dia'} = $fields[16];
+	$gene_info{$g}{'imp-ex-dia-ns'} = $fields[17];
+	for (my $d = 18; $d <= 37; $d ++) { $gene_info{$g}{$patients_dia[$d-18]} = $fields[$d]; }
 
-	$gene_info{$g}{'freq-rel'} = $fields[37];
-	$gene_info{$g}{'tot-rel'} = $fields[38];
-	$gene_info{$g}{'freq-rel-ns'} = $fields[39];
-	$gene_info{$g}{'tot-rel-ns'} = $fields[40];
-	$gene_info{$g}{'max-af-rel'} = $fields[41];
-	$gene_info{$g}{'max-af-rel-ns'} = $fields[42];
-	$gene_info{$g}{'imp-ex-rel'} = $fields[43];
-	$gene_info{$g}{'imp-ex-rel-ns'} = $fields[44];
-	for (my $d = 45; $d <= 64; $d ++) { $gene_info{$g}{$patients_rel[$d-45]} = $fields[$d]; }
+	$gene_info{$g}{'freq-rel'} = $fields[38];
+	$gene_info{$g}{'tot-rel'} = $fields[39];
+	$gene_info{$g}{'freq-rel-ns'} = $fields[40];
+	$gene_info{$g}{'freq-rel-ns-af20'} = $fields[41];
+	$gene_info{$g}{'tot-rel-ns'} = $fields[42];
+	$gene_info{$g}{'max-af-rel'} = $fields[43];
+	$gene_info{$g}{'max-af-rel-ns'} = $fields[44];
+	$gene_info{$g}{'imp-ex-rel'} = $fields[45];
+	$gene_info{$g}{'imp-ex-rel-ns'} = $fields[46];
+	for (my $d = 47; $d <= 66; $d ++) { $gene_info{$g}{$patients_rel[$d-47]} = $fields[$d]; }
 
-	$gene_info{$g}{'freq-cons'} = $fields[65];
-	$gene_info{$g}{'freq-cons-raise'} = $fields[66];
-	$gene_info{$g}{'tot-cons'} = $fields[67];
-	for (my $d = 68; $d <= 87; $d ++) { $gene_info{$g}{$patients_cons[$d-68]} = $fields[$d]; }
+	$gene_info{$g}{'freq-cons'} = $fields[67];
+	$gene_info{$g}{'freq-cons-raise'} = $fields[68];
+	$gene_info{$g}{'tot-cons'} = $fields[69];
+	for (my $d = 70; $d <= 89; $d ++) { $gene_info{$g}{$patients_cons[$d-70]} = $fields[$d]; }
 	
-	$gene_info{$g}{'imp-domains-dia'} = $fields[88];
-	$gene_info{$g}{'imp-domains-rel'} = $fields[89];
+	$gene_info{$g}{'imp-domains-dia'} = $fields[90];
+	$gene_info{$g}{'imp-domains-rel'} = $fields[91];
 }
 close(M);
 INFO(scalar(keys(%gene_info))." genes read from file $gene_patient_matrix");
@@ -247,9 +249,9 @@ INFO(scalar(keys(%gene_info))." genes read from file $gene_patient_matrix");
 
 # output header
 print "gene\ton-panel\tdescr\tchr\tstart\tend\texons\ttr_len\tcds_len\tcosmic\t";
-print "freq-dia\ttot-dia\tfreq-dia-ns\ttot-dia-ns\tmax-af-dia\tmax-af-dia-ns\timp-ex-dia\timp-ex-dia-ns\tp-gene-dia\tp-pw-dia\ttop-pw-dia";
+print "freq-dia\ttot-dia\tfreq-dia-ns\tfreq-dia-ns-af20\ttot-dia-ns\tmax-af-dia\tmax-af-dia-ns\timp-ex-dia\timp-ex-dia-ns\tp-gene-dia\tp-pw-dia\ttop-pw-dia";
 map { print "\t$_" } (@patients_dia);
-print "\tfreq-rel\ttot-rel\tfreq-rel-ns\tfreq-rel-ns-curated\ttot-rel-ns\tmax-af-rel\tmax-af-rel-ns\timp-ex-rel\timp-ex-rel-ns\tp-gene-rel\tp-pw-rel\ttop-pw-rel";
+print "\tfreq-rel\ttot-rel\tfreq-rel-ns\tfreq-rel-ns-af20\tfreq-rel-ns-curated\ttot-rel-ns\tmax-af-rel\tmax-af-rel-ns\timp-ex-rel\timp-ex-rel-ns\tp-gene-rel\tp-pw-rel\ttop-pw-rel";
 map { print "\t$_" } (@patients_rel);
 print "\tfreq-cons\tfreq-cons-raise\ttot-cons";
 map { print "\t$_" } (@patients_cons);
@@ -269,6 +271,7 @@ foreach my $g (keys(%gene_info))
 	print "\t".(defined $gene_info{$g}{'freq-dia'} ? $gene_info{$g}{'freq-dia'} : "");
 	print "\t".(defined $gene_info{$g}{'tot-dia'} ? $gene_info{$g}{'tot-dia'} : "");
 	print "\t".(defined $gene_info{$g}{'freq-dia-ns'} ? $gene_info{$g}{'freq-dia-ns'} : "");
+	print "\t".(defined $gene_info{$g}{'freq-dia-ns-af20'} ? $gene_info{$g}{'freq-dia-ns-af20'} : "");
 	print "\t".(defined $gene_info{$g}{'tot-dia-ns'} ? $gene_info{$g}{'tot-dia-ns'} : "");
 	print "\t".(defined $gene_info{$g}{'max-af-dia'} ? $gene_info{$g}{'max-af-dia'} : "");
 	print "\t".(defined $gene_info{$g}{'max-af-dia-ns'} ? $gene_info{$g}{'max-af-dia-ns'} : "");
@@ -295,6 +298,7 @@ foreach my $g (keys(%gene_info))
 	print "\t".(defined $gene_info{$g}{'freq-rel'} ? $gene_info{$g}{'freq-rel'} : "");
 	print "\t".(defined $gene_info{$g}{'tot-rel'} ? $gene_info{$g}{'tot-rel'} : "");
 	print "\t".(defined $gene_info{$g}{'freq-rel-ns'} ? $gene_info{$g}{'freq-rel-ns'} : "");
+	print "\t".(defined $gene_info{$g}{'freq-rel-ns-20'} ? $gene_info{$g}{'freq-rel-ns-20'} : "");
 	print "\t".(defined $curated_freq{$g} ? $curated_freq{$g} : (defined $gene_info{$g}{'freq-rel-ns'} ? $gene_info{$g}{'freq-rel-ns'} : ""));
 	print "\t".(defined $gene_info{$g}{'tot-rel-ns'} ? $gene_info{$g}{'tot-rel-ns'} : "");
 	print "\t".(defined $gene_info{$g}{'max-af-rel'} ? $gene_info{$g}{'max-af-rel'} : "");

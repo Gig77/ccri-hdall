@@ -7,7 +7,7 @@ PATIENTS=1009302 1019357 1020540 1020583 1021247 1021392 1021631 1022914 1023056
 PATIENTS_REL_ONLY=1017005 1021865 1023545 AD15 BL16 BM18 CA18 DM1 FE1 FS1 GD18 GD1 HJ15 HJA15 HL1 KA17 KJ17 KL16 LB17 LM18 MJ1 ML10 MV16 NS18 PC16 RT15 RT16 SJM16 SKR1 SL1 SLM1 ST14 WA1 ZE13
 PATIENTS_DIA_ONLY=1004564 1010661 1010781 1019964 1020076 1021087 1023338 1023616 1024589 1026233 1026662 B100 EF7 FB14 G44 HD7
 
-all: mutation-relation-dia mutation-relation-rel 
+all: mutation-relation-dia mutation-relation-rel dia/proximity.reseq.tsv rel/proximity.reseq.tsv 
 
 panel-genes.roi: ../../panel-genes.tsv ../../kamilla/final-list-design-studio.tsv ~/hdall/scripts/reseq/music/get-roi-file.pl
 	perl ~/hdall/scripts/reseq/music/get-roi-file.pl | sort -t '	' -k 1,1 -k 2,2g > $@.part
@@ -35,7 +35,7 @@ rel/maf/%.reseq.maf: ../filtered_variants/%.reseq.dbsnp.snpeff.dbNSFP.filtered.v
 
 rel/maf/rem_rel.reseq.maf: $(foreach P, $(PATIENTS), rel/maf/$P_rem_rel.reseq.maf) $(foreach P, $(PATIENTS_REL_ONLY), rel/maf/$P_rem_rel.reseq.maf)
 	perl ~/hdall/scripts/vcf2maf.pl --header 2>&1 1>$@.part | $(LOG)
-	cat rel/maf/*rem_rel.reseq.maf >> $@.part
+	cat $^ >> $@.part
 	mv $@.part $@
 
 rel/maf/rem_rel.reseq.matched.maf: $(foreach P, $(PATIENTS), rel/maf/$P_rem_rel.reseq.maf)
@@ -45,7 +45,7 @@ rel/maf/rem_rel.reseq.matched.maf: $(foreach P, $(PATIENTS), rel/maf/$P_rem_rel.
 
 dia/maf/rem_dia.reseq.maf: $(foreach P, $(PATIENTS), dia/maf/$P_rem_dia.reseq.maf) $(foreach P, $(PATIENTS_DIA_ONLY), dia/maf/$P_rem_dia.reseq.maf)
 	perl ~/hdall/scripts/vcf2maf.pl --header 2>&1 1>$@.part | $(LOG)
-	cat dia/maf/*rem_dia.reseq.maf >> $@.part
+	cat $^ >> $@.part
 	mv $@.part $@
 
 dia/maf/%.reseq.maf: ../filtered_variants/%.reseq.dbsnp.snpeff.dbNSFP.filtered.vcf ../filtered_variants/%.reseq.indel.dbsnp.snpeff.dbNSFP.filtered.vcf panel-genes.roi.gz.tbi ~/hdall/results/gene-id-mapping.biomart-0.7.tsv ~/hdall/scripts/vcf2maf.pl
@@ -293,4 +293,25 @@ dia/mutation-relation.recdia2.combined-CREBBP-TRRAP-KRAS-PTPN11.reseq.tsv: dia/m
 		--output-file $@.part \
 		2>&1 | $(LOG)
 	mv $@.part $@
+	
+#-----------------------------------------------------------------------
+#--- GENOME MUSIC PROXIMITY
+#-----------------------------------------------------------------------
+
+dia/proximity.reseq.tsv: dia/maf/rem_dia.reseq.maf
+	genome music proximity \
+		--maf-file dia/maf/rem_dia.reseq.maf \
+		--max-proximity 15 \
+		--output-dir dia/ \
+		2>&1 | tee -a make.log
+	mv dia/proximity_report $@
+
+rel/proximity.reseq.tsv: rel/maf/rem_rel.reseq.maf
+	genome music proximity \
+		--maf-file rel/maf/rem_rel.reseq.maf \
+		--max-proximity 15 \
+		--output-dir rel/ \
+		2>&1 | tee -a make.log	
+	mv rel/proximity_report $@
+
 		

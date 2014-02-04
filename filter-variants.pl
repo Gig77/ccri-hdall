@@ -11,7 +11,7 @@ use Tabix;
 use Carp;
 
 my ($vcf_out, $header, $rejected_variants_file, $sample_identifier, $vcf_in, $var_type);
-my ($rmsk_file, $simplerepeat_file, $blacklist_file, $segdup_file, $g1k_accessible_file, $ucsc_retro_file, $remission_variants_file);
+my ($rmsk_file, $simplerepeat_file, $blacklist_file, $segdup_file, $g1k_accessible_file, $ucsc_retro_file, $remission_variants_file, $evs_file);
 GetOptions
 (
 	"sample=s" => \$sample_identifier, # e.g. 314_rem_dia
@@ -26,7 +26,8 @@ GetOptions
 	"g1k-accessible=s" => \$g1k_accessible_file, # TABIX indexed UCSC table tgpPhase1AccessibilityPilotCriteria
 	"ucscRetro=s" => \$ucsc_retro_file, # TABIX indexed UCSC table ucscRetroAli5
 	"rejected-variants-file=s" => \$rejected_variants_file, # file with variants rejected based on manual curation; will be filtered from output
-	"remission-variants-file=s" => \$remission_variants_file # TABIX indexed file with variants found in remission samples (GATK)
+	"remission-variants-file=s" => \$remission_variants_file, # TABIX indexed file with variants found in remission samples (GATK)
+	"evs-file=s" => \$evs_file # TABIX indexed file with wariants from Exome Variant Server (http://evs.gs.washington.edu/EVS/)
 );
 
 # TABLE: filtered-variants
@@ -70,7 +71,8 @@ if ($header)
 	print "blacklist\t";
 	print "g1k-accessible\t";	
 	print "retro\t";
-	print "rem_samples\n";	
+	print "rem_samples\t";	
+	print "evs_variant\n";	
 	exit;
 }
 
@@ -87,10 +89,11 @@ croak "ERROR: --segdup-file not specified" if (!$segdup_file);
 croak "ERROR: --g1k-accessible not specified" if (!$g1k_accessible_file);
 croak "ERROR: --ucscRetro not specified" if (!$ucsc_retro_file);
 croak "ERROR: --remission-variants-file not specified" if (!$remission_variants_file);
+croak "ERROR: --evs-file not specified" if (!$evs_file);
 
 my ($patient, $rem_sample, $cmp_sample) = split("_", $sample_identifier) or croak "ERROR: could not parse sample identifier\n";
 my $cmp_type = $rem_sample."_".$cmp_sample;
-die "ERROR: invalid comparison type: $cmp_type\n" if ($cmp_type ne 'rem_dia' and $cmp_type ne 'rem_rel' and $cmp_type ne 'rem_rel1' and $cmp_type ne 'rem_rel2');
+die "ERROR: invalid comparison type: $cmp_type\n" if ($cmp_type ne 'rem_dia' and $cmp_type ne 'rem_rel' and $cmp_type ne 'rem_rel1' and $cmp_type ne 'rem_rel2' and $cmp_type ne 'rem_rel3');
 
 my %patient2sample = (
 	'A_rem' => 'A13324_rem',
@@ -183,6 +186,7 @@ my %patient2sample = (
 	'737_dia' => '737D',
 	'737_rel' => '737R',
 	'737_rel2' => '737R2',
+	'715_rel3' => '715R3',
 	'108_rem' => '108C',
 	'108_dia' => '108D',
 	'108_rel' => '108R1',
@@ -237,6 +241,7 @@ my $segdup = Tabix->new(-data => $segdup_file);
 my $g1kAcc = Tabix->new(-data => $g1k_accessible_file);
 my $ucscRetro = Tabix->new(-data => $ucsc_retro_file);
 my $remission = Tabix->new(-data => $remission_variants_file);
+my $evs = Tabix->new(-data => $evs_file);
 
 $| = 1; # turn on autoflush
 
@@ -300,7 +305,7 @@ if ($vcf_out)
 
 
 my ($tot_var, $filtered_qual, $filtered_gt, $filtered_alt, $filtered_germ) = (0, 0, 0, 0, 0);
-my ($numrep, $num_blacklist, $numsegdup, $num_not_accessible, $num_retro, $num_remission) = (0, 0, 0, 0, 0, 0);
+my ($numrep, $num_blacklist, $numsegdup, $num_not_accessible, $num_retro, $num_remission, $num_evs) = (0, 0, 0, 0, 0, 0, 0);
 my %qual_num;
 
 while (my $line = $vcf->next_line())
@@ -331,7 +336,15 @@ while (my $line = $vcf->next_line())
 	}		
 
 	my $status = $x->{FILTER}->[0];
-	$status = "MISSED" if ($patient eq "C" and $x->{CHROM} eq "chr16" and $x->{POS} eq "3789627"); # keep mutation CREBBP mutation falsely rejected by MuTect
+	
+	# keep mutation CREBBP mutation falsely rejected by MuTect
+	$status = "MISSED" if ($patient eq "C" and $x->{CHROM} eq "chr16" and $x->{POS} eq "3789627"); # CREBBP
+	$status = "MISSED" if ($patient eq "399" and $x->{CHROM} eq "chr16" and $x->{POS} eq "3799627"); # CREBBP
+	$status = "MISSED" if ($patient eq "BL16" and $x->{CHROM} eq "chr1" and $x->{POS} eq "115258747"); # NRAS
+	$status = "MISSED" if ($patient eq "545" and $x->{CHROM} eq "chr1" and $x->{POS} eq "115258747"); # NRAS
+	$status = "MISSED" if ($patient eq "NS18" and $x->{CHROM} eq "chr1" and $x->{POS} eq "115258748"); # NRAS
+	$status = "MISSED" if ($patient eq "MJ16441" and $x->{CHROM} eq "chr12" and $x->{POS} eq "112888211"); # PTPN11
+	$status = "MISSED" if ($patient eq "933" and $x->{CHROM} eq "chr17" and $x->{POS} eq "7578212"); # TP53
 	
 	if ($status eq "REJECT") # rejected by MuTect
 	{
@@ -428,7 +441,7 @@ while (my $line = $vcf->next_line())
 		croak "ERROR: Invalid variant type: $var_type\n";
 	}
 
-	my (@repeats, @dups, @blacklist, @retro, @rem_samples);
+	my (@repeats, @dups, @blacklist, @retro, @rem_samples, %evss);
 	my ($chr, $pos) = ($x->{CHROM}, $x->{POS});
 
 	# ----- annotate overlapping repeat regions
@@ -530,18 +543,47 @@ while (my $line = $vcf->next_line())
 		}
 		$num_remission ++ if (@rem_samples > 0);
 	}
+
+	# ----- annotate variants found in Exome Variant Server
+	{
+		my $iter = $evs->query($chr, $pos-1, $pos);
+		if ($iter and $iter->{_})
+		{
+			while (my $line = $evs->read($iter)) 
+			{
+				my ($echr, $epos, $rsID, $dbSNPVersion, $alleles, $europeanAmericanAlleleCount, $africanAmericanAlleleCount, $allAlleleCount, $MAFinPercent_EA_AA_All, $europeanAmericanGenotypeCount, 
+					$africanAmericanGenotypeCount, $allGenotypeCount, $avgSampleReadDepth, $genes, $geneAccession, $functionGVS, $hgvsProteinVariant, $hgvsCdnaVariant, $codingDnaSize, 
+					$conservationScorePhastCons, $conservationScoreGERP, $granthamScore, $polyphen2_score, $refBaseNCBI37, $chimpAllele, $clinicalInfo, $filterStatus, $onIlluminaHumanExomeChip,
+					$gwasPubMedInfo, $EA_EstimatedAge_kyrs, $AA_EstimatedAge_kyrs) = split(/\s/, $line);
+					
+				next if ($echr ne $chr or $epos ne $pos);
+				foreach my $allele (split(";", $alleles))
+				{
+					my ($ref, $alt) = $allele =~ /(.+)\>(.+)/;
+					if ($ref eq $x->{REF} and $alt eq $x->{ALT}->[0])
+					{
+						my ($alt_count, $ref_count) = $allAlleleCount =~ /(\d+).+?(\d+)/;
+						my $alt_percent = sprintf("%.3f", $alt_count/($alt_count+$ref_count)*100);
+						$evss{$alt_percent} = 1;					
+					}
+				}
+			}		
+		}
+		$num_evs ++ if (keys(%evss) > 0);
+	}
 	
 	my @rejected_because;
 	if ($rejected_variants{"$patient\t$cmp_type\t".$x->{CHROM}."\t".$x->{POS}}) { push(@rejected_because, "manual inspection (".$rejected_variants{"$patient\t$cmp_type\t".$x->{CHROM}."\t".$x->{POS}}.")")}
 	if (@repeats > 0) { push(@rejected_because, "repetitive region"); }
 	if (@dups > 0) { push(@rejected_because, "segmental duplication"); }
 	if (@blacklist > 0) { push(@rejected_because, "blacklisted region"); }
-	if (@retro > 0) { push(@rejected_because, "retrotransposon"); }
+	#if (@retro > 0) { push(@rejected_because, "retrotransposon"); }
 	if (@rem_samples > 1) { push(@rejected_because, "present remissions"); }
 	if ($x->{ID} and $x->{ID} ne ".")  { push(@rejected_because, "dbSNP"); }  
 	if (defined $x->{INFO}{'dbNSFP_1000Gp1_AF'} and $x->{INFO}{'dbNSFP_1000Gp1_AF'} > 0) { push(@rejected_because, "g1k"); }
 	
 	$line =~ s/^([^\t]+\t[^\t]+\t[^\t]+\t[^\t]+\t[^\t]+\t[^\t]+\t)[^\t]+/$1REJECT/ if (@rejected_because > 0);
+	$line =~ s/^([^\t]+\t[^\t]+\t[^\t]+\t[^\t]+\t[^\t]+\t[^\t]+\t)[^\t]+/$1MISSED/ if ($status eq "MISSED");
 	
 	my $polyphen = $x->{INFO}{'dbNSFP_Polyphen2_HVAR_pred'};
 	my $sift = $x->{INFO}{'dbNSFP_SIFT_score'};
@@ -608,7 +650,7 @@ while (my $line = $vcf->next_line())
 		print "\t";
 	}
 	print defined $x->{INFO}{'dbNSFP_1000Gp1_AF'} ? $x->{INFO}{'dbNSFP_1000Gp1_AF'} : "";  # Alternative allele frequency in the whole 1000Gp1 data
-	print "\t", join(',', @repeats), "\t", join(',', @dups), "\t", join(',', @blacklist), "\t$accessible\t", join(",", @retro), "\t", join(",", @rem_samples);
+	print "\t", join(',', @repeats), "\t", join(',', @dups), "\t", join(',', @blacklist), "\t$accessible\t", join(",", @retro), "\t", join(",", @rem_samples), "\t", join(";", keys(%evss));
 	print "\n";
 		
 #	print "\n"; print Dumper($x); exit;
@@ -634,6 +676,7 @@ if ($debug)
 	INFO("  $num_not_accessible variants fall into G1K non-accessible region.");
 	INFO("  $num_retro variants annotated with overlapping retrotransposed (pseudo)gene.");
 	INFO("  $num_remission variants present in remission sample(s).");
+	INFO("  $num_evs variants present in Exome Variant Server (EVS).");
 }
 
 # ------------------------------------------

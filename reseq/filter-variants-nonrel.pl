@@ -11,7 +11,7 @@ use Getopt::Long;
 use Carp;
 
 my ($vcf_out, $header, $rejected_variants_file, $patient);
-my ($rmsk_file, $simplerepeat_file, $blacklist_file, $segdup_file, $g1k_accessible_file, $cosmic_mutation_file, $ucsc_retro_file, $remission_variants_file);
+my ($rmsk_file, $simplerepeat_file, $blacklist_file, $segdup_file, $g1k_accessible_file, $cosmic_mutation_file, $ucsc_retro_file, $remission_variants_file, $evs_file);
 GetOptions
 (
 	"patient=s" => \$patient,  # patient ID
@@ -24,7 +24,8 @@ GetOptions
 	"g1k-accessible=s" => \$g1k_accessible_file, # TABIX indexed UCSC table tgpPhase1AccessibilityPilotCriteria
 	"ucscRetro=s" => \$ucsc_retro_file, # TABIX indexed UCSC table ucscRetroAli5
 	"remission-variants-file=s" => \$remission_variants_file, # TABIX indexed file with variants found in remission samples (GATK)
-	"cosmic-mutation-file=s" => \$cosmic_mutation_file
+	"cosmic-mutation-file=s" => \$cosmic_mutation_file,
+	"evs-file=s" => \$evs_file # TABIX indexed file with wariants from Exome Variant Server (http://evs.gs.washington.edu/EVS/)
 );
 
 # TABLE: filtered-variants
@@ -44,6 +45,7 @@ if ($header)
 	print "impact\t";
 	print "effect\t";
 	print "non_silent\t";
+	print "deleterious\t";
 	print "exons\t";
 	print "dp_rem_tot\t";
 	print "dp_rem_ref\t";
@@ -70,7 +72,8 @@ if ($header)
 	print "repeat\t";
 	print "tsegdup\t";
 	print "blacklist\t";
-	print "g1k-accessible\n";	
+	print "g1k-accessible\t";	
+	print "evs_variant\n";	
 	exit;
 }
 
@@ -87,6 +90,7 @@ croak "ERROR: --g1k-accessible not specified" if (!$g1k_accessible_file);
 croak "ERROR: --cosmic-mutation-file not specified" if (!$cosmic_mutation_file);
 croak "ERROR: --ucscRetro not specified" if (!$ucsc_retro_file);
 croak "ERROR: --remission-variants-file not specified" if (!$remission_variants_file);
+croak "ERROR: --evs-file not specified" if (!$evs_file);
 
 
 my $tum_sample = "$patient"."_dia"; 
@@ -157,6 +161,7 @@ my $segdup = Tabix->new(-data => $segdup_file);
 my $g1kAcc = Tabix->new(-data => $g1k_accessible_file);
 my $ucscRetro = Tabix->new(-data => $ucsc_retro_file);
 my $remission = Tabix->new(-data => $remission_variants_file);
+my $evs = Tabix->new(-data => $evs_file);
 
 $| = 1; # turn on autoflush
 
@@ -177,7 +182,7 @@ if ($vcf_out)
 die "ERROR: Sample name $tum_sample not found!\n" if ($tum_sample ne $samples[0]);
 
 my ($tot_var, $filtered_alt, $filtered_germ) = (0, 0, 0, 0, 0);
-my ($numrep, $num_blacklist, $numsegdup, $num_not_accessible, $num_dbsnp, $num_retro, $num_remission) = (0, 0, 0, 0, 0, 0, 0);
+my ($numrep, $num_blacklist, $numsegdup, $num_not_accessible, $num_dbsnp, $num_retro, $num_remission, $num_evs) = (0, 0, 0, 0, 0, 0, 0, 0);
 my %qual_num;
 
 my %variant_stati = 
@@ -243,7 +248,7 @@ while (my $line = $vcf->next_line())
 	##FORMAT=<ID=DP4,Number=1,Type=String,Description="Strand read counts: ref/fwd, ref/rev, var/fwd, var/rev">
 	($ref_fwd, $ref_rev, $var_fwd, $var_rev) = ($x->{gtypes}{$tum_sample}{RDF}, $x->{gtypes}{$tum_sample}{RDR}, $x->{gtypes}{$tum_sample}{ADF}, $x->{gtypes}{$tum_sample}{ADR});
 
-	my (@repeats, @dups, @blacklist, @retro, @rem_samples);
+	my (@repeats, @dups, @blacklist, @retro, @rem_samples, %evss);
 	my ($chr, $pos) = ($x->{CHROM}, $x->{POS});
 
 	# ----- annotate overlapping repeat regions
@@ -346,6 +351,34 @@ while (my $line = $vcf->next_line())
 		$num_remission ++ if (@rem_samples > 0);
 	}
 
+	# ----- annotate variants found in Exome Variant Server
+	{
+		my $iter = $evs->query($chr, $pos-1, $pos);
+		if ($iter and $iter->{_})
+		{
+			while (my $line = $evs->read($iter)) 
+			{
+				my ($echr, $epos, $rsID, $dbSNPVersion, $alleles, $europeanAmericanAlleleCount, $africanAmericanAlleleCount, $allAlleleCount, $MAFinPercent_EA_AA_All, $europeanAmericanGenotypeCount, 
+					$africanAmericanGenotypeCount, $allGenotypeCount, $avgSampleReadDepth, $genes, $geneAccession, $functionGVS, $hgvsProteinVariant, $hgvsCdnaVariant, $codingDnaSize, 
+					$conservationScorePhastCons, $conservationScoreGERP, $granthamScore, $polyphen2_score, $refBaseNCBI37, $chimpAllele, $clinicalInfo, $filterStatus, $onIlluminaHumanExomeChip,
+					$gwasPubMedInfo, $EA_EstimatedAge_kyrs, $AA_EstimatedAge_kyrs) = split(/\s/, $line);
+					
+				next if ($echr ne $chr or $epos ne $pos);
+				foreach my $allele (split(";", $alleles))
+				{
+					my ($ref, $alt) = $allele =~ /(.+)\>(.+)/;
+					if ($ref eq $x->{REF} and $alt eq $x->{ALT}->[0])
+					{
+						my ($alt_count, $ref_count) = $allAlleleCount =~ /(\d+).+?(\d+)/;
+						my $alt_percent = sprintf("%.3f", $alt_count/($alt_count+$ref_count)*100);
+						$evss{$alt_percent} = 1;					
+					}
+				}
+			}		
+		}
+		$num_evs ++ if (keys(%evss) > 0);
+	}
+
 	my $loc = $x->{CHROM}.":".$x->{POS}."-".$x->{POS};
 	$loc =~ s/^chr//;
 	
@@ -356,7 +389,7 @@ while (my $line = $vcf->next_line())
 	if (@repeats > 0) { $reject = 1; push(@reject_because, "repetitive region"); };
 	if (@dups > 0) { $reject = 1; push(@reject_because, "segmental duplication"); };
 	if (@blacklist > 0) { $reject = 1; push(@reject_because, "blacklisted region"); };
-	if (@retro > 0) { $reject = 1; push(@reject_because, "retrotransposon"); }
+	#if (@retro > 0) { $reject = 1; push(@reject_because, "retrotransposon"); }
 	if (@rem_samples > 1) { $reject = 1; push(@reject_because, "present remissions"); }
 	if ($x->{ID} and $x->{ID} ne ".")  { $reject = 1; push(@reject_because, "dbSNP"); $num_dbsnp ++; };  
 	
@@ -374,8 +407,21 @@ while (my $line = $vcf->next_line())
 	print $x->{REF},"\t";
 	print $x->{ALT}->[0],"\t";
 
+	my $polyphen = $x->{INFO}{'dbNSFP_Polyphen2_HVAR_pred'};
+	my $sift = $x->{INFO}{'dbNSFP_SIFT_score'};
+	my $siphy = $x->{INFO}{'dbNSFP_29way_logOdds'};
 	my ($gene, $add_genes, $impact, $effect, $affected_exon, $aa_change) = get_impact($x->{INFO}{EFF});
 	
+	my $is_deleterious = "n/d";
+	$is_deleterious = "yes" if ($effect eq "NON_SYNONYMOUS_CODING" and $polyphen and $polyphen =~ /D/ and defined $sift and $sift < 0.05); # polyphen & sift
+	$is_deleterious = "yes" if ($effect eq "NON_SYNONYMOUS_CODING" and $polyphen and $polyphen =~ /D/ and defined $siphy and $siphy >= 12); # polyphen & siphy
+	$is_deleterious = "yes" if ($effect eq "NON_SYNONYMOUS_CODING" and defined $sift and $sift < 0.05 and defined $siphy and $siphy >= 12); # sift and siphy
+	$is_deleterious = "yes" if ($effect eq "NON_SYNONYMOUS_CODING" and defined $siphy and $siphy > 20); # siphy only, highly conserved (keeps GNAQ)
+	$is_deleterious = "yes" if ($effect eq "NON_SYNONYMOUS_CODING" and defined $siphy and $siphy > 20); # siphy only, highly conserved (keeps GNAQ)
+	$is_deleterious = "yes" if ($effect eq "FRAME_SHIFT" or $effect eq "SPLICE_SITE_ACCEPTOR" or $effect eq "SPLICE_SITE_DONOR" or $effect eq "STOP_GAINED");
+	$is_deleterious = "no" if ($is_deleterious ne "yes" and defined $polyphen and defined $sift);
+	$is_deleterious = "no" if ($effect eq "DOWNSTREAM" or $effect eq "UPSTREAM" or $effect eq "INTRON" or $effect eq "INTERGENIC" or $effect eq "SYNONYMOUS_CODING" or $effect eq "SYNONYMOUS_STOP" or $effect eq "SYNONYMOUS_START" or $effect eq "UTR_3_PRIME" or $effect eq "UTR_5_PRIME" or $effect eq "UTR_5_DELETED" or $effect eq "UTR_3_DELETED" or $effect eq "START_GAINED");
+
 	my $non_silent = 0;
 	$non_silent = 1 if ($effect eq "STOP_GAINED" or $effect eq "STOP_LOST" or $effect eq "SPLICE_SITE_DONOR" or $effect eq "SPLICE_SITE_ACCEPTOR" or $effect eq "FRAME_SHIFT" or $effect eq "CODON_CHANGE_PLUS_CODON_INSERTION" or $effect eq "CODON_DELETION" or $effect eq "NON_SYNONYMOUS_CODING" or $effect eq "CODON_INSERTION" or $effect eq "CODON_CHANGE_PLUS_CODON_DELETION" or $effect eq "NON_SYNONYMOUS_START" or $effect eq "START_LOST");
 	
@@ -384,6 +430,7 @@ while (my $line = $vcf->next_line())
 	print "$impact\t";
 	print "$effect\t";
 	print "$non_silent\t";
+	print "$is_deleterious\t";
 	print "$affected_exon\t";
 	print "n/a\t";
 	print "n/a\t";
@@ -418,7 +465,7 @@ while (my $line = $vcf->next_line())
 	print $cosmic_leuk{$loc} ? $cosmic_leuk{$loc} : "0", "\t";
 	print aa_hits([$gene, split(",", $add_genes)], "EFF=".$x->{INFO}{EFF}, 1);	
 	
-	print "\t", join(',', @repeats), "\t", join(',', @dups), "\t", join(',', @blacklist), "\t$accessible";
+	print "\t", join(',', @repeats), "\t", join(',', @dups), "\t", join(',', @blacklist), "\t$accessible", "\t", join(";", keys(%evss));
 	print "\n";		
 }
 $vcf->close();
@@ -441,6 +488,7 @@ if ($debug)
 	INFO("  $num_dbsnp variants common non-pathogenic dbSNP variants.");
 	INFO("  $num_retro variants annotated with overlapping retrotransposed (pseudo)gene.");
 	INFO("  $num_remission variants present in remission sample(s).");
+	INFO("  $num_evs variants present in Exome Variant Server (EVS).");
 }
 
 # ------------------------------------------

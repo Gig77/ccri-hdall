@@ -12,7 +12,7 @@ PATIENTS_REL_ONLY=1017005 1021865 1023545 AD15 BL16 BM18 CA18 DM1 FE1 FS1 GD18 G
 PATIENTS_DIA_ONLY=1004564 1010661 1010781 1019964 1020076 1021087 1023338 1023616 1024589 1026233 1026662 B100 EF7 FB14 G44 HD7
 PATIENTS_DIA_NON_REL=331 380 442 350 461 466 529 591 602 619 633 634 642 653 666 672 697 698 700 709 724 762 776 777 779 782 409 NRD_1 73 NRD_2 NRD_3 60 594 687 748 754 646 530 718 681 39 49 45 54 110 111 134 143 147 199 NRD_4
 
-all: filtered-variants.merged.tsv filtered-variants.reseq.cosmic.tsv gene-patient-matrix.reseq.tsv lolliplot/lolliplot_CREBBP_NM_004380_both.svg lolliplot/matched/lolliplot_CREBBP_NM_004380_both.svg
+all: filtered-variants.merged.tsv filtered-variants.reseq.cosmic.tsv filtered-variants.reseq.nonrel.tsv gene-patient-matrix.reseq.tsv lolliplot/lolliplot_CREBBP_NM_004380_both.svg lolliplot/matched/lolliplot_CREBBP_NM_004380_both.svg
 
 .PHONY: varscan
 varscan: $(foreach P, $(PATIENTS_DIA_NON_REL), snpeff/$P_dia.reseq.varscan.dbsnp.snpeff.dbNSFP.vcf)
@@ -116,7 +116,8 @@ filtered-variants.reseq.tsv: $(foreach P, $(PATIENTS), filtered_variants/$P_rem_
 							 filtered_variants/715_rem_rel2.reseq.indel.filtered.tsv \
 							 ~/hdall/scripts/filter-variants.pl 
 	perl  ~/hdall/scripts/filter-variants.pl --header >$@.part
-	cat filtered_variants/*.filtered.tsv >> $@.part
+	cat filtered_variants/*.indel.filtered.tsv >> $@.part
+	cat filtered_variants/*.snp.filtered.tsv >> $@.part
 	mv $@.part $@
 
 filtered-variants.reseq.nonrel.tsv: $(foreach P, $(PATIENTS_DIA_NON_REL), filtered_variants/$P_dia.reseq.varscan.filtered.tsv) \
@@ -130,7 +131,7 @@ filtered-variants.merged.tsv: filtered-variants.reseq.tsv ../filtered-variants.t
 		2>&1 | $(LOG)
 	mv $@.part $@
 	
-filtered-variants.reseq.cosmic.tsv: filtered-variants.reseq.tsv ~/generic/data/cosmic/v65/CosmicMutantExport_v65_280513.tsv ~/hdall/scripts/annotate-cosmic.pl
+filtered-variants.reseq.cosmic.tsv: filtered-variants.reseq.tsv ~/generic/data/cosmic/v67/CosmicMutantExport_v67_241013.tsv ~/hdall/scripts/annotate-cosmic.pl
 	cat $(word 1,$^) | perl ~/hdall/scripts/annotate-cosmic.pl \
 		--cosmic-mutation-file $(word 2,$^) \
 		--only-confirmed \
@@ -152,6 +153,7 @@ filtered_variants/%.reseq.snp.filtered.tsv: snpeff/%.reseq.dbsnp.snpeff.dbNSFP.v
 		--ucscRetro ~/generic/data/hg19/hg19.ucscRetroAli5.txt.gz \
 		--rejected-variants-file ../curated-recected-variants.tsv \
 		--remission-variants-file ../remission-variants.tsv.gz \
+		--evs-file ~/generic/data/evs/ESP6500SI-V2-SSA137.updatedRsIds.chrAll.snps_indels.txt.gz \
 		>$@.part | $(LOG)
 	mv $@.part $@
 
@@ -169,6 +171,7 @@ filtered_variants/%.reseq.indel.filtered.tsv: snpeff/%.reseq.indel.dbsnp.snpeff.
 		--ucscRetro ~/generic/data/hg19/hg19.ucscRetroAli5.txt.gz \
 		--rejected-variants-file ../curated-recected-variants.tsv \
 		--remission-variants-file ../remission-variants.tsv.gz \
+		--evs-file ~/generic/data/evs/ESP6500SI-V2-SSA137.updatedRsIds.chrAll.snps_indels.txt.gz \
 		>$@.part | $(LOG)
 	mv $@.part $@	
 
@@ -183,7 +186,8 @@ filtered_variants/%_dia.reseq.varscan.filtered.tsv: snpeff/%_dia.reseq.varscan.d
 		--g1k-accessible ~/generic/data/hg19/paired.end.mapping.1000G..pilot.bed.gz \
 		--ucscRetro ~/generic/data/hg19/hg19.ucscRetroAli5.txt.gz \
 		--remission-variants-file ~/hdall/results/remission-variants.tsv.gz \
-		--cosmic-mutation-file ~/generic/data/cosmic/v65/CosmicMutantExport_v65_280513.tsv \
+		--cosmic-mutation-file ~/generic/data/cosmic/v67/CosmicMutantExport_v67_241013.tsv \
+		--evs-file ~/generic/data/evs/ESP6500SI-V2-SSA137.updatedRsIds.chrAll.snps_indels.txt.gz \
 		2>&1 1> $@.part | $(LOG)
 	mv $@.part $@
 	

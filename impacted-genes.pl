@@ -137,9 +137,10 @@ my $written = 0;
 while(<>)
 {
 	chomp;
+	my $line = $_;
 	my ($patient, $sample, $var_type, $status, $rejected_because, $chr, $pos, $dbSNP, $ref, $alt, $gene, $add_genes, $impact, $effect, $non_silent, $deleterious, $exons, 
 		$dp_rem_tot, $dp_rem_ref, $dp_rem_var, $freq_rem, $dp_leu_tot, $dp_leu_ref, $dp_leu_var, $freq_leu, $aa_change, $snpeff,
-		$polyphen2, $sift, $gerp, $siphy, $interpro) = split("\t");
+		$polyphen2, $sift, $gerp, $siphy, $interpro) = split("\t", $line);
 
 	die "ERROR: $0: snpeff annotation missing from following line:\n$_\n"
 		if (!$snpeff);
@@ -160,6 +161,7 @@ while(<>)
 		if ($exons)
 		{
 			my $exno = get_exon_no($exons, $gene);
+			print STDERR "ERROR: Could not parse exon number: $line\n" if (!$exno);
 			$genes{$patient}{$sample}{$gene}{'exons_ns'}{$exno} = 1;
 		}
 	}

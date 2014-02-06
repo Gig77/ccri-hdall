@@ -77,18 +77,34 @@ while(<G>)
 	# compute protein length	
 	my @es = split(",", $exonStarts);
 	my @ee = split(",", $exonEnds);
+	
 	if ($cdsStart and $cdsStart < $cdsEnd)
 	{
-		my ($st, $en, $cdslen);		
-		for (my $i = 0; $i < @es and $cdsEnd > $es[$i]; $i ++)
+		my ($st, $en, $cdslen);
+				
+		if ($strand eq '+')
 		{
-			next if ($cdsStart > $ee[$i]);
-			$st = ($cdsStart > $es[$i] and $cdsStart < $ee[$i]) ? $cdsStart : $es[$i];
-			$en = ($cdsEnd > $es[$i] and $cdsEnd < $ee[$i]) ? $cdsEnd : $ee[$i];
-			$cdslen += $en-$st;
-			$transcripts{$ucsc_id}{'splice_pos'}{$i+1} = int($cdslen / 3);	
+			for (my $i = 0; $i < @es and $cdsEnd > $es[$i]; $i ++)
+			{
+				next if ($cdsStart > $ee[$i]);
+				$st = ($cdsStart > $es[$i] and $cdsStart < $ee[$i]) ? $cdsStart : $es[$i];
+				$en = ($cdsEnd > $es[$i] and $cdsEnd < $ee[$i]) ? $cdsEnd : $ee[$i];
+				$cdslen += $en-$st;
+				$transcripts{$ucsc_id}{'splice_pos'}{$i+1} = int($cdslen / 3);	
+			}		
 		}
-	
+		else
+		{
+			for (my $i = @es-1; $i >= 0 and $cdsStart < $ee[$i]; $i --)
+			{
+				next if ($cdsEnd < $es[$i]);
+				$st = ($cdsStart > $es[$i] and $cdsStart < $ee[$i]) ? $cdsStart : $es[$i];
+				$en = ($cdsEnd > $es[$i] and $cdsEnd < $ee[$i]) ? $cdsEnd : $ee[$i];
+				$cdslen += $en-$st;
+				$transcripts{$ucsc_id}{'splice_pos'}{@es-$i} = int($cdslen / 3);	
+			}
+		}
+		
 		$transcripts{$ucsc_id}{'protlen'} = $cdslen/3;
 		#print "protein length NM_002834: ", $transcripts{$ucsc_id}{'protlen'}, "\n" if ($ucsc_id eq "uc001ttx.3");
 		$transcripts{$ucsc_id}{'hugo'} = $id2sym{$ucsc_id};
@@ -171,7 +187,7 @@ while(<V>)
 		
 		if (!$aa_change)
 		{
-			print "ERROR: Could not map following mutation to protein sequence: $transcript $eff\n";
+			print STDERR "WARNING: Could not map following mutation to protein sequence: $transcript $eff. Maybe UTR variant?\n";
 			next;
 		}
 		

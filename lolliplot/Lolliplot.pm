@@ -166,7 +166,7 @@ sub _parse_variants {
 		{
 			my ($patient, $var_type, $status, $chr, $pos, $aa_change) = split("\t", $v);
 			my ($effect) = split("\t", $self->{_variants}{$transcript_name}{$v});
-			my ($orig_aa, $protein_pos, $new_aa) = $aa_change =~ /(.?)(\d+)(.?)/;			
+			my ($orig_aa, $protein_pos, $new_aa) = $aa_change =~ /([^\d]?)(\d+)(.?)/;			
 			my $class = _get_vep_mutation_class($effect); 
 			die "Could not map mutation class: $effect\n" if (!$class);
 	        my @domains = $self->_get_domains($transcript_name);

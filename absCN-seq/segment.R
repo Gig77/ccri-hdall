@@ -1,0 +1,10 @@
+options(warn=1)
+library(DNAcopy)
+cn <- read.table("592_rem_rel.copynumber.called", header=T)
+CNA.object <-CNA(genomdat = cn[,7], chrom = cn[,1], maploc = cn[,2], data.type = 'logratio')
+CNA.smoothed <- smooth.CNA(CNA.object)
+segs <- segment(CNA.smoothed, verbose=0, min.width=2)
+write.table(segs$output[,2:6], file="592_rem_rel.copynumber.called.segmented.part", row.names=F, col.names=F, quote=F, sep="\t")
+
+absCNseq <- data.frame(chrom = gsub("chr", "", segs$output$chrom), loc.start = segs$output$loc.start, loc.end = segs$output$loc.end, eff.seg.len = segs$output$num.mark*100, normalized.ratio = 2^segs$output$seg.mean)
+write.table(absCNseq, file="592_rem_rel.copynumber.called.segmented.absCNseq.cn.part", row.names=F, col.names=T, quote=F, sep="\t")

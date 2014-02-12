@@ -14,10 +14,10 @@ par(mfrow = c(4, 5), mar=c(2,3,2,1))
 for(p in patients)
 {
 	data.filtered <- data[data$patient==p & data$dp_leu_tot >= min_cov & data$dp_rem_tot >= min_cov & data$var_type == "snp" & data$'repeat'=="" & data$segdup=="",]
-	dia <- data.filtered[data.filtered$sample=="rem_dia", c("chr", "pos", "freq_leu_norm")]
-	names(dia)[3] <- "dia"
-	rel <- data.filtered[data.filtered$sample=="rem_rel", c("chr", "pos", "freq_leu_norm")]
-	names(rel)[3] <- "rel"
+	dia <- data.filtered[data.filtered$sample=="rem_dia", c("chr", "pos", "ref", "alt", "freq_leu_norm")]
+	names(dia)[5] <- "dia"
+	rel <- data.filtered[data.filtered$sample=="rem_rel", c("chr", "pos", "ref", "alt", "freq_leu_norm")]
+	names(rel)[5] <- "rel"
 	m <- merge(dia, rel, all.x=T, all.y=T)
 	m[is.na(m$dia), "dia"] <- 0
 	m[is.na(m$rel), "rel"] <- 0

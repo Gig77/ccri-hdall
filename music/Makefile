@@ -308,7 +308,7 @@ pathscan-dia: pathscan/sm_pathways.dia.all.annotated.tsv pathscan/sm_pathways.di
 pathscan-rel: pathscan/sm_pathways.rel.all.annotated.tsv pathscan/sm_pathways.rel.noRAS.noCREBBP.annotated.tsv pathscan/sm_pathways.rel.all.cnv.annotated.tsv pathscan/sm_pathways.rel.all.matrix.clustered.tsv pathscan/sm_pathways.rel.noRAS.matrix.clustered.tsv pathscan/sm_pathways.rel.noCREBBP.matrix.clustered.tsv pathscan/sm_pathways.rel.noRAS.noCREBBP.matrix.clustered.tsv
 pathscan-dia-del: pathscan/sm_pathways.dia.all.del.matrix.clustered.tsv pathscan/sm_pathways.dia.all.del.annotated.tsv pathscan/sm_pathways.dia.all.cnv.del.annotated.tsv 
 pathscan-rel-del: pathscan/sm_pathways.rel.all.del.matrix.clustered.tsv pathscan/sm_pathways.rel.all.del.annotated.tsv pathscan/sm_pathways.rel.all.cnv.del.annotated.tsv 
-pathscan: pathscan-dia pathscan-rel pathscan-dia-del pathscan-rel-del pathscan/sm_pathways.dia+rel.all.tsv ../pathway-patient-matrix.all.clustered.tsv
+pathscan: pathscan-dia pathscan-rel pathscan-dia-del pathscan-rel-del pathscan/sm_pathways.dia+rel.all.tsv pathscan/sm_pathways.dia+rel.all.del.tsv pathscan/sm_pathways.dia+rel.noRAS.noCREBBP.tsv ../pathway-patient-matrix.all.clustered.tsv
 
 pathscan/pathways-david-complete.tsv: pathscan/pathways-david.tsv pathscan/pathways-david-reverse.tsv
 	perl ~/hdall/scripts/pathway-analysis/merge-david-annotations.pl \
@@ -586,6 +586,26 @@ pathscan/sm_pathways.dia+rel.all.tsv: pathscan/sm_pathways.dia.all.annotated.tsv
 		2>&1 | tee -a make.log
 	mv pathscan/sm_pathways.dia+rel.all.clustered.tsv.part pathscan/sm_pathways.dia+rel.all.tsv
 	rm pathscan/sm_pathways.dia+rel.all.tsv.part
+
+pathscan/sm_pathways.dia+rel.all.del.tsv: pathscan/sm_pathways.dia.all.del.annotated.tsv pathscan/sm_pathways.rel.all.del.annotated.tsv ~/hdall/scripts/pathway-analysis/cluster-pathways.R ~/hdall/scripts/music/merge-sm-pathways.R
+	R --no-save --quiet --slave -f ~/hdall/scripts/music/merge-sm-pathways.R \
+		--args pathscan/sm_pathways.dia.all.del.annotated.tsv pathscan/sm_pathways.rel.all.del.annotated.tsv \
+		2>&1 1>$@.part | tee -a make.log
+	R --no-save --quiet --slave -f ~/hdall/scripts/pathway-analysis/cluster-pathways.R \
+		--args $@.part pathscan/sm_pathways.dia+rel.all.del.clustered.tsv.part 13 1e-7 \
+		2>&1 | tee -a make.log
+	mv pathscan/sm_pathways.dia+rel.all.del.clustered.tsv.part $@
+	rm $@.part
+
+pathscan/sm_pathways.dia+rel.noRAS.noCREBBP.tsv: pathscan/sm_pathways.dia.noRAS.noCREBBP.annotated.tsv pathscan/sm_pathways.rel.noRAS.noCREBBP.annotated.tsv ~/hdall/scripts/pathway-analysis/cluster-pathways.R ~/hdall/scripts/music/merge-sm-pathways.R
+	R --no-save --quiet --slave -f ~/hdall/scripts/music/merge-sm-pathways.R \
+		--args pathscan/sm_pathways.dia.noRAS.noCREBBP.annotated.tsv pathscan/sm_pathways.rel.noRAS.noCREBBP.annotated.tsv \
+		2>&1 1>$@.part | tee -a make.log
+	R --no-save --quiet --slave -f ~/hdall/scripts/pathway-analysis/cluster-pathways.R \
+		--args $@.part pathscan/sm_pathways.dia+rel.noRAS.noCREBBP.clustered.tsv.part 13 1e-7 \
+		2>&1 | tee -a make.log
+	mv pathscan/sm_pathways.dia+rel.noRAS.noCREBBP.clustered.tsv.part $@
+	rm $@.part
 
 ../pathway-patient-matrix.all.clustered.tsv: pathscan/sm_pathways.dia.all.annotated.tsv pathscan/sm_pathways.rel.all.annotated.tsv ../filtered-variants.tsv ../kamilla/gene-pathway-assignment.tsv ~/hdall/scripts/pathway-analysis/get-pathway-patient-matrix.pl ~/hdall/scripts/pathway-analysis/cluster-pathways.R
 	perl ~/hdall/scripts/pathway-analysis/get-pathway-patient-matrix.pl \

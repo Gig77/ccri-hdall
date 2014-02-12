@@ -8,9 +8,9 @@ all: 592_rem_rel.copynumber.called.segmented.absCNseq.cn 592_rem_rel.copynumber.
 		/data/knoll/VarScan2/592_rem_rel/592_rem_rel.copynumber \
 		--output-file 592_rem_rel.copynumber.called \
 		--recenter-down 0.54 \
-		--min-coverage 20
+		--min-coverage 30
 		
-592_rem_rel.copynumber.called.segmented.absCNseq.cn: 592_rem_rel.copynumber.called
+592_rem_rel.copynumber.called.segmented.absCNseq.cn: 592_rem_rel.copynumber.called ~/hdall/scripts/absCN-seq/segment.R
 	Rscript ~/hdall/scripts/absCN-seq/segment.R
 	mv 592_rem_rel.copynumber.called.segmented.part 592_rem_rel.copynumber.called.segmented
 	mv $@.part $@

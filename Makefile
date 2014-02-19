@@ -3,7 +3,7 @@ SHELL=/bin/bash
 
 PATIENTS = 314 1021247 399 430 446 460 545 592 715 786 792 818 842 A B C D E X Y
 
-all: filtered-variants.tsv filtered-vcf filtered-variants.cosmic.tsv filtered-variants.cosmic.normaf.tsv gene-patient-matrix.tsv gene-patient-matrix.high-af.tsv gene-patient-matrix.tier1.tsv cnv/gene-patient-matrix.cnv.tsv lolliplot/lolliplot_CREBBP_NM_004380_both.svg ipa/mutated_relapse.tsv stats
+all: filtered-variants.tsv filtered-vcf filtered-variants.cosmic.tsv filtered-variants.cosmic.normaf.tsv gene-patient-matrix.tsv gene-patient-matrix.af20.tsv gene-patient-matrix.tier1.tsv cnv/gene-patient-matrix.cnv.tsv lolliplot/lolliplot_CREBBP_NM_004380_both.svg ipa/mutated_relapse.tsv stats
 
 filtered-vcf: $(foreach P, $(PATIENTS), filtered_variants/$P_rem_dia.filtered.vcf.gz filtered_variants/$P_rem_rel.filtered.vcf.gz)
 
@@ -163,12 +163,12 @@ impacted-genes-list.tsv: filtered-variants.tsv ~/hdall/scripts/impacted-genes.pl
 	mv impacted-genes-list.tsv.part impacted-genes-list.tsv
 
 # TABLE: filtered-variants
-impacted-genes-list.high-af.tsv: filtered-variants.tsv ~/hdall/scripts/impacted-genes.pl
+impacted-genes-list.af20.tsv: filtered-variants.tsv ~/hdall/scripts/impacted-genes.pl
 	cat filtered-variants.tsv \
 		| perl -ne 'print $$_ if ((split/\t/)[24] >= 0.20)' \
 		| perl ~/hdall/scripts/impacted-genes.pl \
-		2>&1 1>impacted-genes-list.high-af.tsv.part | tee -a make.log
-	mv impacted-genes-list.high-af.tsv.part impacted-genes-list.high-af.tsv
+		2>&1 1>impacted-genes-list.af20.tsv.part | tee -a make.log
+	mv impacted-genes-list.af20.tsv.part impacted-genes-list.af20.tsv
 
 gene-patient-matrix.tsv: impacted-genes-list.tsv ~/hdall/scripts/get-gene-patient-matrix.pl
 	cat impacted-genes-list.tsv | perl ~/hdall/scripts/get-gene-patient-matrix.pl --mut-details \
@@ -176,11 +176,11 @@ gene-patient-matrix.tsv: impacted-genes-list.tsv ~/hdall/scripts/get-gene-patien
 		2>&1 1>gene-patient-matrix.tsv.part | tee -a make.log
 	mv gene-patient-matrix.tsv.part gene-patient-matrix.tsv
 
-gene-patient-matrix.high-af.tsv: impacted-genes-list.high-af.tsv ~/hdall/scripts/get-gene-patient-matrix.pl
-	cat impacted-genes-list.high-af.tsv | perl ~/hdall/scripts/get-gene-patient-matrix.pl --mut-details \
+gene-patient-matrix.af20.tsv: impacted-genes-list.af20.tsv ~/hdall/scripts/get-gene-patient-matrix.pl
+	cat impacted-genes-list.af20.tsv | perl ~/hdall/scripts/get-gene-patient-matrix.pl --mut-details \
 		--patient-ids 446,314,842,E,Y,460,715,C,399,592,A,786,X,B,430,545,D,792,818,1021247 \
-		2>&1 1>gene-patient-matrix.high-af.tsv.part | tee -a make.log
-	mv gene-patient-matrix.high-af.tsv.part gene-patient-matrix.high-af.tsv
+		2>&1 1>gene-patient-matrix.af20.tsv.part | tee -a make.log
+	mv gene-patient-matrix.af20.tsv.part gene-patient-matrix.af20.tsv
 
 # TABLE: filtered-variants
 impacted-genes-list.tier1.tsv: filtered-variants.tsv ~/hdall/scripts/impacted-genes.pl
@@ -239,14 +239,14 @@ lolliplot/lolliplot_CREBBP_NM_004380_both.svg: id-mappings.tsv lolliplot/pfam-re
 		--output-directory lolliplot/ \
 		2>&1 | tee -a make.log
 
-ipa/mutated_relapse.tsv: music/rel-high-af/rem_rel.maf music/rel-high-af/smg.tsv
-	cut -f 1,9 music/rel-high-af/rem_rel.maf | grep -P '(Frame_Shift|In_Frame|Missense|Nonsense|Splice_Site)' | cut -f 1 | sort | uniq | grep -f - music/rel-high-af/smg.tsv | cut -f 1,9 | sort -k 2g > ipa/mutated_relapse.tsv.tmp
+ipa/mutated_relapse.tsv: music/rel-af20/rem_rel.maf music/rel-af20/smg.tsv
+	cut -f 1,9 music/rel-af20/rem_rel.maf | grep -P '(Frame_Shift|In_Frame|Missense|Nonsense|Splice_Site)' | cut -f 1 | sort | uniq | grep -f - music/rel-af20/smg.tsv | cut -f 1,9 | sort -k 2g > ipa/mutated_relapse.tsv.tmp
 	grep -vP "^(MESP2|TTN|TBP|CSMD3|DNAH5|RYR1|RYR2|RYR3|DNAH1|DNAH8|DNAH9|MUC2|MUC16|MUC12|MUC5B|OR5H2|OR5H2|OR11H4|OR6F1|OR52R1|OR2T12|OR6V1|OR51I2|OR5I1|OR9Q1|OR9Q1|PDZD7)\t" ipa/mutated_relapse.tsv.tmp > ipa/mutated_relapse.tsv.part
 	rm ipa/mutated_relapse.tsv.tmp
 	mv ipa/mutated_relapse.tsv.part ipa/mutated_relapse.tsv
 
-ipa/mutated_relapse.noKRASpatients.tsv: music/rel-high-af/rem_rel.maf music/rel-high-af/smg.tsv
-	cut -f 1,9,16 music/rel-high-af/rem_rel.maf | grep -P '(1021247|818|842|C|786|X|592|D|399|446|314|792)_rel' | grep -P '(Frame_Shift|In_Frame|Missense|Nonsense|Splice_Site)' | cut -f 1 | sort | uniq | grep -f - music/rel-high-af/smg.tsv | cut -f 1,9 | sort -k 2g > ipa/mutated_relapse.noKRASpatients.tsv.tmp
+ipa/mutated_relapse.noKRASpatients.tsv: music/rel-af20/rem_rel.maf music/rel-af20/smg.tsv
+	cut -f 1,9,16 music/rel-af20/rem_rel.maf | grep -P '(1021247|818|842|C|786|X|592|D|399|446|314|792)_rel' | grep -P '(Frame_Shift|In_Frame|Missense|Nonsense|Splice_Site)' | cut -f 1 | sort | uniq | grep -f - music/rel-af20/smg.tsv | cut -f 1,9 | sort -k 2g > ipa/mutated_relapse.noKRASpatients.tsv.tmp
 	grep -vP "^(MESP2|TTN|TBP|CSMD3|DNAH5|RYR1|RYR2|RYR3|DNAH1|DNAH8|DNAH9|MUC2|MUC16|MUC12|MUC5B|OR5H2|OR5H2|OR11H4|OR6F1|OR52R1|OR2T12|OR6V1|OR51I2|OR5I1|OR9Q1|OR9Q1|PDZD7)\t" ipa/mutated_relapse.noKRASpatients.tsv.tmp > ipa/mutated_relapse.noKRASpatients.tsv.part
 	rm ipa/mutated_relapse.noKRASpatients.tsv.tmp
 	mv ipa/mutated_relapse.noKRASpatients.tsv.part ipa/mutated_relapse.noKRASpatients.tsv

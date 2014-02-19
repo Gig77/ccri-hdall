@@ -15,11 +15,10 @@ t <- read.csv(args[1], sep="\t", as.is=TRUE, check.names=F)
 #t <- read.csv("~/hdall/results/music/sm_pathways.tsv.part", sep="\t", as.is=TRUE)
 #t2 <- t
 
-pcol <- as.numeric(args[3]) # number of column containing p-value for filtering
-pval <- as.numeric(args[4]) # maximum p-value
-if (!is.na(pcol))
+pval <- as.numeric(args[3]) # maximum p-value
+if (!is.na(pval))
 {
-	t2 <- t[(!is.na(t[pcol]) & t[pcol] <= pval) | t$Class == "NCI",]
+	t2 <- t[(!is.na(t["p.value.dia"]) & t["p.value.dia"] <= pval) | (!is.na(t["p.value.rel"]) & t["p.value.rel"] <= pval) | t$Class == "NCI",]
 } else
 {
 	t2 <- t

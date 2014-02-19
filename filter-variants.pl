@@ -340,6 +340,9 @@ while (my $line = $vcf->next_line())
 	# keep mutation CREBBP mutation falsely rejected by MuTect
 	$status = "MISSED" if ($patient eq "C" and $x->{CHROM} eq "chr16" and $x->{POS} eq "3789627"); # CREBBP
 	$status = "MISSED" if ($patient eq "399" and $x->{CHROM} eq "chr16" and $x->{POS} eq "3799627"); # CREBBP
+	$status = "MISSED" if ($patient eq "1021392" and $x->{CHROM} eq "chr16" and $x->{POS} eq "3786752"); # CREBBP
+	$status = "MISSED" if ($patient eq "1021392" and $x->{CHROM} eq "chr16" and $x->{POS} eq "3788607"); # CREBBP insertion NOT detected by MuTect, thus missing in output files!
+	$status = "MISSED" if ($patient eq "818" and $x->{CHROM} eq "chr16" and $x->{POS} eq "3788617"); # CREBBP
 	$status = "MISSED" if ($patient eq "KD20493" and $x->{CHROM} eq "chr16" and ($x->{POS} eq "3786734" or $x->{POS} eq "3786736" or $x->{POS} eq "3786737" or $x->{POS} eq "3786740" or $x->{POS} eq "3786741")); # CREBBP
 	$status = "MISSED" if ($patient eq "BL16" and $x->{CHROM} eq "chr1" and $x->{POS} eq "115258747"); # NRAS
 	$status = "MISSED" if ($patient eq "545" and $x->{CHROM} eq "chr1" and $x->{POS} eq "115258747"); # NRAS
@@ -348,6 +351,7 @@ while (my $line = $vcf->next_line())
 	$status = "MISSED" if ($patient eq "818" and $x->{CHROM} eq "chr12" and $x->{POS} eq "25398284"); # KRAS
 	$status = "MISSED" if ($patient eq "MJ16441" and $x->{CHROM} eq "chr12" and $x->{POS} eq "112888211"); # PTPN11
 	$status = "MISSED" if ($patient eq "933" and $x->{CHROM} eq "chr17" and $x->{POS} eq "7578212"); # TP53
+	
 	
 	if ($status eq "REJECT") # rejected by MuTect
 	{

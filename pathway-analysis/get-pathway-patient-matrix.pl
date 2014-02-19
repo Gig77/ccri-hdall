@@ -110,9 +110,9 @@ close(CUR);
 
 # output header
 # TABLE: pathway-patient-matrix
-print "Pathway\tName\tClass\tSize\tp-dia\tfreq-dia";
+print "Pathway\tName\tClass\tSize\tp.value.dia\tfreq-dia";
 map { print "\t$_-dia" } (keys(%variants));
-print "\tp-rel\tfreq-rel";
+print "\tp.value.rel\tfreq-rel";
 map { print "\t$_-rel" } (keys(%variants));
 print "\tGenes.dia\tGenes.rel\n";
 

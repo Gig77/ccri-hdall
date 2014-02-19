@@ -1,14 +1,14 @@
 export SHELLOPTS:=errexit:pipefail
 SHELL=/bin/bash  # required to make pipefail work
 
-all: dia rel ../gene-patient-matrix.annotated.tsv ../gene-patient-matrix.high-af.annotated.tsv pathscan rel/mutation-relation.tsv rel/mutation-relation.KRAS-PTPN11.tsv  
+all: dia rel ../gene-patient-matrix.annotated.tsv ../gene-patient-matrix.af20.annotated.tsv pathscan rel/mutation-relation.tsv rel/mutation-relation.KRAS-PTPN11.tsv  
 
 dia: ucsc-genes.hg19.roi dia/rem_dia.maf dia/gene_mrs dia/smg.tsv pathscan-dia
 rel: ucsc-genes.hg19.roi rel/rem_rel.maf rel/gene_mrs rel/smg.tsv pathscan-rel
-dia-high-af: ucsc-genes.hg19.roi dia-high-af/rem_dia.maf dia-high-af/gene_mrs dia-high-af/smg.tsv pathscan-dia
-rel-high-af: ucsc-genes.hg19.roi rel-high-af/rem_rel.maf rel-high-af/gene_mrs rel-high-af/smg.tsv pathscan-rel
-dia-high-af-del: ucsc-genes.hg19.roi dia-high-af-del/rem_dia.maf dia-high-af-del/gene_mrs dia-high-af-del/smg.tsv pathscan-dia-del
-rel-high-af-del: ucsc-genes.hg19.roi rel-high-af-del/rem_rel.maf rel-high-af-del/gene_mrs rel-high-af-del/smg.tsv pathscan-rel-del
+dia-af20: ucsc-genes.hg19.roi dia-af20/rem_dia.maf dia-af20/gene_mrs dia-af20/smg.tsv pathscan-dia
+rel-af20: ucsc-genes.hg19.roi rel-af20/rem_rel.maf rel-af20/gene_mrs rel-af20/smg.tsv pathscan-rel
+dia-af20-del: ucsc-genes.hg19.roi dia-af20-del/rem_dia.maf dia-af20-del/gene_mrs dia-af20-del/smg.tsv pathscan-dia-del
+rel-af20-del: ucsc-genes.hg19.roi rel-af20-del/rem_rel.maf rel-af20-del/gene_mrs rel-af20-del/smg.tsv pathscan-rel-del
 
 #---
 
@@ -40,45 +40,45 @@ rel/rem_rel.maf: $(foreach P, $(PATIENTS), maf/$P_rem_rel.maf)
 	cat maf/*rem_rel.maf >> rel/rem_rel.maf.part
 	mv rel/rem_rel.maf.part rel/rem_rel.maf
 
-dia-high-af/rem_dia.maf: $(foreach P, $(PATIENTS), maf-high-af/$P_rem_dia.maf)
-	perl ~/hdall/scripts/vcf2maf.pl --header 2>&1 1>dia-high-af/rem_dia.maf.part | tee -a make.log
-	cat maf-high-af/*rem_dia.maf >> dia-high-af/rem_dia.maf.part
-	mv dia-high-af/rem_dia.maf.part dia-high-af/rem_dia.maf
+dia-af20/rem_dia.maf: $(foreach P, $(PATIENTS), maf-af20/$P_rem_dia.maf)
+	perl ~/hdall/scripts/vcf2maf.pl --header 2>&1 1>dia-af20/rem_dia.maf.part | tee -a make.log
+	cat maf-af20/*rem_dia.maf >> dia-af20/rem_dia.maf.part
+	mv dia-af20/rem_dia.maf.part dia-af20/rem_dia.maf
 
-dia-high-af/rem_dia.cnv.maf: dia-high-af/rem_dia.maf ../cnv/hdall.cnv.tsv ~/hdall/scripts/pathway-analysis/cnv2maf.pl
-	cp dia-high-af/rem_dia.maf dia-high-af/rem_dia.cnv.maf.part
-	cat ../cnv/hdall.cnv.tsv | perl ~/hdall/scripts/pathway-analysis/cnv2maf.pl --max-size-bp 10000000 | grep "_dia" | grep "del" >> dia-high-af/rem_dia.cnv.maf.part
-	mv dia-high-af/rem_dia.cnv.maf.part dia-high-af/rem_dia.cnv.maf
+dia-af20/rem_dia.cnv.maf: dia-af20/rem_dia.maf ../cnv/hdall.cnv.tsv ~/hdall/scripts/pathway-analysis/cnv2maf.pl
+	cp dia-af20/rem_dia.maf dia-af20/rem_dia.cnv.maf.part
+	cat ../cnv/hdall.cnv.tsv | perl ~/hdall/scripts/pathway-analysis/cnv2maf.pl --max-size-bp 10000000 | grep "_dia" | grep "del" >> dia-af20/rem_dia.cnv.maf.part
+	mv dia-af20/rem_dia.cnv.maf.part dia-af20/rem_dia.cnv.maf
 
-dia-high-af-del/rem_dia.maf: $(foreach P, $(PATIENTS), maf-high-af-del/$P_rem_dia.maf)
-	perl ~/hdall/scripts/vcf2maf.pl --header 2>&1 1>dia-high-af-del/rem_dia.maf.part | tee -a make.log
-	cat maf-high-af-del/*rem_dia.maf >> dia-high-af-del/rem_dia.maf.part
-	mv dia-high-af-del/rem_dia.maf.part dia-high-af-del/rem_dia.maf
+dia-af20-del/rem_dia.maf: $(foreach P, $(PATIENTS), maf-af20-del/$P_rem_dia.maf)
+	perl ~/hdall/scripts/vcf2maf.pl --header 2>&1 1>dia-af20-del/rem_dia.maf.part | tee -a make.log
+	cat maf-af20-del/*rem_dia.maf >> dia-af20-del/rem_dia.maf.part
+	mv dia-af20-del/rem_dia.maf.part dia-af20-del/rem_dia.maf
 
-dia-high-af-del/rem_dia.cnv.maf: dia-high-af-del/rem_dia.maf ../cnv/hdall.cnv.tsv ~/hdall/scripts/pathway-analysis/cnv2maf.pl
-	cp dia-high-af-del/rem_dia.maf dia-high-af-del/rem_dia.cnv.maf.part
-	cat ../cnv/hdall.cnv.tsv | perl ~/hdall/scripts/pathway-analysis/cnv2maf.pl --max-size-bp 10000000 | grep "_dia" | grep "del" >> dia-high-af-del/rem_dia.cnv.maf.part
-	mv dia-high-af-del/rem_dia.cnv.maf.part dia-high-af-del/rem_dia.cnv.maf
+dia-af20-del/rem_dia.cnv.maf: dia-af20-del/rem_dia.maf ../cnv/hdall.cnv.tsv ~/hdall/scripts/pathway-analysis/cnv2maf.pl
+	cp dia-af20-del/rem_dia.maf dia-af20-del/rem_dia.cnv.maf.part
+	cat ../cnv/hdall.cnv.tsv | perl ~/hdall/scripts/pathway-analysis/cnv2maf.pl --max-size-bp 10000000 | grep "_dia" | grep "del" >> dia-af20-del/rem_dia.cnv.maf.part
+	mv dia-af20-del/rem_dia.cnv.maf.part dia-af20-del/rem_dia.cnv.maf
 
-rel-high-af/rem_rel.maf: $(foreach P, $(PATIENTS), maf-high-af/$P_rem_rel.maf)
-	perl ~/hdall/scripts/vcf2maf.pl --header 2>&1 1>rel-high-af/rem_rel.maf.part | tee -a make.log
-	cat maf-high-af/*rem_rel.maf >> rel-high-af/rem_rel.maf.part
-	mv rel-high-af/rem_rel.maf.part rel-high-af/rem_rel.maf
+rel-af20/rem_rel.maf: $(foreach P, $(PATIENTS), maf-af20/$P_rem_rel.maf)
+	perl ~/hdall/scripts/vcf2maf.pl --header 2>&1 1>rel-af20/rem_rel.maf.part | tee -a make.log
+	cat maf-af20/*rem_rel.maf >> rel-af20/rem_rel.maf.part
+	mv rel-af20/rem_rel.maf.part rel-af20/rem_rel.maf
 
-rel-high-af/rem_rel.cnv.maf: rel-high-af/rem_rel.maf ../cnv/hdall.cnv.tsv ~/hdall/scripts/pathway-analysis/cnv2maf.pl
-	cp rel-high-af/rem_rel.maf rel-high-af/rem_rel.cnv.maf.part
-	cat ../cnv/hdall.cnv.tsv | perl ~/hdall/scripts/pathway-analysis/cnv2maf.pl --max-size-bp 10000000 | grep "_rel" | grep "del" >> rel-high-af/rem_rel.cnv.maf.part
-	mv rel-high-af/rem_rel.cnv.maf.part rel-high-af/rem_rel.cnv.maf
+rel-af20/rem_rel.cnv.maf: rel-af20/rem_rel.maf ../cnv/hdall.cnv.tsv ~/hdall/scripts/pathway-analysis/cnv2maf.pl
+	cp rel-af20/rem_rel.maf rel-af20/rem_rel.cnv.maf.part
+	cat ../cnv/hdall.cnv.tsv | perl ~/hdall/scripts/pathway-analysis/cnv2maf.pl --max-size-bp 10000000 | grep "_rel" | grep "del" >> rel-af20/rem_rel.cnv.maf.part
+	mv rel-af20/rem_rel.cnv.maf.part rel-af20/rem_rel.cnv.maf
 
-rel-high-af-del/rem_rel.maf: $(foreach P, $(PATIENTS), maf-high-af-del/$P_rem_rel.maf)
-	perl ~/hdall/scripts/vcf2maf.pl --header 2>&1 1>rel-high-af-del/rem_rel.maf.part | tee -a make.log
-	cat maf-high-af-del/*rem_rel.maf >> rel-high-af-del/rem_rel.maf.part
-	mv rel-high-af-del/rem_rel.maf.part rel-high-af-del/rem_rel.maf
+rel-af20-del/rem_rel.maf: $(foreach P, $(PATIENTS), maf-af20-del/$P_rem_rel.maf)
+	perl ~/hdall/scripts/vcf2maf.pl --header 2>&1 1>rel-af20-del/rem_rel.maf.part | tee -a make.log
+	cat maf-af20-del/*rem_rel.maf >> rel-af20-del/rem_rel.maf.part
+	mv rel-af20-del/rem_rel.maf.part rel-af20-del/rem_rel.maf
 
-rel-high-af-del/rem_rel.cnv.maf: rel-high-af-del/rem_rel.maf ../cnv/hdall.cnv.tsv ~/hdall/scripts/pathway-analysis/cnv2maf.pl
-	cp rel-high-af-del/rem_rel.maf rel-high-af-del/rem_rel.cnv.maf.part
-	cat ../cnv/hdall.cnv.tsv | perl ~/hdall/scripts/pathway-analysis/cnv2maf.pl --max-size-bp 10000000 | grep "_rel" | grep "del" >> rel-high-af-del/rem_rel.cnv.maf.part
-	mv rel-high-af-del/rem_rel.cnv.maf.part rel-high-af-del/rem_rel.cnv.maf
+rel-af20-del/rem_rel.cnv.maf: rel-af20-del/rem_rel.maf ../cnv/hdall.cnv.tsv ~/hdall/scripts/pathway-analysis/cnv2maf.pl
+	cp rel-af20-del/rem_rel.maf rel-af20-del/rem_rel.cnv.maf.part
+	cat ../cnv/hdall.cnv.tsv | perl ~/hdall/scripts/pathway-analysis/cnv2maf.pl --max-size-bp 10000000 | grep "_rel" | grep "del" >> rel-af20-del/rem_rel.cnv.maf.part
+	mv rel-af20-del/rem_rel.cnv.maf.part rel-af20-del/rem_rel.cnv.maf
 
 maf/%.maf: ../filtered_variants/%.snp.filtered.vcf ../filtered_variants/%.indel.filtered.vcf ucsc-genes.hg19.roi ~/hdall/results/gene-id-mapping.biomart-0.7.tsv ~/hdall/scripts/vcf2maf.pl
 	mkdir -p maf
@@ -94,8 +94,8 @@ maf/%.maf: ../filtered_variants/%.snp.filtered.vcf ../filtered_variants/%.indel.
 		2>&1 1>>$@.part | grep -vP '(Leading or trailing space|variant.Format|Domain annotations come from)' | tee -a make.log
 	mv $@.part $@
 
-maf-high-af/%.maf: ../filtered_variants/%.snp.filtered.vcf ../filtered_variants/%.indel.filtered.vcf ucsc-genes.hg19.roi ~/hdall/results/gene-id-mapping.biomart-0.7.tsv ~/hdall/scripts/vcf2maf.pl
-	mkdir -p maf-high-af
+maf-af20/%.maf: ../filtered_variants/%.snp.filtered.vcf ../filtered_variants/%.indel.filtered.vcf ucsc-genes.hg19.roi ~/hdall/results/gene-id-mapping.biomart-0.7.tsv ~/hdall/scripts/vcf2maf.pl
+	mkdir -p maf-af20
 	cat ../filtered_variants/$*.snp.filtered.vcf | perl ~/hdall/scripts/vcf2maf.pl \
 		--sample $* \
 		--music-roi ucsc-genes.hg19.roi.gz \
@@ -110,8 +110,8 @@ maf-high-af/%.maf: ../filtered_variants/%.snp.filtered.vcf ../filtered_variants/
 		2>&1 1>>$@.part | grep -vP '(Leading or trailing space|variant.Format|Domain annotations come from)' | tee -a make.log
 	mv $@.part $@
 
-maf-high-af-del/%.maf: ../filtered_variants/%.snp.filtered.vcf ../filtered_variants/%.indel.filtered.vcf ucsc-genes.hg19.roi ~/hdall/results/gene-id-mapping.biomart-0.7.tsv ~/hdall/scripts/vcf2maf.pl
-	mkdir -p maf-high-af-del
+maf-af20-del/%.maf: ../filtered_variants/%.snp.filtered.vcf ../filtered_variants/%.indel.filtered.vcf ucsc-genes.hg19.roi ~/hdall/results/gene-id-mapping.biomart-0.7.tsv ~/hdall/scripts/vcf2maf.pl
+	mkdir -p maf-af20-del
 	cat ../filtered_variants/$*.snp.filtered.vcf | perl ~/hdall/scripts/vcf2maf.pl \
 		--sample $* \
 		--music-roi ucsc-genes.hg19.roi.gz \
@@ -152,37 +152,37 @@ rel/total_covgs: rel/wig-list.tsv ~/generic/data/hg19/ucsc.hg19.nochr.fasta
 		--reference-sequence ~/generic/data/hg19/ucsc.hg19.nochr.fasta \
 		--roi-file ucsc-genes.hg19.roi
 
-dia-high-af/total_covgs: dia/total_covgs
-	rm -f dia-high-af/total_covgs
-	rm -rf dia-high-af/roi_covgs
-	rm -rf dia-high-af/gene_covgs
-	cp dia/total_covgs dia-high-af/total_covgs
-	cp -r dia/roi_covgs dia-high-af/roi_covgs
-	cp -r dia/gene_covgs dia-high-af/gene_covgs
+dia-af20/total_covgs: dia/total_covgs
+	rm -f dia-af20/total_covgs
+	rm -rf dia-af20/roi_covgs
+	rm -rf dia-af20/gene_covgs
+	cp dia/total_covgs dia-af20/total_covgs
+	cp -r dia/roi_covgs dia-af20/roi_covgs
+	cp -r dia/gene_covgs dia-af20/gene_covgs
 
-dia-high-af-del/total_covgs: dia/total_covgs
-	rm -f dia-high-af-del/total_covgs
-	rm -rf dia-high-af-del/roi_covgs
-	rm -rf dia-high-af-del/gene_covgs
-	cp dia/total_covgs dia-high-af-del/total_covgs
-	cp -r dia/roi_covgs dia-high-af-del/roi_covgs
-	cp -r dia/gene_covgs dia-high-af-del/gene_covgs
+dia-af20-del/total_covgs: dia/total_covgs
+	rm -f dia-af20-del/total_covgs
+	rm -rf dia-af20-del/roi_covgs
+	rm -rf dia-af20-del/gene_covgs
+	cp dia/total_covgs dia-af20-del/total_covgs
+	cp -r dia/roi_covgs dia-af20-del/roi_covgs
+	cp -r dia/gene_covgs dia-af20-del/gene_covgs
 
-rel-high-af/total_covgs: rel/total_covgs
-	rm -f rel-high-af/total_covgs
-	rm -rf rel-high-af/roi_covgs
-	rm -rf rel-high-af/gene_covgs
-	cp rel/total_covgs rel-high-af/total_covgs
-	cp -r rel/roi_covgs rel-high-af/roi_covgs
-	cp -r rel/gene_covgs rel-high-af/gene_covgs
+rel-af20/total_covgs: rel/total_covgs
+	rm -f rel-af20/total_covgs
+	rm -rf rel-af20/roi_covgs
+	rm -rf rel-af20/gene_covgs
+	cp rel/total_covgs rel-af20/total_covgs
+	cp -r rel/roi_covgs rel-af20/roi_covgs
+	cp -r rel/gene_covgs rel-af20/gene_covgs
 
-rel-high-af-del/total_covgs: rel/total_covgs
-	rm -f rel-high-af-del/total_covgs
-	rm -rf rel-high-af-del/roi_covgs
-	rm -rf rel-high-af-del/gene_covgs
-	cp rel/total_covgs rel-high-af-del/total_covgs
-	cp -r rel/roi_covgs rel-high-af-del/roi_covgs
-	cp -r rel/gene_covgs rel-high-af-del/gene_covgs
+rel-af20-del/total_covgs: rel/total_covgs
+	rm -f rel-af20-del/total_covgs
+	rm -rf rel-af20-del/roi_covgs
+	rm -rf rel-af20-del/gene_covgs
+	cp rel/total_covgs rel-af20-del/total_covgs
+	cp -r rel/roi_covgs rel-af20-del/roi_covgs
+	cp -r rel/gene_covgs rel-af20-del/gene_covgs
 
 #-----------------------------------------------------------------------
 # GENOME MUSIC CALC-BMR
@@ -206,39 +206,39 @@ rel/gene_mrs: rel/total_covgs rel/wig-list.tsv rel/rem_rel.maf ~/generic/data/hg
 		--reference-sequence ~/generic/data/hg19/ucsc.hg19.nochr.fasta \
 		--roi-file ucsc-genes.hg19.roi
 
-dia-high-af/gene_mrs: dia-high-af/total_covgs dia/wig-list.tsv dia-high-af/rem_dia.maf ~/generic/data/hg19/ucsc.hg19.nochr.fasta ucsc-genes.hg19.roi
-	rm -f dia-high-af/overall_bmrs
+dia-af20/gene_mrs: dia-af20/total_covgs dia/wig-list.tsv dia-af20/rem_dia.maf ~/generic/data/hg19/ucsc.hg19.nochr.fasta ucsc-genes.hg19.roi
+	rm -f dia-af20/overall_bmrs
 	genome music bmr calc-bmr \
 		--bam-list dia/wig-list.tsv \
-		--maf-file dia-high-af/rem_dia.maf \
-		--output-dir dia-high-af/ \
+		--maf-file dia-af20/rem_dia.maf \
+		--output-dir dia-af20/ \
 		--reference-sequence ~/generic/data/hg19/ucsc.hg19.nochr.fasta \
 		--roi-file ucsc-genes.hg19.roi
 
-dia-high-af-del/gene_mrs: dia-high-af-del/total_covgs dia/wig-list.tsv dia-high-af-del/rem_dia.maf ~/generic/data/hg19/ucsc.hg19.nochr.fasta ucsc-genes.hg19.roi
-	rm -f dia-high-af-del/overall_bmrs
+dia-af20-del/gene_mrs: dia-af20-del/total_covgs dia/wig-list.tsv dia-af20-del/rem_dia.maf ~/generic/data/hg19/ucsc.hg19.nochr.fasta ucsc-genes.hg19.roi
+	rm -f dia-af20-del/overall_bmrs
 	genome music bmr calc-bmr \
 		--bam-list dia/wig-list.tsv \
-		--maf-file dia-high-af-del/rem_dia.maf \
-		--output-dir dia-high-af-del/ \
+		--maf-file dia-af20-del/rem_dia.maf \
+		--output-dir dia-af20-del/ \
 		--reference-sequence ~/generic/data/hg19/ucsc.hg19.nochr.fasta \
 		--roi-file ucsc-genes.hg19.roi
 
-rel-high-af/gene_mrs: rel-high-af/total_covgs rel/wig-list.tsv rel-high-af/rem_rel.maf ~/generic/data/hg19/ucsc.hg19.nochr.fasta ucsc-genes.hg19.roi
-	rm -f rel-high-af/overall_bmrs
+rel-af20/gene_mrs: rel-af20/total_covgs rel/wig-list.tsv rel-af20/rem_rel.maf ~/generic/data/hg19/ucsc.hg19.nochr.fasta ucsc-genes.hg19.roi
+	rm -f rel-af20/overall_bmrs
 	genome music bmr calc-bmr \
 		--bam-list rel/wig-list.tsv \
-		--maf-file rel-high-af/rem_rel.maf \
-		--output-dir rel-high-af/ \
+		--maf-file rel-af20/rem_rel.maf \
+		--output-dir rel-af20/ \
 		--reference-sequence ~/generic/data/hg19/ucsc.hg19.nochr.fasta \
 		--roi-file ucsc-genes.hg19.roi
 
-rel-high-af-del/gene_mrs: rel-high-af-del/total_covgs rel/wig-list.tsv rel-high-af-del/rem_rel.maf ~/generic/data/hg19/ucsc.hg19.nochr.fasta ucsc-genes.hg19.roi
-	rm -f rel-high-af-del/overall_bmrs
+rel-af20-del/gene_mrs: rel-af20-del/total_covgs rel/wig-list.tsv rel-af20-del/rem_rel.maf ~/generic/data/hg19/ucsc.hg19.nochr.fasta ucsc-genes.hg19.roi
+	rm -f rel-af20-del/overall_bmrs
 	genome music bmr calc-bmr \
 		--bam-list rel/wig-list.tsv \
-		--maf-file rel-high-af-del/rem_rel.maf \
-		--output-dir rel-high-af-del/ \
+		--maf-file rel-af20-del/rem_rel.maf \
+		--output-dir rel-af20-del/ \
 		--reference-sequence ~/generic/data/hg19/ucsc.hg19.nochr.fasta \
 		--roi-file ucsc-genes.hg19.roi
 
@@ -276,29 +276,29 @@ rel/smg.tsv: rel/gene_mrs
 		--output-file rel/smg.tsv.part
 	mv rel/smg.tsv.part rel/smg.tsv
 
-dia-high-af/smg.tsv: dia-high-af/gene_mrs
+dia-af20/smg.tsv: dia-af20/gene_mrs
 	genome music smg \
-		--gene-mr-file dia-high-af/gene_mrs \
-		--output-file dia-high-af/smg.tsv.part
-	mv dia-high-af/smg.tsv.part dia-high-af/smg.tsv
+		--gene-mr-file dia-af20/gene_mrs \
+		--output-file dia-af20/smg.tsv.part
+	mv dia-af20/smg.tsv.part dia-af20/smg.tsv
 
-dia-high-af-del/smg.tsv: dia-high-af-del/gene_mrs
+dia-af20-del/smg.tsv: dia-af20-del/gene_mrs
 	genome music smg \
-		--gene-mr-file dia-high-af-del/gene_mrs \
-		--output-file dia-high-af-del/smg.tsv.part
-	mv dia-high-af-del/smg.tsv.part dia-high-af-del/smg.tsv
+		--gene-mr-file dia-af20-del/gene_mrs \
+		--output-file dia-af20-del/smg.tsv.part
+	mv dia-af20-del/smg.tsv.part dia-af20-del/smg.tsv
 
-rel-high-af/smg.tsv: rel-high-af/gene_mrs
+rel-af20/smg.tsv: rel-af20/gene_mrs
 	genome music smg \
-		--gene-mr-file rel-high-af/gene_mrs \
-		--output-file rel-high-af/smg.tsv.part
-	mv rel-high-af/smg.tsv.part rel-high-af/smg.tsv
+		--gene-mr-file rel-af20/gene_mrs \
+		--output-file rel-af20/smg.tsv.part
+	mv rel-af20/smg.tsv.part rel-af20/smg.tsv
 
-rel-high-af-del/smg.tsv: rel-high-af-del/gene_mrs
+rel-af20-del/smg.tsv: rel-af20-del/gene_mrs
 	genome music smg \
-		--gene-mr-file rel-high-af-del/gene_mrs \
-		--output-file rel-high-af-del/smg.tsv.part
-	mv rel-high-af-del/smg.tsv.part rel-high-af-del/smg.tsv
+		--gene-mr-file rel-af20-del/gene_mrs \
+		--output-file rel-af20-del/smg.tsv.part
+	mv rel-af20-del/smg.tsv.part rel-af20-del/smg.tsv
 
 #-----------------------------------------------------------------------
 #--- GENOME MUSIC PATH-SCAN (using only high allelic frequency variants)
@@ -378,44 +378,44 @@ pathscan/pathways-kegg-biocarta-bbid-reactome.tsv: pathscan/pathways-david-compl
 	grep "REACTOME_" pathscan/gene-sets.mutsigdb4.0.tsv >> pathscan/pathways-kegg-biocarta-bbid-reactome.tsv
 
 # NOTE: only exclude likely false positives from Lawrence et al. (2013)
-pathscan/sm_pathways.dia.all.raw.tsv: dia-high-af/smg.tsv pathscan/pathways-all.sizefiltered.tsv dia-high-af/rem_dia.maf
+pathscan/sm_pathways.dia.all.raw.tsv: dia-af20/smg.tsv pathscan/pathways-all.sizefiltered.tsv dia-af20/rem_dia.maf
 	genome music path-scan \
 		--bam-list dia/wig-list.tsv \
-		--gene-covg-dir dia-high-af/gene_covgs/ \
-		--maf-file dia-high-af/rem_dia.maf \
+		--gene-covg-dir dia-af20/gene_covgs/ \
+		--maf-file dia-af20/rem_dia.maf \
 		--output-file pathscan/sm_pathways.dia.all.raw.tsv.part \
 		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
 		--genes-to-ignore MESP2,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1,PDZD7
 	mv pathscan/sm_pathways.dia.all.raw.tsv.part pathscan/sm_pathways.dia.all.raw.tsv
 	mv pathscan/sm_pathways.dia.all.raw.tsv.part_detailed pathscan/sm_pathways.dia.all.raw.tsv_detailed
 
-pathscan/sm_pathways.dia.all.del.raw.tsv: dia-high-af-del/smg.tsv pathscan/pathways-all.sizefiltered.tsv dia-high-af-del/rem_dia.maf
+pathscan/sm_pathways.dia.all.del.raw.tsv: dia-af20-del/smg.tsv pathscan/pathways-all.sizefiltered.tsv dia-af20-del/rem_dia.maf
 	genome music path-scan \
 		--bam-list dia/wig-list.tsv \
-		--gene-covg-dir dia-high-af-del/gene_covgs/ \
-		--maf-file dia-high-af-del/rem_dia.maf \
+		--gene-covg-dir dia-af20-del/gene_covgs/ \
+		--maf-file dia-af20-del/rem_dia.maf \
 		--output-file pathscan/sm_pathways.dia.all.del.raw.tsv.part \
 		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
 		--genes-to-ignore MESP2,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1,PDZD7
 	mv pathscan/sm_pathways.dia.all.del.raw.tsv.part pathscan/sm_pathways.dia.all.del.raw.tsv
 	mv pathscan/sm_pathways.dia.all.del.raw.tsv.part_detailed pathscan/sm_pathways.dia.all.del.raw.tsv_detailed
 
-pathscan/sm_pathways.rel.all.raw.tsv: rel-high-af/smg.tsv pathscan/pathways-all.sizefiltered.tsv rel-high-af/rem_rel.maf
+pathscan/sm_pathways.rel.all.raw.tsv: rel-af20/smg.tsv pathscan/pathways-all.sizefiltered.tsv rel-af20/rem_rel.maf
 	genome music path-scan \
 		--bam-list rel/wig-list.tsv \
-		--gene-covg-dir rel-high-af/gene_covgs/ \
-		--maf-file rel-high-af/rem_rel.maf \
+		--gene-covg-dir rel-af20/gene_covgs/ \
+		--maf-file rel-af20/rem_rel.maf \
 		--output-file pathscan/sm_pathways.rel.all.raw.tsv.part \
 		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
 		--genes-to-ignore MESP2,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1,PDZD7
 	mv pathscan/sm_pathways.rel.all.raw.tsv.part pathscan/sm_pathways.rel.all.raw.tsv
 	mv pathscan/sm_pathways.rel.all.raw.tsv.part_detailed pathscan/sm_pathways.rel.all.raw.tsv_detailed
 
-pathscan/sm_pathways.rel.all.del.raw.tsv: rel-high-af-del/smg.tsv pathscan/pathways-all.sizefiltered.tsv rel-high-af-del/rem_rel.maf
+pathscan/sm_pathways.rel.all.del.raw.tsv: rel-af20-del/smg.tsv pathscan/pathways-all.sizefiltered.tsv rel-af20-del/rem_rel.maf
 	genome music path-scan \
 		--bam-list rel/wig-list.tsv \
-		--gene-covg-dir rel-high-af-del/gene_covgs/ \
-		--maf-file rel-high-af-del/rem_rel.maf \
+		--gene-covg-dir rel-af20-del/gene_covgs/ \
+		--maf-file rel-af20-del/rem_rel.maf \
 		--output-file pathscan/sm_pathways.rel.all.del.raw.tsv.part \
 		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
 		--genes-to-ignore MESP2,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1,PDZD7
@@ -423,44 +423,44 @@ pathscan/sm_pathways.rel.all.del.raw.tsv: rel-high-af-del/smg.tsv pathscan/pathw
 	mv pathscan/sm_pathways.rel.all.del.raw.tsv.part_detailed pathscan/sm_pathways.rel.all.del.raw.tsv_detailed
 
 # NOTE: consider also CNV data from arrays
-pathscan/sm_pathways.dia.all.cnv.raw.tsv: dia-high-af/smg.tsv pathscan/pathways-all.sizefiltered.tsv dia-high-af/rem_dia.cnv.maf
+pathscan/sm_pathways.dia.all.cnv.raw.tsv: dia-af20/smg.tsv pathscan/pathways-all.sizefiltered.tsv dia-af20/rem_dia.cnv.maf
 	genome music path-scan \
 		--bam-list dia/wig-list.tsv \
-		--gene-covg-dir dia-high-af/gene_covgs/ \
-		--maf-file dia-high-af/rem_dia.cnv.maf \
+		--gene-covg-dir dia-af20/gene_covgs/ \
+		--maf-file dia-af20/rem_dia.cnv.maf \
 		--output-file pathscan/sm_pathways.dia.all.cnv.raw.tsv.part \
 		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
 		--genes-to-ignore MESP2,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1,PDZD7
 	mv pathscan/sm_pathways.dia.all.cnv.raw.tsv.part pathscan/sm_pathways.dia.all.cnv.raw.tsv
 	mv pathscan/sm_pathways.dia.all.cnv.raw.tsv.part_detailed pathscan/sm_pathways.dia.all.cnv.raw.tsv_detailed
 
-pathscan/sm_pathways.dia.all.cnv.del.raw.tsv: dia-high-af-del/smg.tsv pathscan/pathways-all.sizefiltered.tsv dia-high-af-del/rem_dia.cnv.maf
+pathscan/sm_pathways.dia.all.cnv.del.raw.tsv: dia-af20-del/smg.tsv pathscan/pathways-all.sizefiltered.tsv dia-af20-del/rem_dia.cnv.maf
 	genome music path-scan \
 		--bam-list dia/wig-list.tsv \
-		--gene-covg-dir dia-high-af-del/gene_covgs/ \
-		--maf-file dia-high-af-del/rem_dia.cnv.maf \
+		--gene-covg-dir dia-af20-del/gene_covgs/ \
+		--maf-file dia-af20-del/rem_dia.cnv.maf \
 		--output-file pathscan/sm_pathways.dia.all.cnv.del.raw.tsv.part \
 		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
 		--genes-to-ignore MESP2,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1,PDZD7
 	mv pathscan/sm_pathways.dia.all.cnv.del.raw.tsv.part pathscan/sm_pathways.dia.all.cnv.del.raw.tsv
 	mv pathscan/sm_pathways.dia.all.cnv.del.raw.tsv.part_detailed pathscan/sm_pathways.dia.all.cnv.del.raw.tsv_detailed
 
-pathscan/sm_pathways.rel.all.cnv.raw.tsv: rel-high-af/smg.tsv pathscan/pathways-all.sizefiltered.tsv rel-high-af/rem_rel.cnv.maf
+pathscan/sm_pathways.rel.all.cnv.raw.tsv: rel-af20/smg.tsv pathscan/pathways-all.sizefiltered.tsv rel-af20/rem_rel.cnv.maf
 	genome music path-scan \
 		--bam-list rel/wig-list.tsv \
-		--gene-covg-dir rel-high-af/gene_covgs/ \
-		--maf-file rel-high-af/rem_rel.cnv.maf \
+		--gene-covg-dir rel-af20/gene_covgs/ \
+		--maf-file rel-af20/rem_rel.cnv.maf \
 		--output-file pathscan/sm_pathways.rel.all.cnv.raw.tsv.part \
 		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
 		--genes-to-ignore MESP2,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1,PDZD7
 	mv pathscan/sm_pathways.rel.all.cnv.raw.tsv.part pathscan/sm_pathways.rel.all.cnv.raw.tsv
 	mv pathscan/sm_pathways.rel.all.cnv.raw.tsv.part_detailed pathscan/sm_pathways.rel.all.cnv.raw.tsv_detailed
 
-pathscan/sm_pathways.rel.all.cnv.del.raw.tsv: rel-high-af-del/smg.tsv pathscan/pathways-all.sizefiltered.tsv rel-high-af-del/rem_rel.cnv.maf
+pathscan/sm_pathways.rel.all.cnv.del.raw.tsv: rel-af20-del/smg.tsv pathscan/pathways-all.sizefiltered.tsv rel-af20-del/rem_rel.cnv.maf
 	genome music path-scan \
 		--bam-list rel/wig-list.tsv \
-		--gene-covg-dir rel-high-af-del/gene_covgs/ \
-		--maf-file rel-high-af-del/rem_rel.cnv.maf \
+		--gene-covg-dir rel-af20-del/gene_covgs/ \
+		--maf-file rel-af20-del/rem_rel.cnv.maf \
 		--output-file pathscan/sm_pathways.rel.all.cnv.del.raw.tsv.part \
 		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
 		--genes-to-ignore MESP2,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1,PDZD7
@@ -468,22 +468,22 @@ pathscan/sm_pathways.rel.all.cnv.del.raw.tsv: rel-high-af-del/smg.tsv pathscan/p
 	mv pathscan/sm_pathways.rel.all.cnv.del.raw.tsv.part_detailed pathscan/sm_pathways.rel.all.cnv.del.raw.tsv_detailed
 
 # NOTE: exclude KRAS,NRAS
-pathscan/sm_pathways.dia.noRAS.raw.tsv: dia-high-af-del/smg.tsv pathscan/pathways-all.sizefiltered.tsv dia-high-af-del/rem_dia.maf
+pathscan/sm_pathways.dia.noRAS.raw.tsv: dia-af20-del/smg.tsv pathscan/pathways-all.sizefiltered.tsv dia-af20-del/rem_dia.maf
 	genome music path-scan \
 		--bam-list dia/wig-list.tsv \
-		--gene-covg-dir dia-high-af-del/gene_covgs/ \
-		--maf-file dia-high-af-del/rem_dia.maf \
+		--gene-covg-dir dia-af20-del/gene_covgs/ \
+		--maf-file dia-af20-del/rem_dia.maf \
 		--output-file pathscan/sm_pathways.dia.noRAS.raw.tsv.part \
 		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
 		--genes-to-ignore MESP2,KRAS,NRAS,PTPN11,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1,PDZD7
 	mv pathscan/sm_pathways.dia.noRAS.raw.tsv.part pathscan/sm_pathways.dia.noRAS.raw.tsv
 	mv pathscan/sm_pathways.dia.noRAS.raw.tsv.part_detailed pathscan/sm_pathways.dia.noRAS.raw.tsv_detailed
 
-pathscan/sm_pathways.rel.noRAS.raw.tsv: rel-high-af-del/smg.tsv pathscan/pathways-all.sizefiltered.tsv rel-high-af-del/rem_rel.maf
+pathscan/sm_pathways.rel.noRAS.raw.tsv: rel-af20-del/smg.tsv pathscan/pathways-all.sizefiltered.tsv rel-af20-del/rem_rel.maf
 	genome music path-scan \
 		--bam-list rel/wig-list.tsv \
-		--gene-covg-dir rel-high-af-del/gene_covgs/ \
-		--maf-file rel-high-af-del/rem_rel.maf \
+		--gene-covg-dir rel-af20-del/gene_covgs/ \
+		--maf-file rel-af20-del/rem_rel.maf \
 		--output-file pathscan/sm_pathways.rel.noRAS.raw.tsv.part \
 		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
 		--genes-to-ignore MESP2,KRAS,NRAS,PTPN11,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1,PDZD7
@@ -491,22 +491,22 @@ pathscan/sm_pathways.rel.noRAS.raw.tsv: rel-high-af-del/smg.tsv pathscan/pathway
 	mv pathscan/sm_pathways.rel.noRAS.raw.tsv.part_detailed pathscan/sm_pathways.rel.noRAS.raw.tsv_detailed
 
 # NOTE: exclude CREBBP
-pathscan/sm_pathways.dia.noCREBBP.raw.tsv: dia-high-af-del/smg.tsv pathscan/pathways-all.sizefiltered.tsv dia-high-af-del/rem_dia.maf
+pathscan/sm_pathways.dia.noCREBBP.raw.tsv: dia-af20-del/smg.tsv pathscan/pathways-all.sizefiltered.tsv dia-af20-del/rem_dia.maf
 	genome music path-scan \
 		--bam-list dia/wig-list.tsv \
-		--gene-covg-dir dia-high-af-del/gene_covgs/ \
-		--maf-file dia-high-af-del/rem_dia.maf \
+		--gene-covg-dir dia-af20-del/gene_covgs/ \
+		--maf-file dia-af20-del/rem_dia.maf \
 		--output-file pathscan/sm_pathways.dia.noCREBBP.raw.tsv.part \
 		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
 		--genes-to-ignore MESP2,CREBBP,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1,PDZD7
 	mv pathscan/sm_pathways.dia.noCREBBP.raw.tsv.part pathscan/sm_pathways.dia.noCREBBP.raw.tsv
 	mv pathscan/sm_pathways.dia.noCREBBP.raw.tsv.part_detailed pathscan/sm_pathways.dia.noCREBBP.raw.tsv_detailed
 
-pathscan/sm_pathways.rel.noCREBBP.raw.tsv: rel-high-af-del/smg.tsv pathscan/pathways-all.sizefiltered.tsv rel-high-af-del/rem_rel.maf
+pathscan/sm_pathways.rel.noCREBBP.raw.tsv: rel-af20-del/smg.tsv pathscan/pathways-all.sizefiltered.tsv rel-af20-del/rem_rel.maf
 	genome music path-scan \
 		--bam-list rel/wig-list.tsv \
-		--gene-covg-dir rel-high-af-del/gene_covgs/ \
-		--maf-file rel-high-af-del/rem_rel.maf \
+		--gene-covg-dir rel-af20-del/gene_covgs/ \
+		--maf-file rel-af20-del/rem_rel.maf \
 		--output-file pathscan/sm_pathways.rel.noCREBBP.raw.tsv.part \
 		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
 		--genes-to-ignore MESP2,CREBBP,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1,PDZD7
@@ -514,22 +514,22 @@ pathscan/sm_pathways.rel.noCREBBP.raw.tsv: rel-high-af-del/smg.tsv pathscan/path
 	mv pathscan/sm_pathways.rel.noCREBBP.raw.tsv.part_detailed pathscan/sm_pathways.rel.noCREBBP.raw.tsv_detailed
 
 # NOTE: exclude KRAS,NRAS,CREBBP
-pathscan/sm_pathways.dia.noRAS.noCREBBP.raw.tsv: dia-high-af-del/smg.tsv pathscan/pathways-all.sizefiltered.tsv dia-high-af-del/rem_dia.maf
+pathscan/sm_pathways.dia.noRAS.noCREBBP.raw.tsv: dia-af20-del/smg.tsv pathscan/pathways-all.sizefiltered.tsv dia-af20-del/rem_dia.maf
 	genome music path-scan \
 		--bam-list dia/wig-list.tsv \
-		--gene-covg-dir dia-high-af-del/gene_covgs/ \
-		--maf-file dia-high-af-del/rem_dia.maf \
+		--gene-covg-dir dia-af20-del/gene_covgs/ \
+		--maf-file dia-af20-del/rem_dia.maf \
 		--output-file pathscan/sm_pathways.dia.noRAS.noCREBBP.raw.tsv.part \
 		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
 		--genes-to-ignore MESP2,KRAS,NRAS,PTPN11,CREBBP,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1,PDZD7
 	mv pathscan/sm_pathways.dia.noRAS.noCREBBP.raw.tsv.part pathscan/sm_pathways.dia.noRAS.noCREBBP.raw.tsv
 	mv pathscan/sm_pathways.dia.noRAS.noCREBBP.raw.tsv.part_detailed pathscan/sm_pathways.dia.noRAS.noCREBBP.raw.tsv_detailed
 
-pathscan/sm_pathways.rel.noRAS.noCREBBP.raw.tsv: rel-high-af-del/smg.tsv pathscan/pathways-all.sizefiltered.tsv rel-high-af-del/rem_rel.maf
+pathscan/sm_pathways.rel.noRAS.noCREBBP.raw.tsv: rel-af20-del/smg.tsv pathscan/pathways-all.sizefiltered.tsv rel-af20-del/rem_rel.maf
 	genome music path-scan \
 		--bam-list rel/wig-list.tsv \
-		--gene-covg-dir rel-high-af-del/gene_covgs/ \
-		--maf-file rel-high-af-del/rem_rel.maf \
+		--gene-covg-dir rel-af20-del/gene_covgs/ \
+		--maf-file rel-af20-del/rem_rel.maf \
 		--output-file pathscan/sm_pathways.rel.noRAS.noCREBBP.raw.tsv.part \
 		--pathway-file pathscan/pathways-all.sizefiltered.tsv \
 		--genes-to-ignore MESP2,KRAS,NRAS,PTPN11,CREBBP,TTN,TBP,CSMD3,DNAH5,RYR1,RYR2,RYR3,DNAH1,DNAH8,DNAH9,MUC2,MUC16,MUC12,MUC5B,OR5H2,OR5H2,OR11H4,OR6F1,OR52R1,OR2T12,OR6V1,OR51I2,OR5I1,OR9Q1,OR9Q1,PDZD7
@@ -541,7 +541,7 @@ pathscan/sm_pathways.dia.%.annotated.tsv: pathscan/sm_pathways.dia.%.raw.tsv ~/h
 		--pathway-file pathscan/pathways-all.tsv \
 		--sm-pathways pathscan/sm_pathways.dia.$*.raw.tsv \
 		--sm-pathways-detail pathscan/sm_pathways.dia.$*.raw.tsv_detailed \
-		--maf-file dia-high-af/rem_dia.cnv.maf \
+		--maf-file dia-af20/rem_dia.cnv.maf \
 		> pathscan/sm_pathways.dia.$*.annotated.tsv.part
 	mv pathscan/sm_pathways.dia.$*.annotated.tsv.part pathscan/sm_pathways.dia.$*.annotated.tsv
 
@@ -550,7 +550,7 @@ pathscan/sm_pathways.rel.%.annotated.tsv: pathscan/sm_pathways.rel.%.raw.tsv ~/h
 		--pathway-file pathscan/pathways-all.tsv \
 		--sm-pathways pathscan/sm_pathways.rel.$*.raw.tsv \
 		--sm-pathways-detail pathscan/sm_pathways.rel.$*.raw.tsv_detailed \
-		--maf-file rel-high-af/rem_rel.cnv.maf \
+		--maf-file rel-af20/rem_rel.cnv.maf \
 		> pathscan/sm_pathways.rel.$*.annotated.tsv.part
 	mv pathscan/sm_pathways.rel.$*.annotated.tsv.part pathscan/sm_pathways.rel.$*.annotated.tsv
 
@@ -582,7 +582,7 @@ pathscan/sm_pathways.dia+rel.all.tsv: pathscan/sm_pathways.dia.all.annotated.tsv
 		--args pathscan/sm_pathways.dia.all.annotated.tsv pathscan/sm_pathways.rel.all.annotated.tsv \
 		2>&1 1>pathscan/sm_pathways.dia+rel.all.tsv.part | tee -a make.log
 	R --no-save --quiet --slave -f ~/hdall/scripts/pathway-analysis/cluster-pathways.R \
-		--args pathscan/sm_pathways.dia+rel.all.tsv.part pathscan/sm_pathways.dia+rel.all.clustered.tsv.part 13 1e-7 \
+		--args pathscan/sm_pathways.dia+rel.all.tsv.part pathscan/sm_pathways.dia+rel.all.clustered.tsv.part 1e-7 \
 		2>&1 | tee -a make.log
 	mv pathscan/sm_pathways.dia+rel.all.clustered.tsv.part pathscan/sm_pathways.dia+rel.all.tsv
 	rm pathscan/sm_pathways.dia+rel.all.tsv.part
@@ -592,7 +592,7 @@ pathscan/sm_pathways.dia+rel.all.del.tsv: pathscan/sm_pathways.dia.all.del.annot
 		--args pathscan/sm_pathways.dia.all.del.annotated.tsv pathscan/sm_pathways.rel.all.del.annotated.tsv \
 		2>&1 1>$@.part | tee -a make.log
 	R --no-save --quiet --slave -f ~/hdall/scripts/pathway-analysis/cluster-pathways.R \
-		--args $@.part pathscan/sm_pathways.dia+rel.all.del.clustered.tsv.part 13 1e-7 \
+		--args $@.part pathscan/sm_pathways.dia+rel.all.del.clustered.tsv.part 1e-7 \
 		2>&1 | tee -a make.log
 	mv pathscan/sm_pathways.dia+rel.all.del.clustered.tsv.part $@
 	rm $@.part
@@ -602,7 +602,7 @@ pathscan/sm_pathways.dia+rel.noRAS.noCREBBP.tsv: pathscan/sm_pathways.dia.noRAS.
 		--args pathscan/sm_pathways.dia.noRAS.noCREBBP.annotated.tsv pathscan/sm_pathways.rel.noRAS.noCREBBP.annotated.tsv \
 		2>&1 1>$@.part | tee -a make.log
 	R --no-save --quiet --slave -f ~/hdall/scripts/pathway-analysis/cluster-pathways.R \
-		--args $@.part pathscan/sm_pathways.dia+rel.noRAS.noCREBBP.clustered.tsv.part 13 1e-7 \
+		--args $@.part pathscan/sm_pathways.dia+rel.noRAS.noCREBBP.clustered.tsv.part 1e-7 \
 		2>&1 | tee -a make.log
 	mv pathscan/sm_pathways.dia+rel.noRAS.noCREBBP.clustered.tsv.part $@
 	rm $@.part
@@ -617,7 +617,7 @@ pathscan/sm_pathways.dia+rel.noRAS.noCREBBP.tsv: pathscan/sm_pathways.dia.noRAS.
 	mv ../pathway-patient-matrix.tsv.part ../pathway-patient-matrix.tsv
 	# TABLE: pathway-patient-matrix
 	R --no-save --quiet --slave -f ~/hdall/scripts/pathway-analysis/cluster-pathways.R \
-		--args ../pathway-patient-matrix.tsv ../pathway-patient-matrix.all.clustered.tsv.part 27 1e-7 \
+		--args ../pathway-patient-matrix.tsv ../pathway-patient-matrix.all.clustered.tsv.part 1e-7 \
 		2>&1 | tee -a make.log
 	mv ../pathway-patient-matrix.all.clustered.tsv.part ../pathway-patient-matrix.all.clustered.tsv
 
@@ -674,11 +674,11 @@ dia/mutation-relation.tsv: ../gene-patient-matrix.tsv dia/wig-list.tsv dia/rem_d
 #		--args pathscan/gene-pathway-matrix.tsv pathscan/gene-pathway-matrix.clustered.tsv \
 #		2>&1 | tee -a make.log
 
-../gene-patient-matrix.annotated.tsv: ../gene-patient-matrix.tsv dia-high-af/smg.tsv rel-high-af/smg.tsv pathscan/sm_pathways.dia.all.annotated.tsv pathscan/sm_pathways.rel.all.annotated.tsv ../cnv/impacted-genes-list.cnv.tsv pathscan/sm_pathways.rel.all.matrix.clustered.tsv ../freq-rel-ns-curated.tsv ~/hdall/scripts/annotate-gene-patient-matrix.pl
+../gene-patient-matrix.annotated.tsv: ../gene-patient-matrix.tsv dia-af20/smg.tsv rel-af20/smg.tsv pathscan/sm_pathways.dia.all.annotated.tsv pathscan/sm_pathways.rel.all.annotated.tsv ../cnv/impacted-genes-list.cnv.tsv pathscan/sm_pathways.rel.all.matrix.clustered.tsv ../freq-rel-ns-curated.tsv ~/hdall/scripts/annotate-gene-patient-matrix.pl
 	perl ~/hdall/scripts/annotate-gene-patient-matrix.pl \
 		--gene-patient-matrix ../gene-patient-matrix.tsv \
-		--smg-dia dia-high-af/smg.tsv \
-		--smg-rel rel-high-af/smg.tsv \
+		--smg-dia dia-af20/smg.tsv \
+		--smg-rel rel-af20/smg.tsv \
 		--smp-dia pathscan/sm_pathways.dia.all.annotated.tsv \
 		--smp-rel pathscan/sm_pathways.rel.all.annotated.tsv \
 		--cnv ../cnv/impacted-genes-list.cnv.tsv \
@@ -690,11 +690,11 @@ dia/mutation-relation.tsv: ../gene-patient-matrix.tsv dia/wig-list.tsv dia/rem_d
 		2>&1 1>../gene-patient-matrix.annotated.tsv.part | tee -a make.log
 	mv ../gene-patient-matrix.annotated.tsv.part ../gene-patient-matrix.annotated.tsv	
 	
-../gene-patient-matrix.high-af.annotated.tsv: ../gene-patient-matrix.high-af.tsv dia-high-af/smg.tsv rel-high-af/smg.tsv pathscan/sm_pathways.dia.noRAS.noCREBBP.annotated.tsv pathscan/sm_pathways.rel.noRAS.noCREBBP.annotated.tsv ../cnv/impacted-genes-list.cnv.tsv pathscan/sm_pathways.rel.noRAS.noCREBBP.matrix.clustered.tsv ~/hdall/scripts/annotate-gene-patient-matrix.pl
+../gene-patient-matrix.af20.annotated.tsv: ../gene-patient-matrix.af20.tsv dia-af20/smg.tsv rel-af20/smg.tsv pathscan/sm_pathways.dia.noRAS.noCREBBP.annotated.tsv pathscan/sm_pathways.rel.noRAS.noCREBBP.annotated.tsv ../cnv/impacted-genes-list.cnv.tsv pathscan/sm_pathways.rel.noRAS.noCREBBP.matrix.clustered.tsv ~/hdall/scripts/annotate-gene-patient-matrix.pl
 	perl ~/hdall/scripts/annotate-gene-patient-matrix.pl \
-		--gene-patient-matrix ../gene-patient-matrix.high-af.tsv \
-		--smg-dia dia-high-af-del/smg.tsv \
-		--smg-rel rel-high-af-del/smg.tsv \
+		--gene-patient-matrix ../gene-patient-matrix.af20.tsv \
+		--smg-dia dia-af20-del/smg.tsv \
+		--smg-rel rel-af20-del/smg.tsv \
 		--smp-dia pathscan/sm_pathways.dia.noRAS.noCREBBP.annotated.tsv \
 		--smp-rel pathscan/sm_pathways.rel.noRAS.noCREBBP.annotated.tsv \
 		--cnv ../cnv/impacted-genes-list.cnv.tsv \
@@ -702,5 +702,5 @@ dia/mutation-relation.tsv: ../gene-patient-matrix.tsv dia/wig-list.tsv dia/rem_d
 		--panel-genes ../panel-genes.tsv \
 		--max-p-value 1e-5 \
 		--max-pathway-size 400 \
-		2>&1 1>../gene-patient-matrix.high-af.annotated.tsv.part | tee -a make.log
-	mv ../gene-patient-matrix.high-af.annotated.tsv.part ../gene-patient-matrix.high-af.annotated.tsv
+		2>&1 1>../gene-patient-matrix.af20.annotated.tsv.part | tee -a make.log
+	mv ../gene-patient-matrix.af20.annotated.tsv.part ../gene-patient-matrix.af20.annotated.tsv

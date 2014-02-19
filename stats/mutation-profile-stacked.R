@@ -1,18 +1,21 @@
 library("RColorBrewer")
 warnings()
 
-patients <- c("1021247", "446", "818", "A", "592", "430", "792", "786", "B", "460", "545", "715", "X", "E", "Y", "842", "C", "D", "399", "314") 
+rm(list=ls())
+
+patients <- c("1021247", "446", "818", "A", "592", "430", "792", "786", "B", "460", "545", "715", "X", "Y", "842", "C", "D", "399", "314") 
 #patients <- c("314", "399") 
 
 # TABLE: filtered-variants.tsv
 t <- read.delim("filtered-variants.tsv", stringsAsFactors=F)
-t <- t[t$status != "REJECT",]
+t <- t[t$status != "REJECT" & t$var_type == "snp",]
 min.af <- 0.10
 max.af <- 1.00
 min.dp.leu <- 10
 min.dp.rem <- 10
 color <- "Set1"
 
+df <- data.frame(patient=character(), mutation=character(), freq.dia=numeric(), freq.rel=numeric(), stringsAsFactors=F)
 m.dia <- matrix(rep(0, 6*length(patients)), nrow=length(patients))
 colnames(m.dia) <- c("A>G", "C>T", "G>T", "A>C", "G>C", "A>T")
 rownames(m.dia) <- patients
@@ -20,7 +23,8 @@ m.rel <- m.dia
 
 # per patient
 
-pdf("stats/mutation-profile-stacked.pdf", width=15)
+#pdf("stats/mutation-profile-stacked.pdf", width=15)
+png("stats/mutation-profile-stacked.png")
 
 #layout(matrix(c(seq(1:20),rep(21,5)), ncol=5, byrow=T), heights=c(rep(0.23, 4), 0.08))
 #par(mar=c(2.0, 2.5, 3, 0))
@@ -44,6 +48,13 @@ for(p in patients) {
 	m.rel[p,5] <- nrow(trel[(trel$ref=="G" & trel$alt=="C")|(trel$ref=="C" & trel$alt=="G"),])
 	m.rel[p,6] <- nrow(trel[(trel$ref=="A" & trel$alt=="T")|(trel$ref=="T" & trel$alt=="A"),])
 	m.rel[p,] <- m.rel[p,]/sum(m.rel[p,])
+
+	df[nrow(df)+1,] <- c(p, "A>G", m.dia[p,1], m.rel[p,1])
+	df[nrow(df)+1,] <- c(p, "C>T", m.dia[p,2], m.rel[p,2])
+	df[nrow(df)+1,] <- c(p, "G>T", m.dia[p,3], m.rel[p,3])
+	df[nrow(df)+1,] <- c(p, "A>C", m.dia[p,4], m.rel[p,4])
+	df[nrow(df)+1,] <- c(p, "G>C", m.dia[p,5], m.rel[p,5])
+	df[nrow(df)+1,] <- c(p, "A>T", m.dia[p,6], m.rel[p,6])
 }
 
 layout(matrix(c(1,2,3,3), nrow = 2), widths = c(0.8, 0.2))
@@ -55,7 +66,7 @@ par(mar=c(0, 0, 4, 0))
 plot(0:1, 0:1, type="n", axes=F, ann=F)
 legend("topleft", rev(colnames(m.dia)), fill=rev(brewer.pal(6, color)))
 
-#write.table(df, file="stats/mutation-profile.data.af10.tsv", col.names=NA, row.names=T, sep="\t", quote=F)
+write.table(df, file="stats/mutation-profile.data.af10.tsv", col.names=T, row.names=F, sep="\t", quote=F)
 
 #par(xpd=TRUE, mai=c(0,0,0,0))
 #plot.new()

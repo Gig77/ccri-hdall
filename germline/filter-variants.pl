@@ -62,7 +62,7 @@ if ($header)
 	print "both_strands_leu\t";
 	print "pval_leu\t";
 	print "aa_change\t";
-	print "effect\t";
+	print "effect_long\t";
 	print "Polyphen2\t";
 	print "SIFT\t";
 	print "GERP++\t";
@@ -274,7 +274,7 @@ while (my $line = $vcf->next_line())
 	my $pval_rem = $x->{INFO}{'GPV'};
 			
 	##FORMAT=<ID=DP4,Number=1,Type=String,Description="Strand read counts: ref/fwd, ref/rev, var/fwd, var/rev">
-	my ($ref_fwd_tum, $ref_rev_tum, $var_fwd_tum, $var_rev_tum) = split(",", $x->{gtypes}{$tum_sample}{DP4});
+	my ($ref_fwd_tum, $ref_rev_tum, $var_fwd_tum, $var_rev_tum) = split(",", $x->{gtypes}{$tum_sample}{DP4});		
 	my ($ref_fwd_rem, $ref_rev_rem, $var_fwd_rem, $var_rev_rem) = split(",", $x->{gtypes}{$rem_sample}{DP4});
 	
 	my $both_strands_tum = ($var_fwd_tum and $var_rev_tum);
@@ -282,6 +282,7 @@ while (my $line = $vcf->next_line())
 
 	next if ($var_fwd_tum < 2 || $var_rev_tum < 2);
 	next if ($dp_rem < 10);
+	next if (!$both_strands_rem or !$both_strands_tum);
 
 	my (@repeats, @dups, @blacklist, @retro, @rem_samples, %evss, @clinvars);
 	my ($chr, $pos) = ($x->{CHROM}, $x->{POS});
@@ -441,13 +442,15 @@ while (my $line = $vcf->next_line())
 	my $reject = 0;
 	my @reject_because;
 
-	if ($variant_stati{$x->{INFO}{'SS'}} eq "SOMATIC") { $reject = 1; push(@reject_because, "somatic"); }
+	#if ($variant_stati{$x->{INFO}{'SS'}} eq "SOMATIC") { $reject = 1; push(@reject_because, "somatic"); }
 	if (@repeats > 0) { $reject = 1; push(@reject_because, "repetitive region"); };
 	if (@dups > 0) { $reject = 1; push(@reject_because, "segmental duplication"); };
 	if (@blacklist > 0) { $reject = 1; push(@reject_because, "blacklisted region"); };
 	#if (@retro > 0) { $reject = 1; push(@reject_because, "retrotransposon"); }
 	#if (@rem_samples > 1) { $reject = 1; push(@reject_because, "present remissions"); }
-	if ($x->{ID} and $x->{ID} ne ".")  { $num_dbsnp ++; };  
+	if ($x->{ID} and $x->{ID} ne ".")  { $num_dbsnp ++; };
+	
+	next if ($reject);  
 
 	my $polyphen = $x->{INFO}{'dbNSFP_Polyphen2_HVAR_pred'};
 	my $sift = $x->{INFO}{'dbNSFP_SIFT_score'};

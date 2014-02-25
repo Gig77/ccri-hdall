@@ -1,6 +1,6 @@
 #library("RColorBrewer")
 
-data <- read.csv("~/hdall/results/reseq/filtered-variants.cosmic.normaf.tsv", sep="\t")
+data <- read.csv("~/hdall/results/filtered-variants.cosmic.normaf.tsv", sep="\t")
 data <- data[data$status!="REJECT",]
 
 #patients <- c("A")

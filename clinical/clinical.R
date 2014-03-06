@@ -1,13 +1,19 @@
+options(warn=1)
 library(gridExtra)
+library(vcd)
+library(survival)
 
 rm(list=ls())
+source("~/hdall/scripts/clinical/test_pairwise.R")
+
 set.seed(22)
 
 patients_exome <- c("314", "399", "430", "446", "460", "545", "715", "786", "792", "818", "842", "A", "B", "C", "D", "X", "Y", "1021247", "592")
 patients_rel_only <- c("1017005", "1021865", "1023545", "AD15", "BL16", "BM18", "CA18", "DM1", "FE1", "FS1", "GD18", "GD1", "HJ15", "HJA15", "HL1", "KA17", "KJ17", "KL16", "LB17", "LM18", "MJ1", "ML10", "MV16", "NS18", "PC16", "RT15", "RT16", "SJM16", "SKR1", "SL1", "SLM1", "ST14", "WA1", "ZE13")
 patients_dia_only <- c("1004564", "1010661", "1010781", "1019964", "1020076", "1021087", "1023338", "1023616", "1024589", "1026233", "1026662", "B100", "EF7", "FB14", "G44", "HD7")
+patients_non_rel <- c("331", "380", "442", "350", "461", "466", "529", "591", "602", "619", "633", "634", "642", "653", "666", "672", "697", "698", "700", "709", "724", "762", "776", "777", "779", "782", "409", "NRD_1", "73", "NRD_2", "NRD_3", "60", "594", "687", "748", "754", "646", "530", "718", "681", "39", "49", "45", "54", "110", "111", "134", "143", "147", "199", "NRD_4")
 
-c <- read.delim("~/hdall/results/clinical/clinical_data.tsv", na.strings=c("", "NA", "n/a", "n/d", " "))
+c <- read.delim("~/hdall/results/clinical/clinical_data.tsv", na.strings=c("", "NA", "n/a", "n/d", " ", "early (CNS)"))
 c <- c[!(c$patient_id %in% c("E", "RN14046", "1025678", "1021186")),]
 
 #----
@@ -16,55 +22,235 @@ c <- c[!(c$patient_id %in% c("E", "RN14046", "1025678", "1021186")),]
 
 c$age_dia <- as.numeric(c$age_dia)
 c$sex[c$sex!="m" & c$sex!="f"] <- NA
+c$source <- as.factor(as.character(c$source))
 c$sex <- as.factor(as.character(c$sex))
+c$blasts_dia <- as.numeric(as.character(c$blasts_dia))
+c$blasts_rel <- as.numeric(as.character(c$blasts_rel))
+c$first_rem_months <- as.numeric(as.character(c$first_rem_months))
+c$second_rem_months <- as.numeric(as.character(c$second_rem_months))
+c$age_rel <- c$age_dia+c$first_rem_months/12
 
-cr <- c[c$cohort=="relapsing",]
-cr$endpoint[cr$endpoint==""] <- NA
-cr$endpoint <- as.factor(as.character(cr$endpoint))
-cr$blasts_dia <- as.numeric(as.character(cr$blasts_dia))
-cr$blasts_rel <- as.numeric(as.character(cr$blasts_rel))
-cr$first_rem_months <- as.numeric(as.character(cr$first_rem_months))
-cr$second_rem_months <- as.numeric(as.character(cr$second_rem_months))
+#----
+# MERGE MUTATION DATA
+#----
 
 m <- read.delim("~/hdall/results/reseq/filtered-variants.reseq.cosmic.normaf.tsv")
-m <- m[m$status!="REJECT" & m$non_silent==T & m$freq_leu >= 0.1,]
+m <- m[m$status!="REJECT" & m$non_silent==T & m$freq_leu >= 0.05,]
 
 m.exome <- read.delim("~/hdall/results/filtered-variants.cosmic.normaf.tsv")
 m.exome <- m.exome[m.exome$status!="REJECT" & m.exome$freq_leu >= 0.1,]
 m.exome.ns <- m.exome[m.exome$non_silent==T,]
 
+m.nonrel <- read.delim("~/hdall/results/reseq/filtered-variants.reseq.nonrel.tsv")
+m.nonrel <- m.nonrel[m.nonrel$status!="REJECT" & m.nonrel$non_silent==T & m.nonrel$freq_leu >= 5,]
+m.nonrel$freq_leu = m.nonrel$freq_leu / 100 
+
+# TODO: determine number of RAS pathway hotspot mutations from own mutation caller plus FLT3 mutations from MuTect
+m.ras <- read.delim("~/hdall/results/ras-heterogeneity/ras.hotspots.tsv", stringsAsFactors=F)
+
+m.ras.flt3 <- m[m$sample=="rem_dia" & m$gene=="FLT3", c("patient", "sample", "gene", "chr", "pos", "ref", "alt", "dp_leu_var", "dp_leu_tot", "freq_leu")]
+m.ras.flt3[sapply(m.ras.flt3, is.factor)] <- lapply(m.ras.flt3[sapply(m.ras.flt3, is.factor)], as.character) # convert all factors in dataframe to characters
+m.ras.flt3$sample[m.ras.flt3$sample=="rem_dia"] <- "diagnosis"
+m.ras.flt3$sample[m.ras.flt3$sample=="rem_rel" | m.ras.flt3$sample=="rem_rel2"] <- "relapse"
+m.ras.flt3 <- data.frame(patient=m.ras.flt3[,1], cohort="relapsing", m.ras.flt3[,2:ncol(m.ras.flt3)], stringsAsFactors=F)
+names(m.ras.flt3) <- names(m.ras)
+m.ras <- rbind(m.ras, m.ras.flt3)
+
+m.ras.flt3.nr <- m.nonrel[m.nonrel$gene=="FLT3", c("patient", "gene", "chr", "pos", "ref", "alt", "dp_leu_var", "dp_leu_tot", "freq_leu")]
+m.ras.flt3.nr[sapply(m.ras.flt3.nr, is.factor)] <- lapply(m.ras.flt3.nr[sapply(m.ras.flt3.nr, is.factor)], as.character) # convert all factors in dataframe to characters
+m.ras.flt3.nr <- data.frame(patient=m.ras.flt3.nr[,1], cohort="non-relapsing", sample="diagnosis", m.ras.flt3.nr[,2:ncol(m.ras.flt3.nr)], stringsAsFactors=F)
+names(m.ras.flt3) <- names(m.ras)
+m.ras <- rbind(m.ras, m.ras.flt3)
+
+num.ras.dia <- aggregate(frequency~patient, data=m.ras[m.ras$sample=="diagnosis",], FUN=length)
+names(num.ras.dia) <- c("patient_id", "num.ras.dia")
+num.ras.rel <- aggregate(frequency~patient, data=m.ras[m.ras$sample=="relapse",], FUN=length)
+names(num.ras.rel) <- c("patient_id", "num.ras.rel")
+
 #----
 # ADD ATTRIBUTES TO CLINICAL TABLE
 #----
-cr$age_rel <- cr$age_dia+cr$first_rem_months/12
 
-cr$crebbp.dia <- ifelse(as.character(cr$patient_id) %in% patients_rel_only, NA, as.character(cr$patient_id) %in% as.character(m[m$gene=="CREBBP" & m$sample=="rem_dia", "patient"]))
-cr$crebbp.rel <- ifelse(as.character(cr$patient_id) %in% patients_dia_only, NA, as.character(cr$patient_id) %in% as.character(m[m$gene=="CREBBP" & (m$sample=="rem_rel" | m$sample=="rem_rel2"), "patient"]))
-cr$crebbp.all <- as.character(cr$patient_id) %in% as.character(m[m$gene=="CREBBP", "patient"])
+c$endpoint.death <- as.logical(ifelse(c$cohort=="non-relapsing", FALSE, c$endpoint=="2nd rel + death" | c$endpoint=="death"))
+c$endpoint.sec_rel <- as.logical(ifelse(c$cohort=="non-relapsing", FALSE, c$endpoint=="2nd rel" | c$endpoint=="2nd rel + death"))
+c$endpoint.sec_rel_or_death <- c$endpoint.death | c$endpoint.sec_rel
+c$total_rem_months <- ifelse(c$cohort=="non-relapsing", c$first_rem_months, c$first_rem_months + c$second_rem_months)
 
-cr$kras.dia <- ifelse(as.character(cr$patient_id) %in% patients_rel_only, NA, as.character(cr$patient_id) %in% as.character(m[m$gene=="KRAS" & m$sample=="rem_dia", "patient"]))
-cr$kras.rel <- ifelse(as.character(cr$patient_id) %in% patients_dia_only, NA, as.character(cr$patient_id) %in% as.character(m[m$gene=="KRAS" & (m$sample=="rem_rel" | m$sample=="rem_rel2"), "patient"]))
-cr$kras.all <- as.character(cr$patient_id) %in% as.character(m[m$gene=="KRAS", "patient"])
 
-cr$ras.dia <- ifelse(as.character(cr$patient_id) %in% patients_rel_only, NA, as.character(cr$patient_id) %in% as.character(m[(m$gene=="KRAS" | m$gene=="NRAS" | m$gene=="PTPN11" | m$gene=="FLT3") & m$sample=="rem_dia", "patient"]))
-cr$ras.rel <- ifelse(as.character(cr$patient_id) %in% patients_dia_only, NA, as.character(cr$patient_id) %in% as.character(m[(m$gene=="KRAS" | m$gene=="NRAS" | m$gene=="PTPN11" | m$gene=="FLT3") & (m$sample=="rem_rel" | m$sample=="rem_rel2"), "patient"]))
-cr$ras.all <- as.character(cr$patient_id) %in% as.character(m[m$gene=="KRAS" | m$gene=="NRAS" | m$gene=="PTPN11" | m$gene=="FLT3", "patient"])
+c$crebbp <- as.character(c$patient_id) %in% as.character(m[m$gene=="CREBBP", "patient"]) | as.character(c$patient_id) %in% as.character(m.nonrel[m.nonrel$gene=="CREBBP", "patient"])
+c$crebbp.relapsing <- ifelse(as.character(c$patient_id) %in% patients_non_rel, NA, c$crebbp)
+c$crebbp.relapsing.dia <- ifelse(as.character(c$patient_id) %in% c(patients_non_rel, patients_rel_only), NA, (as.character(c$patient_id) %in% as.character(m[m$gene=="CREBBP" & m$sample=="rem_dia", "patient"])))
+c$crebbp.relapsing.rel <- ifelse(as.character(c$patient_id) %in% c(patients_non_rel, patients_dia_only), NA, (as.character(c$patient_id) %in% as.character(m[m$gene=="CREBBP" & (m$sample=="rem_rel" | m$sample=="rem_rel2"), "patient"])))
+c$crebbp.nonrelapsing <- ifelse(as.character(c$patient_id) %in% patients_non_rel, c$crebbp, NA)
+c$crebbp.dia <- ifelse(as.character(c$patient_id) %in% c(patients_rel_only), NA, ifelse((!is.na(c$crebbp.nonrelapsing) & c$crebbp.nonrelapsing) | (!is.na(c$crebbp.relapsing.dia) & c$crebbp.relapsing.dia), TRUE, FALSE))
 
-cr$ras.crebbp.rel <- cr$crebbp.rel & cr$ras.rel
+# allelic frequency CREBBP at diagnosis
+af <- aggregate(freq_leu~patient, data=m[m$gene=="CREBBP" & m$sample=="rem_dia", c("patient", "freq_leu")], FUN=max)
+names(af) <- c("patient_id", "crebbp.relapsing.dia.af")
+c <- merge(c, af, all.x=T)
 
-cr$death <- as.factor(cr$endpoint=="2nd rel + death" | cr$endpoint=="death")
-cr$sec_rel <- as.factor(cr$endpoint=="2nd rel" | cr$endpoint=="2nd rel + death")
+# merge number of RAS pathway mutations
+c <- merge(c, num.ras.dia, all.x=T)
+c$num.ras.dia[is.na(c$num.ras.dia)] <- ifelse(as.character(c$patient_id[is.na(c$num.ras.dia)]) %in% c(patients_rel_only), NA, 0)
+c <- merge(c, num.ras.rel, all.x=T)
+c$num.ras.rel[is.na(c$num.ras.rel)] <- ifelse(as.character(c$patient_id[is.na(c$num.ras.rel)]) %in% c(patients_non_rel, patients_dia_only), NA, 0)
 
-cr$num.mut.dia <- ifelse(as.character(cr$patient_id) %in% patients_exome, sapply(c$patient_id, function(x) { sum(m.exome$patient==as.character(x) & m.exome$sample=="rem_dia") }), NA)
-cr$num.mut.rel <- ifelse(as.character(cr$patient_id) %in% patients_exome, sapply(c$patient_id, function(x) { sum(m.exome$patient==as.character(x) & m.exome$sample=="rem_rel") }), NA)
-cr$num.mut.dia.ns <- ifelse(as.character(cr$patient_id) %in% patients_exome, sapply(c$patient_id, function(x) { sum(m.exome.ns$patient==as.character(x) & m.exome.ns$sample=="rem_dia") }), NA)
-cr$num.mut.rel.ns <- ifelse(as.character(cr$patient_id) %in% patients_exome, sapply(c$patient_id, function(x) { sum(m.exome.ns$patient==as.character(x) & m.exome.ns$sample=="rem_rel") }), NA)
+# allelic frequency CREBBP at relapse
+af <- aggregate(freq_leu~patient, data=m[m$gene=="CREBBP" & (m$sample=="rem_rel" | m$sample=="rem_rel2"), c("patient", "freq_leu")], FUN=max)
+names(af) <- c("patient_id", "crebbp.relapsing.rel.af")
+c <- merge(c, af, all.x=T)
+
+c$kras <- as.character(c$patient_id) %in% as.character(m[m$gene=="KRAS", "patient"]) | as.character(c$patient_id) %in% as.character(m.nonrel[m.nonrel$gene=="KRAS", "patient"])
+c$kras.relapsing <- ifelse(as.character(c$patient_id) %in% patients_non_rel, NA, c$kras)
+c$kras.relapsing.dia <- ifelse(as.character(c$patient_id) %in% c(patients_non_rel, patients_rel_only), NA, (as.character(c$patient_id) %in% as.character(m[m$gene=="KRAS" & m$sample=="rem_dia", "patient"])))
+c$kras.relapsing.rel <- ifelse(as.character(c$patient_id) %in% c(patients_non_rel, patients_dia_only), NA, (as.character(c$patient_id) %in% as.character(m[m$gene=="KRAS" & (m$sample=="rem_rel" | m$sample=="rem_rel2"), "patient"])))
+c$kras.nonrelapsing <- ifelse(as.character(c$patient_id) %in% patients_non_rel, c$kras, NA)
+c$kras.dia <- ifelse(as.character(c$patient_id) %in% c(patients_rel_only), NA, ifelse((!is.na(c$kras.nonrelapsing) & c$kras.nonrelapsing) | (!is.na(c$kras.relapsing.dia) & c$kras.relapsing.dia), TRUE, FALSE))
+
+c$nras <- as.character(c$patient_id) %in% as.character(m[m$gene=="NRAS", "patient"]) | as.character(c$patient_id) %in% as.character(m.nonrel[m.nonrel$gene=="NRAS", "patient"])
+c$nras.relapsing <- ifelse(as.character(c$patient_id) %in% patients_non_rel, NA, c$nras)
+c$nras.relapsing.dia <- ifelse(as.character(c$patient_id) %in% c(patients_non_rel, patients_rel_only), NA, (as.character(c$patient_id) %in% as.character(m[m$gene=="NRAS" & m$sample=="rem_dia", "patient"])))
+c$nras.relapsing.rel <- ifelse(as.character(c$patient_id) %in% c(patients_non_rel, patients_dia_only), NA, (as.character(c$patient_id) %in% as.character(m[m$gene=="NRAS" & (m$sample=="rem_rel" | m$sample=="rem_rel2"), "patient"])))
+c$nras.nonrelapsing <- ifelse(as.character(c$patient_id) %in% patients_non_rel, c$nras, NA)
+c$nras.dia <- ifelse(as.character(c$patient_id) %in% c(patients_rel_only), NA, ifelse((!is.na(c$nras.nonrelapsing) & c$nras.nonrelapsing) | (!is.na(c$nras.relapsing.dia) & c$nras.relapsing.dia), TRUE, FALSE))
+
+c$ptpn11 <- as.character(c$patient_id) %in% as.character(m[m$gene=="PTPN11", "patient"]) | as.character(c$patient_id) %in% as.character(m.nonrel[m.nonrel$gene=="PTPN11", "patient"])
+c$ptpn11.relapsing <- ifelse(as.character(c$patient_id) %in% patients_non_rel, NA, c$ptpn11)
+c$ptpn11.relapsing.dia <- ifelse(as.character(c$patient_id) %in% c(patients_non_rel, patients_rel_only), NA, (as.character(c$patient_id) %in% as.character(m[m$gene=="PTPN11" & m$sample=="rem_dia", "patient"])))
+c$ptpn11.relapsing.rel <- ifelse(as.character(c$patient_id) %in% c(patients_non_rel, patients_dia_only), NA, (as.character(c$patient_id) %in% as.character(m[m$gene=="PTPN11" & (m$sample=="rem_rel" | m$sample=="rem_rel2"), "patient"])))
+c$ptpn11.nonrelapsing <- ifelse(as.character(c$patient_id) %in% patients_non_rel, c$ptpn11, NA)
+c$ptpn11.dia <- ifelse(as.character(c$patient_id) %in% c(patients_rel_only), NA, ifelse((!is.na(c$ptpn11.nonrelapsing) & c$ptpn11.nonrelapsing) | (!is.na(c$ptpn11.relapsing.dia) & c$ptpn11.relapsing.dia), TRUE, FALSE))
+
+#c$crebbp.dia <- ifelse(as.character(c$patient_id) %in% patients_rel_only, NA, (as.character(c$patient_id) %in% as.character(m[m$gene=="CREBBP" & m$sample=="rem_dia", "patient"])) | as.character(c$patient_id) %in% as.character(m.nonrel[m.nonrel$gene=="CREBBP", "patient"]))
+#c$crebbp.rel <- ifelse(as.character(c$patient_id) %in% patients_dia_only, NA, as.character(c$patient_id) %in% as.character(m[m$gene=="CREBBP" & (m$sample=="rem_rel" | m$sample=="rem_rel2"), "patient"]))
+#c$crebbp.all <- as.character(c$patient_id) %in% as.character(m[m$gene=="CREBBP", "patient"])
+
+c$ras <- as.character(c$patient_id) %in% as.character(m[m$gene %in% c("KRAS", "NRAS", "PTPN11", "FLT3"), "patient"]) | as.character(c$patient_id) %in% as.character(m.nonrel[m.nonrel$gene %in% c("KRAS", "NRAS", "PTPN11", "FLT3"), "patient"])
+c$ras.relapsing <- ifelse(as.character(c$patient_id) %in% patients_non_rel, NA, c$ras)
+c$ras.relapsing.dia <- ifelse(as.character(c$patient_id) %in% c(patients_non_rel, patients_rel_only), NA, (as.character(c$patient_id) %in% as.character(m[m$gene %in% c("KRAS", "NRAS", "PTPN11", "FLT3") & m$sample=="rem_dia", "patient"])))
+c$ras.relapsing.rel <- ifelse(as.character(c$patient_id) %in% c(patients_non_rel, patients_dia_only), NA, (as.character(c$patient_id) %in% as.character(m[m$gene %in% c("KRAS", "NRAS", "PTPN11", "FLT3") & (m$sample=="rem_rel" | m$sample=="rem_rel2"), "patient"])))
+c$ras.nonrelapsing <- ifelse(as.character(c$patient_id) %in% patients_non_rel, c$ras, NA)
+c$ras.dia <- ifelse(as.character(c$patient_id) %in% c(patients_rel_only), NA, ifelse((!is.na(c$ras.nonrelapsing) & c$ras.nonrelapsing) | (!is.na(c$ras.relapsing.dia) & c$ras.relapsing.dia), TRUE, FALSE))
+
+# allelic frequency RAS pathway mutation at diagnosis
+af <- aggregate(freq_leu~patient, data=m[m$gene %in% c("KRAS", "NRAS", "PTPN11", "FLT3") & m$sample=="rem_dia", c("patient", "freq_leu")], FUN=max)
+names(af) <- c("patient_id", "ras.relapsing.dia.af")
+c <- merge(c, af, all.x=T)
+
+# allelic frequency RAS pathway mutation at relapse
+af <- aggregate(freq_leu~patient, data=m[m$gene %in% c("KRAS", "NRAS", "PTPN11", "FLT3") & (m$sample=="rem_rel" | m$sample=="rem_rel2"), c("patient", "freq_leu")], FUN=max)
+names(af) <- c("patient_id", "ras.relapsing.rel.af")
+c <- merge(c, af, all.x=T)
+
+c$crebbp.and.ras.relapsing.dia <- c$crebbp.relapsing.dia & c$ras.relapsing.dia
+c$crebbp.and.ras.relapsing.rel <- c$crebbp.relapsing.rel & c$ras.relapsing.rel
+
+c$num.mut.dia <- ifelse(as.character(c$patient_id) %in% patients_exome, sapply(c$patient_id, function(x) { sum(m.exome$patient==as.character(x) & m.exome$sample=="rem_dia") }), NA)
+c$num.mut.rel <- ifelse(as.character(c$patient_id) %in% patients_exome, sapply(c$patient_id, function(x) { sum(m.exome$patient==as.character(x) & m.exome$sample=="rem_rel") }), NA)
+c$num.mut.dia.ns <- ifelse(as.character(c$patient_id) %in% patients_exome, sapply(c$patient_id, function(x) { sum(m.exome.ns$patient==as.character(x) & m.exome.ns$sample=="rem_dia") }), NA)
+c$num.mut.rel.ns <- ifelse(as.character(c$patient_id) %in% patients_exome, sapply(c$patient_id, function(x) { sum(m.exome.ns$patient==as.character(x) & m.exome.ns$sample=="rem_rel") }), NA)
+c$num.mut.rel.excl.patA <- ifelse(c$patient_id == "A", NA, c$num.mut.rel)
+c$num.mut.rel.ns.excl.patA <- ifelse(c$patient_id == "A", NA, c$num.mut.rel.ns)
+
+cr <- c[c$cohort=="relapsing",]
+
 
 #boxplot(first_rem_months ~ sex, data=cr, na.action=na.exclude, outline=F, names=c("female", "male"))
 #stripchart(first_rem_months ~ sex, data=cr, method="jitter", na.action=na.exclude, vertical=T, pch=19, col=c("red", "blue"), add=T)
 
 pdf("~/hdall/results/clinical/clinical.pdf")
+#test_pairwise_assoc(c, include=c("cohort", "num.ras.dia", "num.ras.rel"))
+tests <- test_pairwise_assoc(c, 
+		sig.level=0.05, 
+		exclude=c("patient_id", "exome", "panel", "mrd_level_rel", "rel_protocol", "BM.transplantation.date", "study_no_relapse", "patno_kiel_rem", "patno_berlin_rel", "X", "other.comments"),
+		exclude.group=list(c("crebbp", "crebbp.relapsing", "crebbp.relapsing.dia", "crebbp.relapsing.rel", "crebbp.nonrelapsing", "crebbp.dia", "crebbp.and.ras.relapsing.dia", "crebbp.and.ras.relapsing.rel"),
+				 		   c("kras", "kras.relapsing", "kras.relapsing.dia", "kras.relapsing.rel", "kras.nonrelapsing", "kras.dia", "ras", "ras.relapsing", "ras.relapsing.dia", "ras.relapsing.rel", "ras.nonrelapsing", "ras.dia", "crebbp.and.ras.relapsing.dia", "crebbp.and.ras.relapsing.rel", "num.ras.rel", "num.ras.dia"),
+						   c("nras", "nras.relapsing", "nras.relapsing.dia", "nras.relapsing.rel", "nras.nonrelapsing", "nras.dia", "ras", "ras.relapsing", "ras.relapsing.dia", "ras.relapsing.rel", "ras.nonrelapsing", "ras.dia", "crebbp.and.ras.relapsing.dia", "crebbp.and.ras.relapsing.rel", "num.ras.rel", "num.ras.dia"),
+						   c("ptpn11", "ptpn11.relapsing", "ptpn11.relapsing.dia", "ptpn11.relapsing.rel", "ptpn11.nonrelapsing", "ptpn11.dia", "ras", "ras.relapsing", "ras.relapsing.dia", "ras.relapsing.rel", "ras.nonrelapsing", "ras.dia", "crebbp.and.ras.relapsing.dia", "crebbp.and.ras.relapsing.rel", "num.ras.rel", "num.ras.dia"),
+						   c("num.mut.dia", "num.mut.dia.ns"),
+						   c("num.mut.rel", "num.mut.rel.ns", "num.mut.rel.excl.patA", "num.mut.rel.ns.excl.patA"),
+						   c("endpoint", "endpoint.death", "endpoint.sec_rel"))
+)
+dev.off()
 
+#------------------------
+# KAPLAN MAYER SURVIVAL PLOTS
+#------------------------
+
+pdf("~/hdall/results/clinical/kaplan.pdf")
+
+plot(survfit(Surv(time=c$second_rem_months, c$endpoint.death)~1), col=c("blue", "red"), xlab="2nd remission (months)", ylab="Survival probability", conf.int=F)
+
+plot(survfit(Surv(time=second_rem_months, endpoint.death)~kras.relapsing.rel, data=c), col=c("blue", "red"), xlab="2nd remission (months)", ylab="Survival probability", conf.int=F)
+legend(80, 1, c("wtKRAS rel", "mKRAS rel"), lwd=c(1,1), col=c("blue", "red"))
+
+plot(survfit(Surv(time=second_rem_months, endpoint.sec_rel_or_death)~kras.relapsing.rel, data=c), col=c("blue", "red"), xlab="2nd remission (months)", ylab="Event-free survival probability", conf.int=F)
+legend(80, 1, c("wtKRAS rel", "mKRAS rel"), lwd=c(1,1), col=c("blue", "red"))
+
+plot(survfit(Surv(time=second_rem_months, endpoint.death)~nras.relapsing.rel, data=c), col=c("blue", "red"), xlab="2nd remission (months)", ylab="Survival probability", conf.int=F)
+legend(80, 1, c("wtNRAS rel", "mNRAS rel"), lwd=c(1,1), col=c("blue", "red"))
+
+plot(survfit(Surv(time=second_rem_months, endpoint.sec_rel_or_death)~nras.relapsing.rel, data=c), col=c("blue", "red"), xlab="2nd remission (months)", ylab="Event-free survival probability", conf.int=F)
+legend(80, 1, c("wtNRAS rel", "mNRAS rel"), lwd=c(1,1), col=c("blue", "red"))
+
+plot(survfit(Surv(time=second_rem_months, endpoint.death)~ptpn11.relapsing.rel, data=c), col=c("blue", "red"), xlab="2nd remission (months)", ylab="Survival probability", conf.int=F)
+legend(80, 1, c("wtPTPN11 rel", "mPTPN11 rel"), lwd=c(1,1), col=c("blue", "red"))
+
+plot(survfit(Surv(time=second_rem_months, endpoint.sec_rel_or_death)~ptpn11.relapsing.rel, data=c), col=c("blue", "red"), xlab="2nd remission (months)", ylab="Event-free survival probability", conf.int=F)
+legend(80, 1, c("wtPTPN11 rel", "mPTPN11 rel"), lwd=c(1,1), col=c("blue", "red"))
+
+plot(survfit(Surv(time=second_rem_months, endpoint.death)~ras.relapsing.rel, data=c), col=c("blue", "red"), xlab="2nd remission (months)", ylab="Survival probability", conf.int=F)
+legend(80, 1, c("wtRAS rel", "mRAS rel"), lwd=c(1,1), col=c("blue", "red"))
+
+plot(survfit(Surv(time=second_rem_months, endpoint.sec_rel_or_death)~ras.relapsing.rel, data=c), col=c("blue", "red"), xlab="2nd remission (months)", ylab="Event-free survival probability", conf.int=F)
+legend(80, 1, c("wtRAS rel", "mRAS rel"), lwd=c(1,1), col=c("blue", "red"))
+
+plot(survfit(Surv(time=second_rem_months, endpoint.death)~crebbp.relapsing.rel, data=c), col=c("blue", "red"), xlab="2nd remission (months)", ylab="Survival probability", conf.int=F)
+legend(80, 1, c("wtCREBBP rel", "mCREBBP rel"), lwd=c(1,1), col=c("blue", "red"))
+
+plot(survfit(Surv(time=second_rem_months, endpoint.sec_rel_or_death)~crebbp.relapsing.rel, data=c), col=c("blue", "red"), xlab="2nd remission (months)", ylab="Event-free survival probability", conf.int=F)
+legend(80, 1, c("wtCREBBP rel", "mCREBBP rel"), lwd=c(1,1), col=c("blue", "red"))
+
+plot(survfit(Surv(time=c$total_rem_months, c$endpoint.death)~1), col=c("blue", "red"), xlab="total remission (months)", ylab="Survival probability", conf.int=F)
+
+plot(survfit(Surv(time=total_rem_months, endpoint.death)~kras.dia, data=c), col=c("blue", "red"), xlab="total remission (months)", ylab="Survival probability", conf.int=F)
+legend(170, 0.6, c("wtKRAS dia", "mKRAS dia"), lwd=c(1,1), col=c("blue", "red"))
+
+plot(survfit(Surv(time=total_rem_months, endpoint.sec_rel_or_death)~kras.dia, data=c), col=c("blue", "red"), xlab="total remission (months)", ylab="Event-free survival probability", conf.int=F)
+legend(170, 0.6, c("wtKRAS dia", "mKRAS dia"), lwd=c(1,1), col=c("blue", "red"))
+
+plot(survfit(Surv(time=total_rem_months, endpoint.death)~nras.dia, data=c), col=c("blue", "red"), xlab="total remission (months)", ylab="Survival probability", conf.int=F)
+legend(170, 0.6, c("wtNRAS dia", "mNRAS dia"), lwd=c(1,1), col=c("blue", "red"))
+
+plot(survfit(Surv(time=total_rem_months, endpoint.sec_rel_or_death)~nras.dia, data=c), col=c("blue", "red"), xlab="total remission (months)", ylab="Event-free survival probability", conf.int=F)
+legend(170, 0.6, c("wtNRAS dia", "mNRAS dia"), lwd=c(1,1), col=c("blue", "red"))
+
+plot(survfit(Surv(time=total_rem_months, endpoint.death)~ptpn11.dia, data=c), col=c("blue", "red"), xlab="total remission (months)", ylab="Survival probability", conf.int=F)
+legend(170, 0.6, c("wtPTPN11 dia", "mPTPN11 dia"), lwd=c(1,1), col=c("blue", "red"))
+
+plot(survfit(Surv(time=total_rem_months, endpoint.sec_rel_or_death)~ptpn11.dia, data=c), col=c("blue", "red"), xlab="total remission (months)", ylab="Event-free survival probability", conf.int=F)
+legend(170, 0.6, c("wtPTPN11 dia", "mPTPN11 dia"), lwd=c(1,1), col=c("blue", "red"))
+
+plot(survfit(Surv(time=total_rem_months, endpoint.death)~ras.dia, data=c), col=c("blue", "red"), xlab="total remission (months)", ylab="Survival probability", conf.int=F)
+legend(170, 0.6, c("wtRAS dia", "mRAS dia"), lwd=c(1,1), col=c("blue", "red"))
+
+plot(survfit(Surv(time=total_rem_months, endpoint.sec_rel_or_death)~ras.dia, data=c), col=c("blue", "red"), xlab="total remission (months)", ylab="Event-free survival probability", conf.int=F)
+legend(170, 0.6, c("wtRAS dia", "mRAS dia"), lwd=c(1,1), col=c("blue", "red"))
+
+plot(survfit(Surv(time=total_rem_months, endpoint.death)~crebbp.dia, data=c), col=c("blue", "red"), xlab="total remission (months)", ylab="Survival probability", conf.int=F)
+legend(170, 0.6, c("wtCREBBP dia", "mCREBBP dia"), lwd=c(1,1), col=c("blue", "red"))
+
+plot(survfit(Surv(time=total_rem_months, endpoint.sec_rel_or_death)~crebbp.dia, data=c), col=c("blue", "red"), xlab="total remission (months)", ylab="Event-free survival probability", conf.int=F)
+legend(170, 0.6, c("wtCREBBP dia", "mCREBBP dia"), lwd=c(1,1), col=c("blue", "red"))
+
+dev.off()
+
+stop("DONE")
+
+# KAPLAN MAYER CURVES
+# plot(survfit(Surv(first_rem_months)~sex, data=c), col=c("blue", "red"), xlab="1st remission (months)", ylab="sex", conf.int=F)
+# legend(80, 1, c("female", "male"), lwd=c(1,1), col=c("blue", "red"))
+# p <- survdiff(Surv(first_rem_months)~sex, data=c))  # don't know how this works yet
 #par(mfrow=c(3,3), mar=c(2.5,4,1.5,2))
 
 #----

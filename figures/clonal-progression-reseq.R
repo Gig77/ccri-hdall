@@ -6,7 +6,7 @@ min.cov <- 30
 cov.max.std.dev <- 2
 genes.to.label <- c("CREBBP", "KRAS", "NRAS", "FLT3", "PTPN11", "MLL2")
 exclude.chr <- c("chrX", "chrY")
-blast.count <- list("715.dia" = 92, "715.rel" = 92, "715.rel3" = "??", "545.dia" = 97, "545.rel" = 86, "Y.dia" = 98, "Y.rel" = 95, "592.dia" = 94, "592.rel" = 98)
+blast.count <- list("715.dia" = 92, "715.rel" = 92, "715.rel3" = "92", "545.dia" = 97, "545.rel" = 86, "Y.dia" = 98, "Y.rel" = 95, "592.dia" = 94, "592.rel" = 98)
 
 # exome seq variants
 data <- read.csv("~/hdall/results/filtered-variants.cosmic.normaf.tsv", sep="\t")

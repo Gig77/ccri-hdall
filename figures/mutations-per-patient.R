@@ -35,5 +35,5 @@ png("~/hdall/results/figures/mutation-per-patient.png", res=50)
 bardata <- bardata[order(rowSums(bardata)),]
 barplot(t(bardata), beside=FALSE, col=brewer.pal(6, "Set2"), las=2, main="Exonic mutations per patient")
 #plot(0:1, 0:1, type="n", axes=F, ann=F)
-legend(x=1, y=400, rev(colnames(bardata)), fill=rev(brewer.pal(3, "Set2")))
+legend(x=1, y=140, rev(colnames(bardata)), fill=rev(brewer.pal(3, "Set2")))
 dev.off()

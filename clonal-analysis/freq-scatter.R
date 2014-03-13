@@ -11,7 +11,7 @@ t <- read.csv("~/hdall/results/filtered-variants.cosmic.normaf.tsv", sep="\t", s
 t <- t[t$status != "REJECT",]
 
 pdf("~/hdall/results/clonal-analysis/freq-scatter.pdf", width=12, paper='A4r')
-par(mfrow=c(4,5), mar=c(2,1,2,1))
+par(mfrow=c(4,5), mar=c(2,1,2,1), oma=c(2,3,0,0))
 for(p in patients) {
 	freqd <- t[t$patient==p & t$sample=="rem_dia", c("chr", "pos", "freq_leu")]
 	colnames(freqd)[3] = "freq_dia"
@@ -23,6 +23,8 @@ for(p in patients) {
 	smoothScatter(merged$freq_dia, merged$freq_rel, nbin=100, bandwidth=0.01, xlim=c(0,1), ylim=c(0,1), main=paste(p, " (n=", length(merged$freq_dia), ")", sep=""))
 	#plot(merged$freq_dia, merged$freq_rel, col="#00000033", xlim=c(0,1), ylim=c(0,1), main=paste(p, " (n=", length(merged$freq_dia), ")", sep=""))
 }
+mtext("AF diagnosis", side=1, outer=T, cex=1, line=1)
+mtext("AF relapse", side=2, outer=T, cex=1, line=1)
 dev.off()
 
 patients <- c("314", "399", "430", "446", "460", "545", "592", "715", "818", "B", "C") 

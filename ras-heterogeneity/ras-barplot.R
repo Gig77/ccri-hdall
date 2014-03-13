@@ -5,85 +5,170 @@ library(grid)
 rm(list=ls())
 
 # assign colors to mutations
-cols <- c("KRAS:chr12:25378561:G>A" = brewer.pal(9, "YlOrRd")[2],
-		"KRAS:chr12:25378562:C>T" = brewer.pal(9, "YlOrRd")[3], 
-		"KRAS:chr12:25378562:C>A" = brewer.pal(9, "YlOrRd")[3], 
-		"KRAS:chr12:25378562:C>G" = brewer.pal(9, "YlOrRd")[3], 
-		"KRAS:chr12:25380275:T>A" = brewer.pal(9, "YlOrRd")[4],
-	    "KRAS:chr12:25380275:T>G" = brewer.pal(9, "YlOrRd")[4],
-		"KRAS:chr12:25398281:C>T" = brewer.pal(9, "YlOrRd")[5],
-		"KRAS:chr12:25398282:C>A" = brewer.pal(9, "YlOrRd")[5],
-		"KRAS:chr12:25398284:C>T" = brewer.pal(9, "YlOrRd")[6],
-		"KRAS:chr12:25398284:C>A" = brewer.pal(9, "YlOrRd")[6],
-		"KRAS:chr12:25398284:C>G" = brewer.pal(9, "YlOrRd")[6],
-		"KRAS:chr12:25398285:C>T" = brewer.pal(9, "YlOrRd")[7],
-		"KRAS:chr12:25398285:C>A" = brewer.pal(9, "YlOrRd")[7],
-		"NRAS:chr1:115256528:T>A" = brewer.pal(9, "Blues")[2],
-		"NRAS:chr1:115256528:T>G" = brewer.pal(9, "Blues")[2],
-		"NRAS:chr1:115256529:T>C" = brewer.pal(9, "Blues")[3],
-		"NRAS:chr1:115256530:G>T" = brewer.pal(9, "Blues")[4],
-		"NRAS:chr1:115258744:C>T" = brewer.pal(9, "Blues")[5],
-		"NRAS:chr1:115258744:C>A" = brewer.pal(9, "Blues")[5],
-		"NRAS:chr1:115258745:C>G" = brewer.pal(9, "Blues")[6],
-		"NRAS:chr1:115258745:C>A" = brewer.pal(9, "Blues")[6],
-		"NRAS:chr1:115258747:C>T" = brewer.pal(9, "Blues")[7],
-		"NRAS:chr1:115258747:C>G" = brewer.pal(9, "Blues")[7],
-		"NRAS:chr1:115258747:C>A" = brewer.pal(9, "Blues")[7],
-		"NRAS:chr1:115258748:C>A" = brewer.pal(9, "Blues")[8],
-		"NRAS:chr1:115258748:C>T" = brewer.pal(9, "Blues")[8],
-		"PTPN11:chr12:112888163:G>T" = brewer.pal(9, "RdPu")[2],
-		"PTPN11:chr12:112888163:G>C" = brewer.pal(9, "RdPu")[2],
-		"PTPN11:chr12:112888165:G>T" = brewer.pal(9, "RdPu")[3],
-		"PTPN11:chr12:112888166:A>G" = brewer.pal(9, "RdPu")[3],
-		"PTPN11:chr12:112888189:G>A" = brewer.pal(9, "RdPu")[4],
-		"PTPN11:chr12:112888198:G>A" = brewer.pal(9, "RdPu")[4],
-		"PTPN11:chr12:112888198:G>T" = brewer.pal(9, "RdPu")[4],
-		"PTPN11:chr12:112888199:C>A" = brewer.pal(9, "RdPu")[4],
-		"PTPN11:chr12:112888199:C>T" = brewer.pal(9, "RdPu")[4],
-		"PTPN11:chr12:112888210:G>A" = brewer.pal(9, "RdPu")[5],
-		"PTPN11:chr12:112888211:A>G" = brewer.pal(9, "RdPu")[5],
-		"PTPN11:chr12:112888211:A>T" = brewer.pal(9, "RdPu")[5],
-		"PTPN11:chr12:112915524:A>G" = brewer.pal(9, "RdPu")[6],
-		"PTPN11:chr12:112926884:T>C" = brewer.pal(9, "RdPu")[7],
-		"PTPN11:chr12:112926884:T>A" = brewer.pal(9, "RdPu")[7],
-		"PTPN11:chr12:112926884:T>G" = brewer.pal(9, "RdPu")[7],
-		"PTPN11:chr12:112926888:G>T" = brewer.pal(9, "RdPu")[8],
-		"PTPN11:chr12:112926888:G>C" = brewer.pal(9, "RdPu")[8],
-		"PTPN11:chr12:112926909:A>T" = brewer.pal(9, "RdPu")[9],
-		"FLT3:chr13:28592634:CATG>C" = "black",
-		"FLT3:chr13:28592640:A>T" = "black",
-		"FLT3:chr13:28592640:A>T" = "black",
-		"FLT3:chr13:28592641:T>A" = "black",
-		"FLT3:chr13:28592642:C>A" = "black",
-		"FLT3:chr13:28592642:C>G" = "black",
-		"FLT3:chr13:28597522:C>T" = "black",
-		"FLT3:chr13:28592621:A>G" = "black",
-		"FLT3:chr13:28592623:T>G" = "black",
-		"FLT3:chr13:28608341:T>C" = "black",
-		"FLT3:chr13:28608312:T>G" = "black",
-		"FLT3:chr13:28592623:T>G" = "black",   
-		"FLT3:chr13:28592617:A>T" = "black",
-		"FLT3:chr13:28602329:G>A" = "black",
-		"FLT3:chr13:28602340:G>T" = "black",  
-		"FLT3:chr13:28602378:T>C" = "black",  
-		"FLT3:chr13:28608098:T>A" = "black",   
-		"FLT3:chr13:28592641:T>A" = "black",
-		"FLT3:chr13:28592623:T>G" = "black",   
-		"FLT3:chr13:28602329:G>A" = "black",
-		"FLT3:chr13:28608285:A>C" = "black",
-		"FLT3:chr13:28608341:T>C" = "black",
-		"FLT3:chr13:28589780:A>C" = "black",
-		"FLT3:chr13:28608329:A>T" = "black",
-		"FLT3:chr13:28610138:G>A" = "black",
-		"FLT3:chr13:28602380:T>C" = "black",
-		"FLT3:chr13:28608275:A>G" = "black",
-		"FLT3:chr13:28608320:A>C" = "black",
-		"FLT3:chr13:28608449:T>C" = "black",
-		"FLT3:chr13:28622527:A>G" = "black",
-		"FLT3:chr13:28626716:C>T" = "black",
-		"FLT3:chr13:28592717:T>C" = "black",
-		"FLT3:chr13:28608291:A>C" = "black")
+#cols <- c("KRAS:chr12:25378561:G>A" = brewer.pal(9, "YlOrRd")[2],
+#		"KRAS:chr12:25378562:C>T" = brewer.pal(9, "YlOrRd")[3], 
+#		"KRAS:chr12:25378562:C>A" = brewer.pal(9, "YlOrRd")[3], 
+#		"KRAS:chr12:25378562:C>G" = brewer.pal(9, "YlOrRd")[3], 
+#		"KRAS:chr12:25380275:T>A" = brewer.pal(9, "YlOrRd")[4],
+#	    "KRAS:chr12:25380275:T>G" = brewer.pal(9, "YlOrRd")[4],
+#		"KRAS:chr12:25398281:C>T" = brewer.pal(9, "YlOrRd")[5],
+#		"KRAS:chr12:25398282:C>A" = brewer.pal(9, "YlOrRd")[5],
+#		"KRAS:chr12:25398284:C>T" = brewer.pal(9, "YlOrRd")[6],
+#		"KRAS:chr12:25398284:C>A" = brewer.pal(9, "YlOrRd")[6],
+#		"KRAS:chr12:25398284:C>G" = brewer.pal(9, "YlOrRd")[6],
+#		"KRAS:chr12:25398285:C>T" = brewer.pal(9, "YlOrRd")[7],
+#		"KRAS:chr12:25398285:C>A" = brewer.pal(9, "YlOrRd")[7],
+#		"NRAS:chr1:115256528:T>A" = brewer.pal(9, "Blues")[2],
+#		"NRAS:chr1:115256528:T>G" = brewer.pal(9, "Blues")[2],
+#		"NRAS:chr1:115256529:T>C" = brewer.pal(9, "Blues")[3],
+#		"NRAS:chr1:115256530:G>T" = brewer.pal(9, "Blues")[4],
+#		"NRAS:chr1:115258744:C>T" = brewer.pal(9, "Blues")[5],
+#		"NRAS:chr1:115258744:C>A" = brewer.pal(9, "Blues")[5],
+#		"NRAS:chr1:115258745:C>G" = brewer.pal(9, "Blues")[6],
+#		"NRAS:chr1:115258745:C>A" = brewer.pal(9, "Blues")[6],
+#		"NRAS:chr1:115258747:C>T" = brewer.pal(9, "Blues")[7],
+#		"NRAS:chr1:115258747:C>G" = brewer.pal(9, "Blues")[7],
+#		"NRAS:chr1:115258747:C>A" = brewer.pal(9, "Blues")[7],
+#		"NRAS:chr1:115258748:C>A" = brewer.pal(9, "Blues")[8],
+#		"NRAS:chr1:115258748:C>T" = brewer.pal(9, "Blues")[8],
+#		"PTPN11:chr12:112888163:G>T" = brewer.pal(9, "RdPu")[2],
+#		"PTPN11:chr12:112888163:G>C" = brewer.pal(9, "RdPu")[2],
+#		"PTPN11:chr12:112888165:G>T" = brewer.pal(9, "RdPu")[3],
+#		"PTPN11:chr12:112888166:A>G" = brewer.pal(9, "RdPu")[3],
+#		"PTPN11:chr12:112888189:G>A" = brewer.pal(9, "RdPu")[4],
+#		"PTPN11:chr12:112888198:G>A" = brewer.pal(9, "RdPu")[4],
+#		"PTPN11:chr12:112888198:G>T" = brewer.pal(9, "RdPu")[4],
+#		"PTPN11:chr12:112888199:C>A" = brewer.pal(9, "RdPu")[4],
+#		"PTPN11:chr12:112888199:C>T" = brewer.pal(9, "RdPu")[4],
+#		"PTPN11:chr12:112888210:G>A" = brewer.pal(9, "RdPu")[5],
+#		"PTPN11:chr12:112888211:A>G" = brewer.pal(9, "RdPu")[5],
+#		"PTPN11:chr12:112888211:A>T" = brewer.pal(9, "RdPu")[5],
+#		"PTPN11:chr12:112915524:A>G" = brewer.pal(9, "RdPu")[6],
+#		"PTPN11:chr12:112926884:T>C" = brewer.pal(9, "RdPu")[7],
+#		"PTPN11:chr12:112926884:T>A" = brewer.pal(9, "RdPu")[7],
+#		"PTPN11:chr12:112926884:T>G" = brewer.pal(9, "RdPu")[7],
+#		"PTPN11:chr12:112926888:G>T" = brewer.pal(9, "RdPu")[8],
+#		"PTPN11:chr12:112926888:G>C" = brewer.pal(9, "RdPu")[8],
+#		"PTPN11:chr12:112926909:A>T" = brewer.pal(9, "RdPu")[9],
+#		"FLT3:chr13:28592634:CATG>C" = "black",
+#		"FLT3:chr13:28592640:A>T" = "black",
+#		"FLT3:chr13:28592640:A>T" = "black",
+#		"FLT3:chr13:28592641:T>A" = "black",
+#		"FLT3:chr13:28592642:C>A" = "black",
+#		"FLT3:chr13:28592642:C>G" = "black",
+#		"FLT3:chr13:28597522:C>T" = "black",
+#		"FLT3:chr13:28592621:A>G" = "black",
+#		"FLT3:chr13:28592623:T>G" = "black",
+#		"FLT3:chr13:28608341:T>C" = "black",
+#		"FLT3:chr13:28608312:T>G" = "black",
+#		"FLT3:chr13:28592623:T>G" = "black",   
+#		"FLT3:chr13:28592617:A>T" = "black",
+#		"FLT3:chr13:28602329:G>A" = "black",
+#		"FLT3:chr13:28602340:G>T" = "black",  
+#		"FLT3:chr13:28602378:T>C" = "black",  
+#		"FLT3:chr13:28608098:T>A" = "black",   
+#		"FLT3:chr13:28592641:T>A" = "black",
+#		"FLT3:chr13:28592623:T>G" = "black",   
+#		"FLT3:chr13:28602329:G>A" = "black",
+#		"FLT3:chr13:28608285:A>C" = "black",
+#		"FLT3:chr13:28608341:T>C" = "black",
+#		"FLT3:chr13:28589780:A>C" = "black",
+#		"FLT3:chr13:28608329:A>T" = "black",
+#		"FLT3:chr13:28610138:G>A" = "black",
+#		"FLT3:chr13:28602380:T>C" = "black",
+#		"FLT3:chr13:28608275:A>G" = "black",
+#		"FLT3:chr13:28608320:A>C" = "black",
+#		"FLT3:chr13:28608449:T>C" = "black",
+#		"FLT3:chr13:28622527:A>G" = "black",
+#		"FLT3:chr13:28626716:C>T" = "black",
+#		"FLT3:chr13:28592717:T>C" = "black",
+#		"FLT3:chr13:28608291:A>C" = "black")
 
+cols <- c("KRAS:chr12:25378561:G>A" = brewer.pal(8, "Accent")[1],
+				"KRAS:chr12:25378562:C>T" = brewer.pal(8, "Accent")[1], 
+				"KRAS:chr12:25378562:C>A" = brewer.pal(8, "Accent")[1], 
+				"KRAS:chr12:25378562:C>G" = brewer.pal(8, "Accent")[1], 
+				"KRAS:chr12:25380275:T>A" = brewer.pal(8, "Accent")[1],
+				"KRAS:chr12:25380275:T>G" = brewer.pal(8, "Accent")[1],
+				"KRAS:chr12:25398281:C>T" = brewer.pal(8, "Accent")[1],
+				"KRAS:chr12:25398282:C>A" = brewer.pal(8, "Accent")[1],
+				"KRAS:chr12:25398284:C>T" = brewer.pal(8, "Accent")[1],
+				"KRAS:chr12:25398284:C>A" = brewer.pal(8, "Accent")[1],
+				"KRAS:chr12:25398284:C>G" = brewer.pal(8, "Accent")[1],
+				"KRAS:chr12:25398285:C>T" = brewer.pal(8, "Accent")[1],
+				"KRAS:chr12:25398285:C>A" = brewer.pal(8, "Accent")[1],
+				
+				"NRAS:chr1:115256528:T>A" = brewer.pal(8, "Accent")[2],
+				"NRAS:chr1:115256528:T>G" = brewer.pal(8, "Accent")[2],
+				"NRAS:chr1:115256529:T>C" = brewer.pal(8, "Accent")[2],
+				"NRAS:chr1:115256530:G>T" = brewer.pal(8, "Accent")[2],
+				"NRAS:chr1:115258744:C>T" = brewer.pal(8, "Accent")[2],
+				"NRAS:chr1:115258744:C>A" = brewer.pal(8, "Accent")[2],
+				"NRAS:chr1:115258745:C>G" = brewer.pal(8, "Accent")[2],
+				"NRAS:chr1:115258745:C>A" = brewer.pal(8, "Accent")[2],
+				"NRAS:chr1:115258747:C>T" = brewer.pal(8, "Accent")[2],
+				"NRAS:chr1:115258747:C>G" = brewer.pal(8, "Accent")[2],
+				"NRAS:chr1:115258747:C>A" = brewer.pal(8, "Accent")[2],
+				"NRAS:chr1:115258748:C>A" = brewer.pal(8, "Accent")[2],
+				"NRAS:chr1:115258748:C>T" = brewer.pal(8, "Accent")[2],
+				
+				"PTPN11:chr12:112888163:G>T" = brewer.pal(8, "Accent")[5],
+				"PTPN11:chr12:112888163:G>C" = brewer.pal(8, "Accent")[5],
+				"PTPN11:chr12:112888165:G>T" = brewer.pal(8, "Accent")[5],
+				"PTPN11:chr12:112888166:A>G" = brewer.pal(8, "Accent")[5],
+				"PTPN11:chr12:112888189:G>A" = brewer.pal(8, "Accent")[5],
+				"PTPN11:chr12:112888198:G>A" = brewer.pal(8, "Accent")[5],
+				"PTPN11:chr12:112888198:G>T" = brewer.pal(8, "Accent")[5],
+				"PTPN11:chr12:112888199:C>A" = brewer.pal(8, "Accent")[5],
+				"PTPN11:chr12:112888199:C>T" = brewer.pal(8, "Accent")[5],
+				"PTPN11:chr12:112888210:G>A" = brewer.pal(8, "Accent")[5],
+				"PTPN11:chr12:112888211:A>G" = brewer.pal(8, "Accent")[5],
+				"PTPN11:chr12:112888211:A>T" = brewer.pal(8, "Accent")[5],
+				"PTPN11:chr12:112915524:A>G" = brewer.pal(8, "Accent")[5],
+				"PTPN11:chr12:112926884:T>C" = brewer.pal(8, "Accent")[5],
+				"PTPN11:chr12:112926884:T>A" = brewer.pal(8, "Accent")[5],
+				"PTPN11:chr12:112926884:T>G" = brewer.pal(8, "Accent")[5],
+				"PTPN11:chr12:112926888:G>T" = brewer.pal(8, "Accent")[5],
+				"PTPN11:chr12:112926888:G>C" = brewer.pal(8, "Accent")[5],
+				"PTPN11:chr12:112926909:A>T" = brewer.pal(8, "Accent")[5],
+				
+				"FLT3:chr13:28592634:CATG>C" = brewer.pal(8, "Accent")[7],
+				"FLT3:chr13:28592640:A>T" = brewer.pal(8, "Accent")[7],
+				"FLT3:chr13:28592640:A>T" = brewer.pal(8, "Accent")[7],
+				"FLT3:chr13:28592641:T>A" = brewer.pal(8, "Accent")[7],
+				"FLT3:chr13:28592642:C>A" = brewer.pal(8, "Accent")[7],
+				"FLT3:chr13:28592642:C>G" = brewer.pal(8, "Accent")[7],
+				"FLT3:chr13:28597522:C>T" = brewer.pal(8, "Accent")[7],
+				"FLT3:chr13:28592621:A>G" = brewer.pal(8, "Accent")[7],
+				"FLT3:chr13:28592623:T>G" = brewer.pal(8, "Accent")[7],
+				"FLT3:chr13:28608341:T>C" = brewer.pal(8, "Accent")[7],
+				"FLT3:chr13:28608312:T>G" = brewer.pal(8, "Accent")[7],
+				"FLT3:chr13:28592623:T>G" = brewer.pal(8, "Accent")[7],   
+				"FLT3:chr13:28592617:A>T" = brewer.pal(8, "Accent")[7],
+				"FLT3:chr13:28602329:G>A" = brewer.pal(8, "Accent")[7],
+				"FLT3:chr13:28602340:G>T" = brewer.pal(8, "Accent")[7],  
+				"FLT3:chr13:28602378:T>C" = brewer.pal(8, "Accent")[7],  
+				"FLT3:chr13:28608098:T>A" = brewer.pal(8, "Accent")[7],   
+				"FLT3:chr13:28592641:T>A" = brewer.pal(8, "Accent")[7],
+				"FLT3:chr13:28592623:T>G" = brewer.pal(8, "Accent")[7],   
+				"FLT3:chr13:28602329:G>A" = brewer.pal(8, "Accent")[7],
+				"FLT3:chr13:28608285:A>C" = brewer.pal(8, "Accent")[7],
+				"FLT3:chr13:28608341:T>C" = brewer.pal(8, "Accent")[7],
+				"FLT3:chr13:28589780:A>C" = brewer.pal(8, "Accent")[7],
+				"FLT3:chr13:28608329:A>T" = brewer.pal(8, "Accent")[7],
+				"FLT3:chr13:28610138:G>A" = brewer.pal(8, "Accent")[7],
+				"FLT3:chr13:28602380:T>C" = brewer.pal(8, "Accent")[7],
+				"FLT3:chr13:28608275:A>G" = brewer.pal(8, "Accent")[7],
+				"FLT3:chr13:28608320:A>C" = brewer.pal(8, "Accent")[7],
+				"FLT3:chr13:28608449:T>C" = brewer.pal(8, "Accent")[7],
+				"FLT3:chr13:28622527:A>G" = brewer.pal(8, "Accent")[7],
+				"FLT3:chr13:28626716:C>T" = brewer.pal(8, "Accent")[7],
+				"FLT3:chr13:28592717:T>C" = brewer.pal(8, "Accent")[7],
+				"FLT3:chr13:28608291:A>C" = brewer.pal(8, "Accent")[7],
+				
+				"diagnosis" = brewer.pal(8, "Accent")[1],
+				"relapse" = brewer.pal(8, "Accent")[2])
+				
 # get KRAS, NRAS, PTPN11 mutations from hotspot mutation caller
 m <- read.delim("~/hdall/results/ras-heterogeneity/ras.hotspots.tsv")
 m <- m[m$gene != "FLT3",]
@@ -129,10 +214,12 @@ m <- merge(m, c, all.x=T)
 m$frequency.norm <- NA
 m$frequency.norm[m$sample=="diagnosis"] <- m$frequency[m$sample=="diagnosis"]/m$blasts.dia[m$sample=="diagnosis"]*100
 m$frequency.norm[m$sample=="relapse"] <- m$frequency[m$sample=="relapse"]/m$blasts.rel[m$sample=="relapse"]*100
+m$frequency.norm[is.na(m$frequency.norm)] <- m$frequency[is.na(m$frequency.norm)]
 
 # subset samples
-m.relapsing.dia <- m[m$cohort=="relapsing" & m$sample=="diagnosis",]
-m.relapsing.rel <- m[m$cohort=="relapsing" & m$sample=="relapse",]
+m.relapsing <- m[m$cohort=="relapsing",]
+m.relapsing.dia <- m.relapsing[m.relapsing$sample=="diagnosis",]
+m.relapsing.rel <- m.relapsing[m.relapsing$sample=="relapse",]
 m.nonrelapsing <- m[m$cohort=="non-relapsing" & m$sample=="diagnosis",]
 
 pdf("~/hdall/results/ras-heterogeneity/ras-barplot.pdf", width=15)
@@ -155,7 +242,7 @@ print(ggplot(data=m.relapsing.dia, aes(x=patient, y=frequency.norm, fill=mut, or
 		facet_grid(.~group, scale="free_x", space = "free_x") +
 		geom_bar(stat="identity", width=0.9, colour="white") +
 		scale_fill_manual(values = cols, name="Mutation") + 
-		scale_y_continuous(expand = c(0,0), limits = c(0,max(sorted$frequency.norm+0.1)), breaks=seq(0, 1, 0.1)) + 
+		scale_y_continuous(expand = c(0,0), limits = c(0,1), breaks=seq(0, 1, 0.1)) + 
 		theme_bw() + 
 		theme(axis.text.x = element_text(angle = 90, hjust = 1), legend.key.size=unit(0.35, "cm")) +
 #		geom_text(aes(label = mut.short), size = 3, hjust = 0.5, vjust = 1.2, position = "stack", colour="white") +
@@ -180,12 +267,25 @@ print(ggplot(data=m.relapsing.rel, aes(x=patient, y=frequency.norm, fill=mut, or
 				facet_grid(.~group, scale="free_x", space = "free_x") +
 				geom_bar(stat="identity", width=0.9, colour="white") +
 				scale_fill_manual(values = cols, name="Mutation") + 
-				scale_y_continuous(expand = c(0,0), limits = c(0,max(sorted$frequency.norm+0.1)), breaks=seq(0, 1, 0.1)) + 
+				scale_y_continuous(expand = c(0,0), limits = c(0,1), breaks=seq(0, 1, 0.1)) + 
 				theme_bw() + 
 				theme(axis.text.x = element_text(angle = 90, hjust = 1), legend.key.size=unit(0.35, "cm")) +
 #				geom_text(aes(label = mut.short), size = 3, hjust = 0.5, vjust = 1.2, position = "stack", colour="white") +
 				ylab("Allelic frequency (normalized)") +
 				ggtitle("RAS pathway mutations at relapse (relapsing cohort)"))
+
+#---
+# RELAPSING, TOGETHER
+#---
+
+print(ggplot(data=m.relapsing, aes(x=patient, y=frequency.norm, fill=sample) + 
+				geom_bar(stat="identity", position=c("dodge"), width=0.9, colour="white") +
+				scale_fill_manual(values = cols, name="Timepoint") + 
+				scale_y_continuous(expand = c(0,0), limits = c(0,1), breaks=seq(0, 1, 0.1)) + 
+				theme_bw() + 
+				theme(axis.text.x = element_text(angle = 90, hjust = 1), legend.key.size=unit(0.35, "cm")) +
+				ylab("Allelic frequency (normalized)") +
+				ggtitle("RAS pathway mutations (relapsing cohort)"))
 
 #---
 # NON-RELAPSING, DIA
@@ -205,7 +305,7 @@ print(ggplot(data=m.nonrelapsing, aes(x=patient, y=frequency.norm, fill=mut, ord
 				facet_grid(.~group, scale="free_x", space = "free_x") +
 				geom_bar(stat="identity", width=0.9, colour="white") +
 				scale_fill_manual(values = cols, name="Mutation") + 
-				scale_y_continuous(expand = c(0,0), limits = c(0,max(sorted$frequency.norm+0.1)), breaks=seq(0, 1, 0.1)) + 
+				scale_y_continuous(expand = c(0,0), limits = c(0,1), breaks=seq(0, 1, 0.1)) + 
 				theme_bw() + 
 				theme(axis.text.x = element_text(angle = 90, hjust = 1), legend.key.size=unit(0.35, "cm")) +
 #				geom_text(aes(label = mut.short), size = 3, hjust = 0.5, vjust = 1.2, position = "stack", colour="white") +

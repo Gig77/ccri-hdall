@@ -98,7 +98,7 @@ test_pairwise_assoc <- function (df, include=NULL, exclude=NULL, sig.level=NULL,
 		b <- df[,name.b]
 		
 		if (tests[i,"type"] == "CAT-vs-NUM") {
-			boxplot(b~a, xlab=name.a, ylab=name.b, main=sprintf("p=%.2g", tests[i, "p"], na.action=na.exclude, outline=F, cex.axis=0.8))
+			boxplot(b~a, xlab=name.a, ylab=name.b, main=sprintf("p=%.2g", tests[i, "p"]), na.action=na.exclude, outline=F, cex.axis=0.8)
 			stripchart(b~a, method="jitter", na.action=na.exclude, vertical=T, pch=19, col=1:length(levels(as.factor(a))), add=T)
 		} else if (tests[i,"type"] == "NUM-vs-NUM") {
 			plot(a, b, xlab=name.a, ylab=name.b, main=sprintf("R=%.2f, p=%.2g", tests[i, "R"], tests[i, "p"]))

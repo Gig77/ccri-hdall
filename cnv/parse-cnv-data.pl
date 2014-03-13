@@ -4,9 +4,6 @@ use strict;
 use Carp;
 use Getopt::Long;
 
-# STDIN: list with enriched pathways from DAVID
-# STDOUT: pathway/patient matrix indicating the number of times a pathway is mutated across patients
-
 my ($format, $header);
 GetOptions
 (
@@ -86,18 +83,19 @@ elsif ($format eq 'maria')
 		chomp;
 		my ($file, $cn_state, $type, $chromosome, $min, $max, $size, $marker_count, $cytoband_start, $cytoband_end, $genes, $sno_mirna) = split /\t/;
 
-		my ($patient, $sample) = $file =~ /^(C|B|\d{3})_?(Dx|DX|Rel|REL)\./;
+		my ($patient, $sample) = $file =~ /^(C|B|\d{3})_?(Dx|DX|Rel|REL|RR|Rem)\./;
 		if (!$patient or !$sample)
 		{
-			print STDERR "WARNING: Could not parse following line. SKIPPED.\n $_\n";
+			print STDERR "WARNING: Could not parse following line. SKIPPED.\n$_\n";
 			next;
 		}
 		
 		$sample =~ s/dx/rem_dia/i;
 		$sample =~ s/rel/rem_rel/i;
+		$sample =~ s/RR/rem_rel3/i; # patient 715
 
 		
-		if ($sample ne "rem_dia" and $sample ne "rem_rel")
+		if ($sample ne "rem_dia" and $sample ne "rem_rel" and $sample ne "rem_rel3")
 		{
 			print STDERR "WARNING: Uknown sample: $sample. SKIPPED.\n $_\n";
 			next;

@@ -31,9 +31,20 @@ for(p in patients) {
 }
 
 # plot
-png("~/hdall/results/figures/mutation-per-patient.png", res=50)
+png("~/hdall/results/figures/mutation-per-patient.png", width=800, height=800, res=100)
 bardata <- bardata[order(rowSums(bardata)),]
-barplot(t(bardata), beside=FALSE, col=brewer.pal(6, "Set2"), las=2, main="Exonic mutations per patient")
+barplot(t(bardata), beside=FALSE, col=brewer.pal(6, "Set2"), las=2, main="Exonic mutations per patient", ylab="# exonic somatic mutations (allelic frequency > 10%)")
 #plot(0:1, 0:1, type="n", axes=F, ann=F)
 legend(x=1, y=140, rev(colnames(bardata)), fill=rev(brewer.pal(3, "Set2")))
+dev.off()
+
+# box plot, statistical test
+png("~/hdall/results/figures/exonic-mutations-dia-vs-rel.png", width=800, height=800, res=100)
+mut <- as.data.frame(bardata)
+mut$dia <- mut$'diagnosis-specific' + mut$conserved
+mut$rel <- mut$'relapse-specific' + mut$conserved
+test <- kruskal.test(list(mut$dia, mut$rel))
+boxplot(mut$dia, mut$rel, xlab="timepoint", ylab="number exonic mutations", na.action=na.exclude, outline=F, cex.axis=0.8, main=paste0("p=", sprintf("%.2g", test$p.value), " (Kruskal-Wallis)"), xaxt="n", cex.lab=1.3)
+axis(1, at=c(1,2), labels=c("diagnosis", "relapse"))
+stripchart(list(mut$dia, mut$rel), method="jitter", vertical=T, pch=19, col=c("red", "blue"), add=T)
 dev.off()

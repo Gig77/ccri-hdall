@@ -12,7 +12,7 @@ PATIENTS_REL_ONLY=1017005 1021865 1023545 AD15 BL16 BM18 CA18 DM1 FE1 FS1 GD18 G
 PATIENTS_DIA_ONLY=1004564 1010661 1010781 1019964 1020076 1021087 1023338 1023616 1024589 1026233 1026662 B100 EF7 FB14 G44 HD7
 PATIENTS_DIA_NON_REL=331 380 442 350 461 466 529 591 602 619 633 634 642 653 666 672 697 698 700 709 724 762 776 777 779 782 409 NRD_1 73 NRD_2 NRD_3 60 594 687 748 754 646 530 718 681 39 49 45 54 110 111 134 143 147 199 NRD_4
 
-all: filtered-variants.reseq.cosmic.normaf.tsv filtered-variants.reseq.nonrel.tsv gene-patient-matrix.reseq.tsv lolliplot/lolliplot_CREBBP_NM_004380_both.svg lolliplot/matched/lolliplot_CREBBP_NM_004380_both.svg
+all: gene-patient-matrix.reseq.nonrel.tsv filtered-variants.reseq.cosmic.normaf.tsv filtered-variants.reseq.nonrel.tsv gene-patient-matrix.reseq.tsv lolliplot/lolliplot_CREBBP_NM_004380_both.svg lolliplot/matched/lolliplot_CREBBP_NM_004380_both.svg
 
 .PHONY: varscan
 varscan: $(foreach P, $(PATIENTS_DIA_NON_REL), snpeff/$P_dia.reseq.varscan.dbsnp.snpeff.dbNSFP.vcf)
@@ -124,6 +124,16 @@ filtered-variants.reseq.nonrel.tsv: $(foreach P, $(PATIENTS_DIA_NON_REL), filter
 							 		~/hdall/scripts/reseq/filter-variants-nonrel.pl 
 	perl  ~/hdall/scripts/reseq/filter-variants-nonrel.pl --header >$@.part
 	cat filtered_variants/*.varscan.filtered.tsv >> $@.part
+	mv $@.part $@
+
+impacted-genes-list.reseq.nonrel.tsv: filtered-variants.reseq.nonrel.tsv ~/hdall/scripts/reseq/impacted-genes-nonrel.pl
+	cat $< | perl ~/hdall/scripts/reseq/impacted-genes-nonrel.pl \
+		2>&1 1>$@.part | tee -a make.log
+	mv $@.part $@
+
+gene-patient-matrix.reseq.nonrel.tsv: impacted-genes-list.reseq.nonrel.tsv ~/hdall/scripts/reseq/get-gene-patient-matrix-nonrel.pl
+	cat $< | perl ~/hdall/scripts/reseq/get-gene-patient-matrix-nonrel.pl --mut-details \
+		2>&1 1>$@.part | tee -a make.log
 	mv $@.part $@
 
 filtered-variants.merged.tsv: filtered-variants.reseq.tsv ../filtered-variants.tsv ~/hdall/scripts/reseq/merge_discovery_validation.R

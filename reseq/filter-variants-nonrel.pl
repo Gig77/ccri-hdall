@@ -391,7 +391,19 @@ while (my $line = $vcf->next_line())
 	if (@blacklist > 0) { $reject = 1; push(@reject_because, "blacklisted region"); };
 	#if (@retro > 0) { $reject = 1; push(@reject_because, "retrotransposon"); }
 	if (@rem_samples > 1) { $reject = 1; push(@reject_because, "present remissions"); }
-	if ($x->{ID} and $x->{ID} ne ".")  { $reject = 1; push(@reject_because, "dbSNP"); $num_dbsnp ++; };  
+	if ($x->{ID} and $x->{ID} ne ".")  { $reject = 1; push(@reject_because, "dbSNP"); $num_dbsnp ++; };
+	
+	if (($patient eq "724" and $x->{CHROM} eq "chr16" and $x->{POS} == 3779248) ||
+	    ($patient eq "331" and $x->{CHROM} eq "chr16" and $x->{POS} == 3779329) ||
+	    ($patient eq "697" and $x->{CHROM} eq "chr16" and $x->{POS} == 3786740) ||
+	    ($patient eq "709" and $x->{CHROM} eq "chr16" and $x->{POS} == 3790542) ||
+	    ($patient eq "718" and $x->{CHROM} eq "chr16" and $x->{POS} == 3817813) ||
+	    ($patient eq "776" and $x->{CHROM} eq "chr16" and $x->{POS} == 3820723) ||
+	    ($patient eq "NRD_1" and $x->{CHROM} eq "chr16" and $x->{POS} == 3820723)) 
+	{
+		$reject = 1;
+		push(@reject_because, "confirmed germline");
+	}  
 	
 	$line =~ s/^([^\t]+\t[^\t]+\t[^\t]+\t[^\t]+\t[^\t]+\t[^\t]+\t)[^\t]+/$1REJECT/ if ($reject);
 	

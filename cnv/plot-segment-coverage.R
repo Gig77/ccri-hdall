@@ -134,9 +134,12 @@ normal.chrs <- list(
 		"ZA16211_rel" = c("chr2", "chr7", "chr16"), 
 		"ZE13_rel" = c("chr2", "chr3", "chr15"), 
 
-		"39_dia" = c("chr15"),
+		"39_dia" = c("chr2", "chr3"),
 		"45_dia" = c("chr2", "chr8"),
 		"49_dia" = c("chr2", "chr3", "chr16"),
+		"54_dia" = c("chr2", "chr3"),
+		"60_dia" = c("chr2", "chr3"),
+		"73_dia" = c("chr2", "chr15"),
 		"110_dia" = c("chr2", "chr3"),
 		"111_dia" = c("chr2", "chr3", "chr15"),
 		"134_dia" = c("chr2", "chr3", "chr12"),
@@ -149,10 +152,39 @@ normal.chrs <- list(
 		"409_dia" = c("chr2", "chr3", "chr15"),
 		"442_dia" = c("chr2", "chr15", "chr16"),
 		"461_dia" = c("chr2", "chr3", "chr16"),
-		"466_dia" = c("chr3", "chr10"),
+		"466_dia" = c("chr9", "chr15"),
 		"529_dia" = c("chr2", "chr3"),
 		"530_dia" = c("chr2", "chr3", "chr16"),
-		"777_dia" = c("chr1", "chr2", "chr3")) 
+		"591_dia" = c("chr2", "chr15"),
+		"594_dia" = c("chr2", "chr15"),
+		"602_dia" = c("chr2", "chr5"),
+		"619_dia" = c("chr2", "chr3", "chr5"),
+		"633_dia" = c("chr2", "chr15"),
+		"634_dia" = c("chr2", "chr15"),
+		"642_dia" = c("chr2", "chr5"),
+		"646_dia" = c("chr2", "chr15"),
+		"653_dia" = c("chr2", "chr3"),
+		"666_dia" = c("chr2", "chr3"), # IKZF1 deletion
+		"672_dia" = c("chr2", "chr5"),
+		"681_dia" = c("chr2", "chr5"),
+		"687_dia" = c("chr2", "chr7"),
+		"697_dia" = c("chr2", "chr3"), # low blast
+		"698_dia" = c("chr2", "chr3"), # hyperdiploid?
+		"700_dia" = c("chr2", "chr3"),
+		"709_dia" = c("chr2", "chr3"), # EXCLUDE
+		"718_dia" = c("chr2", "chr3"),
+		"724_dia" = c("chr2", "chr3"),
+		"748_dia" = c("chr2", "chr3"),
+		"754_dia" = c("chr2", "chr3"),
+		"762_dia" = c("chr2", "chr15"),
+		"776_dia" = c("chr2", "chr3"),
+		"777_dia" = c("chr1", "chr2", "chr3"),
+		"779_dia" = c("chr2", "chr3"),
+		"782_dia" = c("chr2", "chr3"),
+		"NRD_1_dia" = c("chr3", "chr8"),
+		"NRD_2_dia" = c("chr2", "chr3"),
+		"NRD_3_dia" = c("chr2", "chr3"),
+		"NRD_4_dia" = c("chr2", "chr3"))
 
 t <- read.delim(opt$tumor, header=F)
 n <- read.delim(opt$normal, header=F)
@@ -163,7 +195,7 @@ m$ratio <- m$ratio - ifelse(!is.null(normal.chrs[[opt$patient]]), mean(m$ratio[w
 set.seed(25)
 CNA.object <-CNA(genomdat = m[,"ratio"], chrom = m[,"V1"], maploc = m[,"V2"], data.type = 'logratio')
 CNA.smoothed <- smooth.CNA(CNA.object)
-segs <- segment(CNA.smoothed, alpha = 0.01, verbose=0, min.width=2)
+segs <- segment(CNA.smoothed, alpha = 0.01, verbose=0, min.width=2, undo.splits="sdundo", undo.SD=2)
 
 pdf(opt$output, width=30, paper="A4r")
 par(mfrow=c(5,5), mar=c(0.5,2,1.5,1))

@@ -18,7 +18,7 @@ all: $(foreach P, $(PATIENTS_EXOME), $P_rem.coverage.exome.tsv $P_dia.coverage.e
 	 $(foreach P, $(PATIENTS_RESEQ_MATCHED), ../reseq/cnv/$P_Remission.coverage.reseq.panel.tsv ../reseq/cnv/$P_Diagnosis.coverage.reseq.panel.tsv ../reseq/cnv/$P_Relapse.coverage.reseq.panel.tsv ../reseq/cnv/cov-plot.$P.matched.reseq.panel.pdf ../reseq/cnv/segmented_coverage/$P_Diagnosis.segmented-coverage.tsv  ../reseq/cnv/segmented_coverage/$P_Remission.segmented-coverage.tsv  ../reseq/cnv/segmented_coverage/$P_Relapse.segmented-coverage.tsv ../reseq/cnv/segmented_coverage/$P_Diagnosis.segmented-coverage.pdf ../reseq/cnv/segmented_coverage/$P_Relapse.segmented-coverage.pdf) \
 	 $(foreach P, $(PATIENTS_RESEQ_RELONLY), ../reseq/cnv/$P_Remission.coverage.reseq.panel.tsv ../reseq/cnv/$P_Relapse.coverage.reseq.panel.tsv ../reseq/cnv/cov-plot.$P.rel.reseq.panel.pdf ../reseq/cnv/segmented_coverage/$P_Remission.segmented-coverage.tsv  ../reseq/cnv/segmented_coverage/$P_Relapse.segmented-coverage.tsv ../reseq/cnv/segmented_coverage/$P_Relapse.segmented-coverage.pdf) \
 	 $(foreach P, $(PATIENTS_RESEQ_DIAONLY), ../reseq/cnv/$P_Remission.coverage.reseq.panel.tsv ../reseq/cnv/$P_Diagnosis.coverage.reseq.panel.tsv ../reseq/cnv/cov-plot.$P.dia.reseq.panel.pdf ../reseq/cnv/segmented_coverage/$P_Diagnosis.segmented-coverage.tsv  ../reseq/cnv/segmented_coverage/$P_Remission.segmented-coverage.tsv ../reseq/cnv/segmented_coverage/$P_Diagnosis.segmented-coverage.pdf) \
-	$(foreach P, $(PATIENTS_RESEQ_NONREL), ../reseq/cnv/segmented_coverage/$P_Diagnosis.segmented-coverage.tsv ../reseq/cnv/segmented_coverage/$P_Diagnosis.nonrel.segmented-coverage.pdf)
+	$(foreach P, $(PATIENTS_RESEQ_NONREL), ../reseq/cnv/$P_Diagnosis.coverage.reseq.panel.tsv ../reseq/cnv/cov-plot.$P.dia.nonrel.reseq.panel.pdf ../reseq/cnv/segmented_coverage/$P_Diagnosis.segmented-coverage.tsv ../reseq/cnv/segmented_coverage/$P_Diagnosis.nonrel.segmented-coverage.pdf)
 
 # get GC content for each exon
 gc/truseq_exome_targeted_regions.hg19.gc.bed: ~/generic/data/hg19/ucsc.hg19.fasta ~/generic/data/illumina/truseq_exome_targeted_regions.hg19.bed.chr
@@ -87,6 +87,10 @@ cov-plot.%.panel.pdf: %_dia.coverage.panel.tsv %_rel.coverage.panel.tsv %_rem.co
 	mv cov-plot.$*.reseq.pdf.part $@
 	
 ../reseq/cnv/cov-plot.%.dia.reseq.panel.pdf: ../reseq/cnv/%_Diagnosis.coverage.reseq.panel.tsv ../reseq/cnv/%_Remission.coverage.reseq.panel.tsv ~/hdall/scripts/cnv/cov-plot-panel.R
+	Rscript ~/hdall/scripts/cnv/cov-plot-panel.R --patient $* --diagnosis $(word 1,$^) --remission $(word 2,$^) 2>&1
+	mv cov-plot.$*.reseq.pdf.part $@
+
+../reseq/cnv/cov-plot.%.dia.nonrel.reseq.panel.pdf: ../reseq/cnv/%_Diagnosis.coverage.reseq.panel.tsv ../reseq/cnv/1009302_Remission.coverage.reseq.panel.tsv ~/hdall/scripts/cnv/cov-plot-panel.R
 	Rscript ~/hdall/scripts/cnv/cov-plot-panel.R --patient $* --diagnosis $(word 1,$^) --remission $(word 2,$^) 2>&1
 	mv cov-plot.$*.reseq.pdf.part $@
 

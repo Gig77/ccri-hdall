@@ -7,7 +7,7 @@ patients <- c("1021247", "446", "818", "A", "592", "430", "792", "786", "B", "46
 #patients <- c("314", "399") 
 
 # TABLE: filtered-variants.tsv
-t <- read.delim("filtered-variants.tsv", stringsAsFactors=F)
+t <- read.delim("~/hdall/results/filtered-variants.tsv", stringsAsFactors=F)
 t <- t[t$status != "REJECT" & t$var_type == "snp",]
 min.af <- 0.10
 max.af <- 1.00
@@ -24,7 +24,7 @@ m.rel <- m.dia
 # per patient
 
 #pdf("stats/mutation-profile-stacked.pdf", width=15)
-png("stats/mutation-profile-stacked.png")
+png("~/hdall/results/stats/mutation-profile-stacked.png", width=2000, height=2000, res=200)
 
 #layout(matrix(c(seq(1:20),rep(21,5)), ncol=5, byrow=T), heights=c(rep(0.23, 4), 0.08))
 #par(mar=c(2.0, 2.5, 3, 0))
@@ -66,7 +66,7 @@ par(mar=c(0, 0, 4, 0))
 plot(0:1, 0:1, type="n", axes=F, ann=F)
 legend("topleft", rev(colnames(m.dia)), fill=rev(brewer.pal(6, color)))
 
-write.table(df, file="stats/mutation-profile.data.af10.tsv", col.names=T, row.names=F, sep="\t", quote=F)
+write.table(df, file="~/hdall/results/stats/mutation-profile.data.af10.tsv", col.names=T, row.names=F, sep="\t", quote=F)
 
 #par(xpd=TRUE, mai=c(0,0,0,0))
 #plot.new()

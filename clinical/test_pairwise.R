@@ -1,4 +1,4 @@
-test_pairwise_assoc <- function (df, include=NULL, exclude=NULL, sig.level=NULL, exclude.group=NULL) {
+test_pairwise_assoc <- function (df, include=NULL, exclude=NULL, sig.level=NULL, include.group=NULL, exclude.group=NULL) {
 
 	tests <- data.frame(a = character(0), b = character(0), type = character(0), p = numeric(0), R = numeric(0), stringsAsFactors=F)
 	for (i in 1:(ncol(df)-1)) {
@@ -7,9 +7,9 @@ test_pairwise_assoc <- function (df, include=NULL, exclude=NULL, sig.level=NULL,
 			name.a <- names(df)[i]
 			name.b <- names(df)[j]
 			
-			if (!is.null(include) && (!(name.a %in% include) || !(name.b %in% include))) next
+			if (!is.null(include) && !(name.a %in% include) && !(name.b %in% include)) next
 			if (!is.null(exclude) && (name.a %in% exclude || name.b %in% exclude)) next
-			
+			if (!is.null(include.group) && (!(name.a %in% include.group) || !(name.b %in% include.group))) next
 			if (!is.null(exclude.group)) {
 				found = FALSE
 				for (g in 1:length(exclude.group)) {
@@ -24,14 +24,6 @@ test_pairwise_assoc <- function (df, include=NULL, exclude=NULL, sig.level=NULL,
 				}
 			}
 			
-			# do not compare nested variable
-			#if (length(strsplit(name.a, name.b)[[1]]) > 1 || length(strsplit(name.b, name.a)[[1]]) > 1) {
-			#	print(paste0("Skipped nested variables '", name.a, "' and '", name.b, "'"))
-			#	next
-			#}
-			
-			#print(sprintf("i=%d j=%d", i, j))
-			
 			a <- df[,i]
 			b <- df[,j]
 			
@@ -40,10 +32,6 @@ test_pairwise_assoc <- function (df, include=NULL, exclude=NULL, sig.level=NULL,
 				if (length(levels(as.factor(as.character(a[!is.na(b)])))) > 1) { # we need more than one group
 					test <- kruskal.test(b~a, na.action=na.exclude)
 					tests[nrow(tests)+1,] <- c(name.a, name.b, "CAT-vs-NUM", test$p.value, NA)
-#					if (is.null(sig.level) || test$p.value <= sig.level) {
-#						boxplot(b~a, xlab=name.a, ylab=name.b, main=sprintf("p=%.2g", test$p.value), na.action=na.exclude, outline=F, cex.axis=0.8)
-#						stripchart(b~a, method="jitter", na.action=na.exclude, vertical=T, pch=19, col=1:length(levels(as.factor(a))), add=T)
-#					}
 				} else {
 					print(paste0("  NO TEST PERFORMED: only single factor level: ", unique(a[!is.na(b)])));
 				}
@@ -52,10 +40,6 @@ test_pairwise_assoc <- function (df, include=NULL, exclude=NULL, sig.level=NULL,
 				if (length(levels(as.factor(as.character(b[!is.na(a)])))) > 1) { # we need more than one group
 					test <- kruskal.test(a~b, na.action=na.exclude)
 					tests[nrow(tests)+1,] <- c(name.b, name.a, "CAT-vs-NUM", test$p.value, NA)
-#					if (is.null(sig.level) || test$p.value <= sig.level) {
-#						boxplot(a~b, xlab=name.b, ylab=name.a, main=sprintf("p=%.2g", test$p.value), na.action=na.exclude, outline=F, cex.axis=0.8)
-#						stripchart(a~b, method="jitter", na.action=na.exclude, vertical=T, pch=19, col=1:length(levels(as.factor(b))), add=T)
-#					}
 				} else {
 					print(paste0("  NO TEST PERFORMED: only single factor level: ", unique(b[!is.na(a)])));
 				}
@@ -64,20 +48,12 @@ test_pairwise_assoc <- function (df, include=NULL, exclude=NULL, sig.level=NULL,
 				fit <- lm(b~a)
 				p <- anova(fit)$'Pr(>F)'[1]
 				tests[nrow(tests)+1,] <- c(name.a, name.b, "NUM-vs-NUM", p, summary(fit)$r.squared)
-#				if (is.null(sig.level) || p <= sig.level) {
-#					plot(a, b, xlab=name.a, ylab=name.b, main=sprintf("R=%.2f, p=%.2g", summary(fit)$r.squared, p))
-#					abline(fit, col="red")
-#				}
 			} else if ((is.factor(a) || is.logical(a)) && (is.factor(b) || is.logical(b))) {
 				print(paste0("CATEGORIAL VS. CATEGORIAL: ", names(df)[i], " <--> ", names(df)[j]))
 				pair.table <- table(df[,c(i, j)])
 				if (sum(pair.table > 0)) {
 					p <- fisher.test(pair.table)$p.value
 					tests[nrow(tests)+1,] <- c(name.a, name.b, "CAT-vs-CAT", p, NA)
-#					if (is.null(sig.level) || p <= sig.level) {
-#						mosaic(pair.table, pop=F, main=sprintf("p=%.2g", p))
-#						labeling_cells(text=pair.table)(pair.table)
-#					}
 				}
 			}
 		}

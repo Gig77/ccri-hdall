@@ -6,7 +6,8 @@ option_list <- list(
 		make_option("--patient", type="character", help="patient ID"),
 		make_option("--tumor", type="character", help="tumor coverage data file"),
 		make_option("--normal", type="character", help="remission coverage data file"),
-		make_option("--output", type="character", help="output file name")
+		make_option("--output", type="character", help="output file name"),
+		make_option("--circos", type="character", help="circos output file name")
 )
 opt <- parse_args(OptionParser(option_list=option_list))
 
@@ -14,9 +15,10 @@ if (is.na(opt$patient)) stop("patient ID not specified")
 if (is.na(opt$tumor)) stop("tumor coverage file not specified")
 if (is.na(opt$normal)) stop("normal coverage file not specified")
 if (is.na(opt$output)) stop("output file not specified")
+if (is.na(opt$circos)) stop("circos output file not specified")
 
 # for test purposes
-#opt <- data.frame(patient="1020540_dia", tumor="../reseq/cnv/segmented_coverage/1020540_Diagnosis.segmented-coverage.tsv", normal="../reseq/cnv/segmented_coverage/1020540_Remission.segmented-coverage.tsv", stringsAsFactors=F)
+#opt <- data.frame(patient="1020540_dia", tumor="../reseq/cnv/segmented_coverage/1020540_Diagnosis.segmented-coverage.tsv", normal="../reseq/cnv/segmented_coverage/1020540_Remission.segmented-coverage.tsv", circos="~/hdall/results/cnv/circos/1020540_dia.cnv.circos.tsv", stringsAsFactors=F)
 
 # normalization factor (correct for different read count)
 normal.chrs <- list(
@@ -195,7 +197,8 @@ m$ratio <- m$ratio - ifelse(!is.null(normal.chrs[[opt$patient]]), mean(m$ratio[w
 set.seed(25)
 CNA.object <-CNA(genomdat = m[,"ratio"], chrom = m[,"V1"], maploc = m[,"V2"], data.type = 'logratio')
 CNA.smoothed <- smooth.CNA(CNA.object)
-segs <- segment(CNA.smoothed, alpha = 0.01, verbose=0, min.width=2, undo.splits="sdundo", undo.SD=2)
+#segs <- segment(CNA.smoothed, alpha = 0.01, verbose=0, min.width=2, undo.splits="sdundo", undo.SD=3)
+segs <- segment(CNA.smoothed, alpha = 0.01, verbose=0, min.width=2)
 
 pdf(opt$output, width=30, paper="A4r")
 par(mfrow=c(5,5), mar=c(0.5,2,1.5,1))
@@ -208,3 +211,15 @@ for (c in c("chr1", "chr2", "chr3", "chr4", "chr5", "chr6", "chr7", "chr8", "chr
 	}
 }
 dev.off()
+
+# write circos output file
+segs$output <- segs$output[complete.cases(segs$output),]
+segs$output$color <- NA
+segs$output$color[segs$output$seg.mean<0.15 & segs$output$seg.mean > -0.15] <- "fill_color=white"
+segs$output$color[segs$output$seg.mean>=0.15 & segs$output$seg.mean<0.65] <- "fill_color=lblue"
+segs$output$color[segs$output$seg.mean>=0.65] <- "fill_color=dblue"
+segs$output$color[segs$output$seg.mean>-0.65 & segs$output$seg.mean<=-0.15] <- "fill_color=lred"
+segs$output$color[segs$output$seg.mean<=-0.65] <- "fill_color=dred"
+segs$output$seg.mean <- abs(segs$output$seg.mean)
+segs$output$chrom <- gsub("chr", "hs", segs$output$chrom)
+write.table(segs$output[!is.na(segs$output$seg.mean),c("chrom", "loc.start", "loc.end", "seg.mean", "color")], file=opt$circos, row.names=F, col.names=F, sep="\t", quote=F)

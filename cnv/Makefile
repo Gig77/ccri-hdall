@@ -18,7 +18,8 @@ all: $(foreach P, $(PATIENTS_EXOME), $P_rem.coverage.exome.tsv $P_dia.coverage.e
 	 $(foreach P, $(PATIENTS_RESEQ_MATCHED), ../reseq/cnv/$P_Remission.coverage.reseq.panel.tsv ../reseq/cnv/$P_Diagnosis.coverage.reseq.panel.tsv ../reseq/cnv/$P_Relapse.coverage.reseq.panel.tsv ../reseq/cnv/cov-plot.$P.matched.reseq.panel.pdf ../reseq/cnv/segmented_coverage/$P_Diagnosis.segmented-coverage.tsv  ../reseq/cnv/segmented_coverage/$P_Remission.segmented-coverage.tsv  ../reseq/cnv/segmented_coverage/$P_Relapse.segmented-coverage.tsv ../reseq/cnv/segmented_coverage/$P_Diagnosis.segmented-coverage.pdf ../reseq/cnv/segmented_coverage/$P_Relapse.segmented-coverage.pdf) \
 	 $(foreach P, $(PATIENTS_RESEQ_RELONLY), ../reseq/cnv/$P_Remission.coverage.reseq.panel.tsv ../reseq/cnv/$P_Relapse.coverage.reseq.panel.tsv ../reseq/cnv/cov-plot.$P.rel.reseq.panel.pdf ../reseq/cnv/segmented_coverage/$P_Remission.segmented-coverage.tsv  ../reseq/cnv/segmented_coverage/$P_Relapse.segmented-coverage.tsv ../reseq/cnv/segmented_coverage/$P_Relapse.segmented-coverage.pdf) \
 	 $(foreach P, $(PATIENTS_RESEQ_DIAONLY), ../reseq/cnv/$P_Remission.coverage.reseq.panel.tsv ../reseq/cnv/$P_Diagnosis.coverage.reseq.panel.tsv ../reseq/cnv/cov-plot.$P.dia.reseq.panel.pdf ../reseq/cnv/segmented_coverage/$P_Diagnosis.segmented-coverage.tsv  ../reseq/cnv/segmented_coverage/$P_Remission.segmented-coverage.tsv ../reseq/cnv/segmented_coverage/$P_Diagnosis.segmented-coverage.pdf) \
-	$(foreach P, $(PATIENTS_RESEQ_NONREL), ../reseq/cnv/$P_Diagnosis.coverage.reseq.panel.tsv ../reseq/cnv/cov-plot.$P.dia.nonrel.reseq.panel.pdf ../reseq/cnv/segmented_coverage/$P_Diagnosis.segmented-coverage.tsv ../reseq/cnv/segmented_coverage/$P_Diagnosis.nonrel.segmented-coverage.pdf)
+	 $(foreach P, $(PATIENTS_RESEQ_NONREL), ../reseq/cnv/$P_Diagnosis.coverage.reseq.panel.tsv ../reseq/cnv/cov-plot.$P.dia.nonrel.reseq.panel.pdf ../reseq/cnv/segmented_coverage/$P_Diagnosis.segmented-coverage.tsv ../reseq/cnv/segmented_coverage/$P_Diagnosis.nonrel.segmented-coverage.pdf) \
+	 relapsing.rel.circos.png
 
 # get GC content for each exon
 gc/truseq_exome_targeted_regions.hg19.gc.bed: ~/generic/data/hg19/ucsc.hg19.fasta ~/generic/data/illumina/truseq_exome_targeted_regions.hg19.bed.chr
@@ -109,6 +110,7 @@ cov-plot.%.panel.pdf: %_dia.coverage.panel.tsv %_rel.coverage.panel.tsv %_rem.co
 		--patient $*_dia \
 		--tumor $(word 1,$^) \
 		--normal $(word 2,$^) \
+		--circos ~/hdall/results/cnv/circos/$*_dia.cnv.circos.tsv \
 		--output $@.part
 	mv $@.part $@
 
@@ -117,6 +119,7 @@ cov-plot.%.panel.pdf: %_dia.coverage.panel.tsv %_rel.coverage.panel.tsv %_rem.co
 		--patient $*_rel \
 		--tumor $(word 1,$^) \
 		--normal $(word 2,$^) \
+		--circos ~/hdall/results/cnv/circos/$*_rel.cnv.circos.tsv \
 		--output $@.part
 	mv $@.part $@
 	
@@ -125,6 +128,11 @@ cov-plot.%.panel.pdf: %_dia.coverage.panel.tsv %_rel.coverage.panel.tsv %_rem.co
 		--patient $*_dia \
 		--tumor $(word 1,$^) \
 		--normal $(word 2,$^) \
+		--circos ~/hdall/results/cnv/circos/$*_dia.nonrel.cnv.circos.tsv \
 		--output $@.part
 	mv $@.part $@
+	
+relapsing.rel.circos.png: $(foreach P, $(PATIENTS_RESEQ_MATCHED) $(PATIENTS_RESEQ_RELONLY), ~/hdall/results/cnv/circos/$P_rel.cnv.circos.tsv)
+	 ~/tools/circos-0.64/bin/circos --conf ~/hdall/scripts/cnv/circos.conf
+	 mv relapsing.rel.circos.part.png $@ 
 

@@ -276,6 +276,26 @@ test_pairwise_assoc(c, sig.level=0.99,
 )
 dev.off()
 
+#---
+# correlation of mutations with age
+#---
+png("~/hdall/results/clinical/supp-figure.corr.age-dia.num-mut-dia.png", width=2048, height=1024)
+par(mfrow=c(1,2), cex=2)
+
+fit <- lm(num.mut.dia~age_dia, data=c)
+p <- anova(fit)$'Pr(>F)'[1]
+R <- summary(fit)$r.squared
+plot(c$age_dia, c$num.mut.dia, xlab="age at diagnosis (years)", ylab="Number of mutations", xlim=c(0, 20), ylim=c(0, 250), main=sprintf("R=%.2f, p=%.2g", R, p))
+abline(fit, col="red")
+
+fit <- lm(num.mut.rel.excl.patA~age_rel, data=c)
+p <- anova(fit)$'Pr(>F)'[1]
+R <- summary(fit)$r.squared
+plot(c$age_rel, c$num.mut.rel.excl.patA, xlab="age at relapse (years)", ylab="Number of mutations", xlim=c(0, 20), ylim=c(0, 250), main=sprintf("R=%.2f, p=%.2g", R, p))
+abline(fit, col="red")
+
+dev.off()
+
 #pdf("~/hdall/results/clinical/clinical.pdf")
 #tests <- test_pairwise_assoc(c, 
 #		sig.level=0.1, 

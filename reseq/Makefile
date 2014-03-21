@@ -8,6 +8,7 @@ empty:=
 space:= $(empty) $(empty)
 
 PATIENTS=1009302 1019357 1020540 1020583 1021247 1021392 1021631 1022914 1023056 1023392 1024518 1024543 1025108 1025409 1187 314 399 430 446 460 545 592 715 786 792 818 842 A B C D FB11 G HS6 K MB2 X 243 933 944 KA14651 KD20493 KE12025 MJ16441 NH17331 PJ13414 RD17412 RS13466 ST13892 ZA16211 Y
+PATIENTS_RESEQ=1009302 1019357 1020540 1020583 1021392 1021631 1022914 1023056 1023392 1024518 1024543 1025108 1025409 1187 FB11 G HS6 K MB2 243 933 944 KA14651 KD20493 KE12025 MJ16441 NH17331 PJ13414 RD17412 RS13466 ST13892 ZA16211
 PATIENTS_REL_ONLY=1017005 1021865 1023545 AD15 BL16 BM18 CA18 DM1 FE1 FS1 GD18 GD1 HJ15 HJA15 HL1 KA17 KJ17 KL16 LB17 LM18 MJ1 ML10 MV16 NS18 PC16 RT15 RT16 SJM16 SKR1 SL1 SLM1 ST14 WA1 ZE13
 PATIENTS_DIA_ONLY=1004564 1010661 1010781 1019964 1020076 1021087 1023338 1023616 1024589 1026233 1026662 B100 EF7 FB14 G44 HD7
 PATIENTS_DIA_NON_REL=331 380 442 350 461 466 529 591 602 619 633 634 642 653 666 672 697 698 700 709 724 762 776 777 779 782 409 NRD_1 73 NRD_2 NRD_3 60 594 687 748 754 646 530 718 681 39 49 45 54 110 111 134 143 147 199 NRD_4
@@ -100,6 +101,19 @@ lolliplot/matched/lolliplot_CREBBP_NM_004380_both.svg: ../id-mappings.tsv ../lol
 		--filtered-variants filtered-variants.reseq.tsv \
 		--output-directory lolliplot/matched \
 		2>&1 | $(LOG)
+
+#-------------
+# coverage
+#-------------
+
+.PHONY: coverage
+coverage: $(foreach P, $(PATIENTS_RESEQ), coverage/$P_Diagnosis.coverage.bedtools.txt coverage/$P_Relapse.coverage.bedtools.txt coverage/$P_Remission.coverage.bedtools.txt) \
+		  $(foreach P, $(PATIENTS_DIAONLY), coverage/$P_Diagnosis.coverage.bedtools.txt coverage/$P_Remission.coverage.bedtools.txt) \
+		  $(foreach P, $(PATIENTS_RELONLY), coverage/$P_Relapse.coverage.bedtools.txt coverage/$P_Remission.coverage.bedtools.txt)
+		  
+coverage/%.coverage.bedtools.txt: ~/hdall/data/reseq/bam/%.duplicate_marked.realigned.recalibrated.bam ~/hdall/data/reseq/enriched_regions.bed
+	samtools view -bq 1 $< | bedtools coverage -hist -abam - -b ~/hdall/data/reseq/enriched_regions.bed | grep ^all > $@.part
+	mv $@.part $@
 
 #-------------
 # final lists

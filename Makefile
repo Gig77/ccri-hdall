@@ -109,6 +109,16 @@ filtered-variants.cosmic.normaf.tsv: filtered-variants.cosmic.tsv cnv/hdall.cnv.
 		2>&1 1>$@.part | tee -a make.log
 	mv $@.part $@ 
 
+#---
+# coverage
+#---
+
+.PHONY:
+coverage: $(foreach P, $(PATIENTS), coverage/$P_dia.coverage.bedtools.txt coverage/$P_rel.coverage.bedtools.txt coverage/$P_rem.coverage.bedtools.txt) 
+
+coverage/%.coverage.bedtools.txt: ~/hdall/data/bam/%.merged.duplicate_marked.realigned.recalibrated.bam ~/generic/data/illumina/truseq_exome_targeted_regions.hg19.bed.chr
+	samtools view -bq 1 $< | bedtools coverage -hist -abam - -b ~/generic/data/illumina/truseq_exome_targeted_regions.hg19.bed.chr | grep ^all > $@.part
+	mv $@.part $@
 	
 # annotation tracks
 

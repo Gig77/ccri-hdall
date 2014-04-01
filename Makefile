@@ -3,7 +3,7 @@ SHELL=/bin/bash
 
 PATIENTS = 314 1021247 399 430 446 460 545 592 715 786 792 818 842 A B C D E X Y
 
-all: filtered-variants.tsv filtered-vcf filtered-variants.cosmic.tsv filtered-variants.cosmic.normaf.tsv gene-patient-matrix.tsv gene-patient-matrix.af20.tsv gene-patient-matrix.tier1.tsv cnv/gene-patient-matrix.cnv.tsv lolliplot/lolliplot_CREBBP_NM_004380_both.svg ipa/mutated_relapse.tsv stats
+all: coverage filtered-variants.tsv filtered-vcf filtered-variants.cosmic.tsv filtered-variants.cosmic.normaf.tsv gene-patient-matrix.tsv gene-patient-matrix.af20.tsv gene-patient-matrix.tier1.tsv cnv/gene-patient-matrix.cnv.tsv lolliplot/lolliplot_CREBBP_NM_004380_both.svg ipa/mutated_relapse.tsv stats
 
 filtered-vcf: $(foreach P, $(PATIENTS), filtered_variants/$P_rem_dia.filtered.vcf.gz filtered_variants/$P_rem_rel.filtered.vcf.gz)
 
@@ -117,7 +117,7 @@ filtered-variants.cosmic.normaf.tsv: filtered-variants.cosmic.tsv cnv/hdall.cnv.
 coverage: $(foreach P, $(PATIENTS), coverage/$P_dia.coverage.bedtools.txt coverage/$P_rel.coverage.bedtools.txt coverage/$P_rem.coverage.bedtools.txt) 
 
 coverage/%.coverage.bedtools.txt: ~/hdall/data/bam/%.merged.duplicate_marked.realigned.recalibrated.bam ~/generic/data/illumina/truseq_exome_targeted_regions.hg19.bed.chr
-	samtools view -bq 1 $< | bedtools coverage -hist -abam - -b ~/generic/data/illumina/truseq_exome_targeted_regions.hg19.bed.chr | grep ^all > $@.part
+	samtools view -bq 1 -F 0x400 $< | bedtools coverage -hist -abam - -b ~/generic/data/illumina/truseq_exome_targeted_regions.hg19.bed.chr | grep ^all > $@.part
 	mv $@.part $@
 	
 # annotation tracks

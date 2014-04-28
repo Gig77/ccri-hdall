@@ -10,7 +10,7 @@ use Getopt::Long;
 use Tabix;
 use Carp;
 
-my ($vcf_out, $header, $rejected_variants_file, $sample_identifier, $vcf_in, $var_type);
+my ($vcf_out, $header, $rejected_variants_file, $sample_identifier, $vcf_in, $var_type, $min_num_rem);
 my ($rmsk_file, $simplerepeat_file, $blacklist_file, $segdup_file, $g1k_accessible_file, $ucsc_retro_file, $remission_variants_file, $evs_file);
 GetOptions
 (
@@ -27,8 +27,11 @@ GetOptions
 	"ucscRetro=s" => \$ucsc_retro_file, # TABIX indexed UCSC table ucscRetroAli5
 	"rejected-variants-file=s" => \$rejected_variants_file, # file with variants rejected based on manual curation; will be filtered from output
 	"remission-variants-file=s" => \$remission_variants_file, # TABIX indexed file with variants found in remission samples (GATK)
-	"evs-file=s" => \$evs_file # TABIX indexed file with wariants from Exome Variant Server (http://evs.gs.washington.edu/EVS/)
+	"evs-file=s" => \$evs_file, # TABIX indexed file with wariants from Exome Variant Server (http://evs.gs.washington.edu/EVS/)
+	"min-num-rem-to-exclude=i" => \$min_num_rem # minimum number of remission samples in which variant needs to be found in order to exclude it
 );
+
+$min_num_rem = 2 if (!defined $min_num_rem);
 
 # TABLE: filtered-variants
 if ($header)
@@ -637,7 +640,7 @@ while (my $line = $vcf->next_line())
 	if (@dups > 0) { push(@rejected_because, "segmental duplication"); }
 	if (@blacklist > 0) { push(@rejected_because, "blacklisted region"); }
 	#if (@retro > 0) { push(@rejected_because, "retrotransposon"); }
-	if (@rem_samples > 1) { push(@rejected_because, "present remissions"); }
+	if (@rem_samples >= $min_num_rem) { push(@rejected_because, "present remissions"); }
 	if ($x->{ID} and $x->{ID} ne ".")  { push(@rejected_because, "dbSNP"); }  
 	if (defined $x->{INFO}{'dbNSFP_1000Gp1_AF'} and $x->{INFO}{'dbNSFP_1000Gp1_AF'} > 0) { push(@rejected_because, "g1k"); }
 	if ($x->{CHROM} eq "hs37d5") { push(@rejected_because, "decoy genome"); }

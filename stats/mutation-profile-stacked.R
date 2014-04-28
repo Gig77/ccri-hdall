@@ -23,8 +23,8 @@ m.rel <- m.dia
 
 # per patient
 
-#pdf("stats/mutation-profile-stacked.pdf", width=15)
-png("~/hdall/results/stats/mutation-profile-stacked.png", width=2000, height=2000, res=200)
+pdf("~/hdall/results/stats/mutation-profile-stacked.pdf", width=8)
+#png("~/hdall/results/stats/mutation-profile-stacked.png", width=2000, height=2000, res=200)
 
 #layout(matrix(c(seq(1:20),rep(21,5)), ncol=5, byrow=T), heights=c(rep(0.23, 4), 0.08))
 #par(mar=c(2.0, 2.5, 3, 0))

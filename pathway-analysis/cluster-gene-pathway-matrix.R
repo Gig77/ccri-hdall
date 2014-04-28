@@ -22,6 +22,10 @@ if (ncol(x) < 2)
 	quit()
 }
 
+# suppress leaf labels
+#rownames(x) <- rep("", nrow(x))
+#colnames(x) <- rep("", ncol(x))
+
 hc.rows <- hclust(dist(x, method="binary"), method="average")
 hc.cols <- hclust(dist(t(x), method="binary"), method="average")
 
@@ -31,7 +35,7 @@ write.table(x, file=args[2], col.names=NA, row.names=T, sep="\t", quote=F)
 if (!is.na(args[3]) && nrow(x) > 2) {
 	pdf(args[3], width=30, height=20)
 	par(cex=0.6)
-	plot(hc.rows, main=args[3])
+	plot(hc.rows, main=args[3], xlab=)
 	dev.off()
 }
 

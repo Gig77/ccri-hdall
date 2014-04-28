@@ -49,10 +49,13 @@ if ($format eq 'andrea')
 		my $cnumber = 2;
 		if ($mean < 0.6) { $cnumber = 0; }
 		elsif ($mean < 1.6) { $cnumber = 1; }
-		elsif ($mean >= 2.3 and $mean < 3.6) { $cnumber = 3; }
-		elsif ($mean >= 3.6 and $mean < 4.6) { $cnumber = 4; }
+		elsif ($mean >= 2.3 and $mean < 3.1) { $cnumber = 3; }
+		elsif ($mean >= 3.1 and $mean < 4.6) { $cnumber = 4; }
 		elsif ($mean >= 4.6 and $mean < 5.6) { $cnumber = 5; }
 		elsif ($mean >= 5.6) { $cnumber = "6+"; }
+		
+		# correct glitch in input files
+		$cnumber = 3 if ($event eq "gain" and $cnumber == 0);
 		
 		my $genes = $overlapping_features;
 		$genes =~ s/region, ends, 0, bp, before, CNTNAP2, \(\+\)//;

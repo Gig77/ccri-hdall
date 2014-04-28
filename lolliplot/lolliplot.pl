@@ -10,12 +10,13 @@ use Log::Log4perl qw(:easy);
 use Getopt::Long;
 use Lolliplot;
 
-my ($hugos, $filtered_variants_file, $output_directory, $patients_list);
+my ($hugos, $filtered_variants_file, $output_directory, $patients_list, $min_af);
 GetOptions
 (
 	"hugos=s" => \$hugos, # HUGO gene symbols, e.g. CREBBP,KRAS,NRAS
 	"filtered-variants=s" => \$filtered_variants_file, # file with filtered variants
 	"patients=s" => \$patients_list, # if specified, consider mutations only from these patients
+	"min-af=s" => \$min_af, # minimum allelic frequency
 	"output-directory=s" => \$output_directory # output directory
 );
 
@@ -140,6 +141,7 @@ INFO("$lines domain annotations read from file $ENV{HOME}/hdall/results/lolliplo
 # TABLE: filtered-variants
 $lines = 0;
 my %variants;
+my $skipped_minaf = 0;
 open(V, $filtered_variants_file) or die "could not open file $filtered_variants_file\n";
 <V>; # skip header
 while(<V>)
@@ -150,6 +152,11 @@ while(<V>)
 
 	next if ($patients_list and !$patients_hash{$patient});
 	next if ($status eq "REJECT");
+	if ($min_af and $freq_leu < $min_af)
+	{
+		$skipped_minaf ++;
+		next;
+	}
 	
 	$snpeff =~ s/EFF=//;
 	foreach my $eff (split(",", $snpeff))
@@ -200,6 +207,7 @@ while(<V>)
 }
 close(V);
 INFO("$lines variants read from file $filtered_variants_file");
+INFO("$skipped_minaf variants skipped with AF below $min_af") if ($min_af);
 
 
 Lolliplot->new

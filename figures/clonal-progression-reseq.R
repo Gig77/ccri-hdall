@@ -1,12 +1,12 @@
 #library("RColorBrewer")
 
-# 715, 545, Y, 592
-p <- "592"
+# 715, 545, Y, 592, 430
+p <- "430"
 min.cov <- 30
 cov.max.std.dev <- 2
 genes.to.label <- c("CREBBP", "KRAS", "NRAS", "FLT3", "PTPN11", "MLL2")
 exclude.chr <- c("chrX", "chrY")
-blast.count <- list("715.dia" = 92, "715.rel" = 92, "715.rel3" = "92", "545.dia" = 97, "545.rel" = 86, "Y.dia" = 98, "Y.rel" = 95, "592.dia" = 94, "592.rel" = 98)
+blast.count <- list("715.dia" = 92, "715.rel" = 92, "715.rel3" = "92", "545.dia" = 97, "545.rel" = 86, "Y.dia" = 98, "Y.rel" = 95, "592.dia" = 94, "592.rel" = 98, "430.dia" = 81, "430.rel" = 72)
 
 # exome seq variants
 data <- read.csv("~/hdall/results/filtered-variants.cosmic.normaf.tsv", sep="\t")
@@ -71,7 +71,8 @@ m <- m[m$dia>=0.1 | m$rel>=0.1 | m$rel3>=0.1,]
 
 if (p != "715")
 {
-	png(paste0("~/hdall/results/figures/clonal-progression-", p, ".png"))
+	#png(paste0("~/hdall/results/figures/clonal-progression-", p, ".png"))
+	pdf(paste0("~/hdall/results/figures/clonal-progression-", p, ".pdf"))
 	plot(0, 0, xlim=c(1, 3.1), ylim=c(0, 0.7), type="n", xaxt="n", yaxt="n", xlab="", ylab="allelic frequency", main=paste(p, " (n=", nrow(m), ")", sep=""))
 	axis(1, at=c(1.3, 2.8), labels=c(paste0("diagnosis\n(", blast.count[[paste0(p, ".dia")]], "% blasts)"), paste0("relapse\n(", blast.count[[paste0(p, ".rel")]], "% blasts)")), padj=0.5)
 	axis(2, at = seq(0, 1, 0.1), las = 1) 
@@ -88,7 +89,8 @@ if (p != "715")
 		}
 	}
 } else {
-	png(paste0("~/hdall/results/figures/clonal-progression-", p, ".png"), width=1024)
+	#png(paste0("~/hdall/results/figures/clonal-progression-", p, ".png"), width=1024)
+	pdf(paste0("~/hdall/results/figures/clonal-progression-", p, ".pdf"), width=12)
 	plot(0, 0, xlim=c(1, 4.6), ylim=c(0, 0.7), type="n", xaxt="n", yaxt="n", xlab="", ylab="allelic frequency", main=paste(p, " (n=", nrow(m), ")", sep=""))
 	axis(1, at=c(1.3, 2.8, 4.3), labels=c(paste0("diagnosis\n(", blast.count[[paste0(p, ".dia")]], "% blasts)"), paste0("relapse 1\n(", blast.count[[paste0(p, ".rel")]], "% blasts)"), paste0("relapse 3\n(", blast.count[[paste0(p, ".rel3")]], "% blasts)")), padj=0.5)
 	axis(2, at = seq(0, 1, 0.1), las = 1) 

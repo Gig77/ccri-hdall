@@ -90,6 +90,7 @@ lolliplot/lolliplot_CREBBP_NM_004380_both.svg: ../id-mappings.tsv ../lolliplot/p
 	perl ~/hdall/scripts/lolliplot/lolliplot.pl \
 		--hugos CREBBP,KRAS,NRAS,PTPN11,FLT3 \
 		--filtered-variants filtered-variants.reseq.tsv \
+		--min-af 0.1 \
 		--output-directory lolliplot/ \
 		2>&1 | $(LOG)
 		
@@ -100,6 +101,7 @@ lolliplot/matched/lolliplot_CREBBP_NM_004380_both.svg: ../id-mappings.tsv ../lol
 		--hugos CREBBP,KRAS,NRAS,PTPN11,FLT3 \
 		--patients $(subst $(space),$(comma),$(foreach P, $(PATIENTS),$P)) \
 		--filtered-variants filtered-variants.reseq.tsv \
+		--min-af 0.1 \
 		--output-directory lolliplot/matched \
 		2>&1 | $(LOG)
 
@@ -110,10 +112,15 @@ lolliplot/matched/lolliplot_CREBBP_NM_004380_both.svg: ../id-mappings.tsv ../lol
 .PHONY: coverage
 coverage: $(foreach P, $(PATIENTS_EXOME), coverage/$P_Diagnosis.coverage.bedtools.txt coverage/$P_Relapse.coverage.bedtools.txt) \
 		  $(foreach P, $(PATIENTS_RESEQ_MATCHED), coverage/$P_Diagnosis.coverage.bedtools.txt coverage/$P_Relapse.coverage.bedtools.txt coverage/$P_Remission.coverage.bedtools.txt) \
-		  $(foreach P, $(PATIENTS_RESEQ_DIAONLY), coverage/$P_Diagnosis.coverage.bedtools.txt coverage/$P_Remission.coverage.bedtools.txt) \
-		  $(foreach P, $(PATIENTS_RESEQ_RELONLY), coverage/$P_Relapse.coverage.bedtools.txt coverage/$P_Remission.coverage.bedtools.txt)
+		  $(foreach P, $(PATIENTS_DIA_ONLY), coverage/$P_Diagnosis.coverage.bedtools.txt coverage/$P_Remission.coverage.bedtools.txt) \
+		  $(foreach P, $(PATIENTS_REL_ONLY), coverage/$P_Relapse.coverage.bedtools.txt coverage/$P_Remission.coverage.bedtools.txt) \
+		  $(foreach P, $(PATIENTS_DIA_NON_REL), coverage/nonrelapsing/$P_Diagnosis.coverage.bedtools.txt)
 		  
 coverage/%.coverage.bedtools.txt: ~/hdall/data/reseq/bam/%.duplicate_marked.realigned.recalibrated.bam ~/hdall/data/reseq/enriched_regions.bed
+	samtools view -bq 1 -F 0x400 $< | bedtools coverage -hist -abam - -b ~/hdall/data/reseq/enriched_regions.bed | grep ^all > $@.part
+	mv $@.part $@
+
+coverage/nonrelapsing/%.coverage.bedtools.txt: ~/hdall/data/reseq/bam/%.duplicate_marked.realigned.recalibrated.bam ~/hdall/data/reseq/enriched_regions.bed
 	samtools view -bq 1 -F 0x400 $< | bedtools coverage -hist -abam - -b ~/hdall/data/reseq/enriched_regions.bed | grep ^all > $@.part
 	mv $@.part $@
 

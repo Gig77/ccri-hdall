@@ -101,7 +101,7 @@ cov-plot.%.panel.pdf: %_dia.coverage.panel.tsv %_rel.coverage.panel.tsv %_rem.co
 	
 ../reseq/cnv/segmented_coverage/%.segmented-coverage.tsv: ~/hdall/data/reseq/bam/%.duplicate_marked.realigned.recalibrated.bam ~/hdall/scripts/cnv/get-segment-coverage.pl
 	~/tools/samtools-0.1.19/samtools depth -Q 1 $< \
-		| perl ~/hdall/scripts/cnv/get-segment-coverage.pl --bin-size 250000 \
+		| perl ~/hdall/scripts/cnv/get-segment-coverage.pl --sample $* --bin-size 250000 \
 		> $@.part
 	mv $@.part $@
 

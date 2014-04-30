@@ -25,6 +25,7 @@ if ($format eq 'andrea')
 		chomp;
 		my ($chromosome, $start, $end, $sample_id, $mean, $copy_number, $overlapping_features, $nearest_feature) = split /\t/;
 
+		next if ($sample_id =~ /(460|715)/);  # these two patients are also in Maria's file (CytoScanHD arrays), which we want to use because of higher resolution
 		my ($patient, $sample) = $sample_id =~ /^(\d+)(D|R)$/;	
 		if (!$patient or !$sample)
 		{

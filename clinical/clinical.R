@@ -183,6 +183,13 @@ c$kras.or.nras.or.ikzf.rel <- c$kras.relapsing.rel | c$nras.relapsing.rel | c$ik
 
 cr <- c[c$cohort=="relapsing",]
 
+#----
+# CLONAL KINETICS
+#----
+c$clonal.kinetic <- NA
+c$clonal.kinetic[c$patient_id %in% c("430", "446", "818", "B", "C", "842", "D", "1021247", "792", "A")] <- "progression"
+c$clonal.kinetic[c$patient_id %in% c("460", "545", "715", "592", "786", "X", "Y")] <- "ancestral-derived"
+c$clonal.kinetic <- as.factor(c$clonal.kinetic)
 
 #boxplot(first_rem_months ~ sex, data=cr, na.action=na.exclude, outline=F, names=c("female", "male"))
 #stripchart(first_rem_months ~ sex, data=cr, method="jitter", na.action=na.exclude, vertical=T, pch=19, col=c("red", "blue"), add=T)
@@ -199,6 +206,13 @@ dev.off()
 #---
 pdf("~/hdall/results/clinical/clinical-cohort-vs-mutation.pdf")
 test_pairwise_assoc(c, include.group=c("cohort", "crebbp.dia", "kras.dia", "nras.dia", "ptpn11.dia", "ras.dia"), exclude.group=list(c("crebbp.dia", "kras.dia", "nras.dia", "ptpn11.dia", "ras.dia")))
+dev.off()
+
+#---
+# associations of mutation kinetics (progression vs. ancestral clone)
+#---
+pdf("~/hdall/results/clinical/clinical-kinetic-vs-all.pdf")
+test_pairwise_assoc(c, sig.level=0.99, include=c("clonal.kinetic"), exclude=c("patient_id", "exome", "panel", "mrd_level_rel", "rel_protocol", "BM.transplantation.date", "study_no_relapse", "patno_kiel_rem", "patno_berlin_rel", "X", "other.comments"))
 dev.off()
 
 #---

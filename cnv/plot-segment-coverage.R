@@ -188,11 +188,13 @@ normal.chrs <- list(
 		"NRD_3_dia" = c("chr2", "chr3"),
 		"NRD_4_dia" = c("chr2", "chr3"))
 
-t <- read.delim(opt$tumor, header=F)
-n <- read.delim(opt$normal, header=F)
+t <- read.delim(opt$tumor, header=F, colClasses=c("factor", "integer", "numeric"))
+n <- read.delim(opt$normal, header=F, colClasses=c("factor", "integer", "numeric"))
 m <- merge(n, t, by=c("V1", "V2"))
 m$ratio <- log((m[,"V3.y"] / sum(m[,"V3.y"])) / (m[,"V3.x"] / sum(m[,"V3.x"])), 2)
 m$ratio <- m$ratio - ifelse(!is.null(normal.chrs[[opt$patient]]), mean(m$ratio[which(m$V1 %in% normal.chrs[[opt$patient]] & is.finite(m$ratio))]), 0)
+m$ratio[m$ratio > 1.5] <- 1.5
+m$ratio[m$ratio < -1.5] <- -1.5
 
 set.seed(25)
 CNA.object <-CNA(genomdat = m[,"ratio"], chrom = m[,"V1"], maploc = m[,"V2"], data.type = 'logratio')
@@ -201,7 +203,7 @@ CNA.smoothed <- smooth.CNA(CNA.object)
 segs <- segment(CNA.smoothed, alpha = 0.01, verbose=0, min.width=2)
 
 pdf(opt$output, width=30, paper="A4r")
-par(mfrow=c(5,5), mar=c(0.5,2,1.5,1))
+par(mfrow=c(5,5), mar=c(0.5,2,1.5,1), oma=c(0, 0, 2, 0))
 for (c in c("chr1", "chr2", "chr3", "chr4", "chr5", "chr6", "chr7", "chr8", "chr9", "chr10", "chr11", "chr12", "chr13", "chr14", "chr15", "chr16", "chr17", "chr18", "chr19", "chr20", "chr21", "chr22", "chrX", "chrY"))
 {
 	plot(m[m$V1==c,"V2"], m[m$V1==c,"ratio"], ylim=c(-1.5,1.5), main=c, cex=0.3, xaxt='n')
@@ -210,6 +212,7 @@ for (c in c("chr1", "chr2", "chr3", "chr4", "chr5", "chr6", "chr7", "chr8", "chr
 		lines(c(segs$output$loc.start[i], segs$output$loc.end[i]),c(segs$output$seg.mean[i],segs$output$seg.mean[i]),type="l", col="orange", lty=1, lwd=3)
 	}
 }
+mtext(opt$patient, outer=TRUE, cex=1.5)
 dev.off()
 
 # write circos output file

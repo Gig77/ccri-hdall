@@ -239,7 +239,7 @@ m.relapsing.cons <- merge(m.relapsing.dia, m.relapsing.rel, by=c("patient", "mut
 m.relapsing.cons <- paste0(m.relapsing.cons$patient, ":", m.relapsing.cons$mut)
 m.nonrelapsing <- m[m$cohort=="non-relapsing" & m$sample=="diagnosis",]
 
-pdf("~/hdall/results/ras-heterogeneity/ras-barplot.pdf", width=18, height=15)
+pdf("~/hdall/results/ras-heterogeneity/ras-barplot.pdf", width=18, height=13)
 
 #---
 # RELAPSING, DIA
@@ -260,17 +260,19 @@ m.relapsing.dia$label <- ifelse(paste0(m.relapsing.dia$patient, ":", m.relapsing
 plot.dia <- ggplot(data=m.relapsing.dia, aes(x=patient, y=frequency.norm, fill=mut, order=-frequency.norm)) + 
 		facet_grid(.~group, scale="free_x", space = "free_x") +
 		geom_bar(stat="identity", width=0.9, colour="white") +
-		geom_text(aes(label=label, y=midpoint), size=4, vjust=1, colour="white", parse=TRUE) +
-		scale_fill_manual(values = cols, name="Gene", breaks=c("KRAS:chr12:25378561:G>A", "NRAS:chr1:115256528:T>A", "PTPN11:chr12:112888163:G>T", "FLT3:chr13:28589780:A>C"), labels=c("KRAS", "NRAS", "PTPN11", "FLT3")) + 
-		scale_y_continuous(expand = c(0,0), limits = c(0,1), breaks=seq(0, 1, 0.1)) + 
+		geom_text(aes(label=label, y=midpoint), size=8, vjust=1, colour="white", parse=TRUE) +
+		scale_fill_manual(values = cols, breaks=c("KRAS:chr12:25378561:G>A", "NRAS:chr1:115256528:T>A", "PTPN11:chr12:112888163:G>T", "FLT3:chr13:28589780:A>C"), labels=c("KRAS", "NRAS", "PTPN11", "FLT3")) + 
+		scale_y_continuous(expand = c(0,0), limits = c(0,1), breaks=c(0.25, 0.5, 0.75, 1)) +
 		theme_bw() + 
 		theme(axis.text.x = element_text(angle = 90, hjust = 1, size=15), axis.text.y = element_text(size=13), axis.title.y = element_text(size=18, vjust=0.1), axis.title.x = element_blank(), 
-				legend.title = element_text(size=15), legend.text=element_text(size=13), legend.key.size=unit(0.7, "cm"), legend.justification=c(1,1), legend.position=c(1,1), legend.background=element_rect(colour="black"),
+				legend.title = element_blank(), legend.text=element_text(size=13), legend.key.size=unit(0.7, "cm"), legend.justification=c(1,1), legend.position=c(1,1), legend.background=element_rect(colour="black"),
 				strip.text.x = element_text(size=15), 
+				panel.grid.major.x = element_blank(),
+				panel.grid.minor.y = element_blank(),
 				plot.title=element_text(size=20, face="bold", vjust=1), plot.margin=unit(c(0.5,1,0,1), "cm")) +
 #		geom_text(aes(label = mut.short), size = 3, hjust = 0.5, vjust = 1.2, position = "stack", colour="white") +
-		ylab("Allelic frequency (adjusted)") +
-		ggtitle("Ras pathway mutations at diagnosis")
+		ylab("Allelic frequency diagnosis") 
+#		+ ggtitle("Ras pathway mutations at diagnosis")
 
 #---
 # RELAPSING, REL
@@ -291,17 +293,19 @@ m.relapsing.rel$label <- ifelse(paste0(m.relapsing.rel$patient, ":", m.relapsing
 plot.rel <- ggplot(data=m.relapsing.rel, aes(x=patient, y=frequency.norm, fill=mut, order=-frequency.norm)) + 
 				facet_grid(.~group, scale="free_x", space = "free_x") +
 				geom_bar(stat="identity", width=0.9, colour="white") +
-				geom_text(aes(label=label, y=midpoint), size=4, vjust=1, colour="white", parse=TRUE) +
+				geom_text(aes(label=label, y=midpoint), size=8, vjust=1, colour="white", parse=TRUE) +
 				scale_fill_manual(values = cols, name="Mutation", guide=FALSE) + 
-				scale_y_continuous(expand = c(0,0), limits = c(0,1), breaks=seq(0, 1, 0.1)) + 
+				scale_y_continuous(expand = c(0,0), limits = c(0,1), breaks=c(0.25, 0.5, 0.75, 1)) +
 				theme_bw() + 
 				theme(axis.text.x = element_text(angle = 90, hjust = 1, size=15), axis.text.y = element_text(size=13), axis.title.x = element_text(size=20, vjust=0.2), axis.title.y = element_text(size=18, vjust=0.1), 
 						legend.key.size=unit(0.35, "cm"),
 						strip.text.x = element_text(size=15), 
+						panel.grid.major.x = element_blank(),
+						panel.grid.minor.y = element_blank(),
 						plot.title=element_text(size=20, face="bold", vjust=1), plot.margin=unit(c(1,1,0.3,1), "cm")) +
 #				geom_text(aes(label = mut.short), size = 3, hjust = 0.5, vjust = 1.2, position = "stack", colour="white") +
-				ylab("Allelic frequency (adjusted)") +
-				ggtitle("Ras pathway mutations at relapse")
+				ylab("Allelic frequency relapse") 
+#				+ ggtitle("Ras pathway mutations at relapse")
 		
 grid.arrange(plot.dia, plot.rel, nrow=2)
 

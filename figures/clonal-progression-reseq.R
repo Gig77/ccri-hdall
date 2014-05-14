@@ -1,7 +1,7 @@
 #library("RColorBrewer")
 
 # 715, 545, Y, 592, 430
-p <- "430"
+p <- "715"
 min.cov <- 30
 cov.max.std.dev <- 2
 genes.to.label <- c("CREBBP", "KRAS", "NRAS", "FLT3", "PTPN11", "MLL2")
@@ -18,7 +18,8 @@ rel <- data[data$sample=="rem_rel", c("chr", "pos", "ref", "alt", "gene", "freq_
 names(rel)[6] <- "rel"
 
 # patient 715, relapse 3
-rel3 <- read.csv("~/p2ry8-crlf2/results/filtered-variants.cosmic.normaf.tsv", sep="\t", stringsAsFactor=F)
+#rel3 <- read.csv("~/p2ry8-crlf2/results/filtered-variants.cosmic.normaf.tsv", sep="\t", stringsAsFactor=F)
+rel3 <- read.csv("/data/christian/p2ry8-crlf2/results/2014-03-27-old-reference/filtered-variants.cosmic.normaf.tsv", sep="\t", stringsAsFactor=F)
 rel3 <- rel3[rel3$patient == p & rel3$status!="REJECT" & rel3$dp_leu_tot >= min.cov & rel3$dp_rem_tot >= min.cov & !(rel3$chr %in% exclude.chr),]
 rel3 <- rel3[rel3$sample=="rem_rel3", c("chr", "pos", "ref", "alt", "gene", "freq_leu_norm")]
 names(rel3)[6] <- "rel3"

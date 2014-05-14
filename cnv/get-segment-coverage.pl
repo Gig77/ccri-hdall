@@ -4,7 +4,7 @@ use strict;
 use Getopt::Long;
 
 my %diploid_chr = (
-	"92D" => "chr3"
+#	"92D" => "chr3"
 );
 
 my ($sample, $bin_size);

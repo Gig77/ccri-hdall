@@ -28,7 +28,7 @@ INFO(scalar(keys(%id2sym))." id mappgins read from file $ENV{HOME}/hdall/results
 
 # read biomart id mapping to get entrez ids and additional uniprot ids
 my %sym2entrez;
-open(G, "$ENV{HOME}/hdall/results/gene-id-mapping.biomart-0.7.tsv") or die "ERROR: could not read gene list\n";
+open(G, "$ENV{HOME}/generic/data/ensembl/gene-id-mapping.biomart-0.7.tsv") or die "ERROR: could not read gene list\n";
 while(<G>)
 {
 	chomp;

@@ -189,7 +189,7 @@ while(<>)
 }
 
 # TABLE: impacted-genes
-print "patient\tcomparison\tgene\tchr\tstart\tend\ttr_len\tcds_len\texons\tcosmic\tdesc\tnum_mut\tnum_mut_nonsyn\tmax_af\tmax_af_ns\timp_exons\timp_exons_ns\tmut_effects\tdomains\n";
+print "patient\tcomparison\tgene\tchr\tstart\tend\ttr_len\tcds_len\texons\tcosmic\tdesc\tnum_mut\tnum_mut_nonsyn\tnum_mut_deleterious\tmax_af\tmax_af_ns\timp_exons\timp_exons_ns\tmut_effects\tdomains\n";
 foreach my $p (keys(%genes))
 {
 	foreach my $s (keys(%{$genes{$p}}))

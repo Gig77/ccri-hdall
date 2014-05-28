@@ -17,18 +17,18 @@ panel-genes.roi.gz.tbi: panel-genes.roi
 	bgzip -c $^ > panel-genes.roi.gz
 	~/tools/tabix-0.2.6/tabix panel-genes.roi.gz -s 1 -b 2 -e 3
 	
-rel/maf/%.reseq.maf: ../filtered_variants/%.reseq.dbsnp.snpeff.dbNSFP.filtered.vcf ../filtered_variants/%.reseq.indel.dbsnp.snpeff.dbNSFP.filtered.vcf panel-genes.roi.gz.tbi ~/hdall/results/gene-id-mapping.biomart-0.7.tsv ~/hdall/scripts/vcf2maf.pl
+rel/maf/%.reseq.maf: ../filtered_variants/%.reseq.dbsnp.snpeff.dbNSFP.filtered.vcf ../filtered_variants/%.reseq.indel.dbsnp.snpeff.dbNSFP.filtered.vcf panel-genes.roi.gz.tbi ~/generic/data/ensembl/gene-id-mapping.biomart-0.7.tsv ~/hdall/scripts/vcf2maf.pl
 	mkdir -p rel/maf
 	cat $(word 1,$^) | perl ~/hdall/scripts/vcf2maf.pl \
 		--sample $* \
 		--music-roi panel-genes.roi.gz \
-		--mapping-entrez ~/hdall/results/gene-id-mapping.biomart-0.7.tsv \
+		--mapping-entrez ~/generic/data/ensembl/gene-id-mapping.biomart-0.7.tsv \
 		--min-af 0.10 \
 		2>&1 1>$@.part | $(LOG)
 	cat $(word 2,$^) | perl ~/hdall/scripts/vcf2maf.pl \
 		--sample $* \
 		--music-roi panel-genes.roi.gz \
-		--mapping-entrez ~/hdall/results/gene-id-mapping.biomart-0.7.tsv \
+		--mapping-entrez ~/generic/data/ensembl/gene-id-mapping.biomart-0.7.tsv \
 		--min-af 0.10 \
 		2>&1 1>>$@.part | $(LOG)
 	mv $@.part $@
@@ -48,18 +48,18 @@ dia/maf/rem_dia.reseq.maf: $(foreach P, $(PATIENTS), dia/maf/$P_rem_dia.reseq.ma
 	cat $^ >> $@.part
 	mv $@.part $@
 
-dia/maf/%.reseq.maf: ../filtered_variants/%.reseq.dbsnp.snpeff.dbNSFP.filtered.vcf ../filtered_variants/%.reseq.indel.dbsnp.snpeff.dbNSFP.filtered.vcf panel-genes.roi.gz.tbi ~/hdall/results/gene-id-mapping.biomart-0.7.tsv ~/hdall/scripts/vcf2maf.pl
+dia/maf/%.reseq.maf: ../filtered_variants/%.reseq.dbsnp.snpeff.dbNSFP.filtered.vcf ../filtered_variants/%.reseq.indel.dbsnp.snpeff.dbNSFP.filtered.vcf panel-genes.roi.gz.tbi ~/generic/data/ensembl/gene-id-mapping.biomart-0.7.tsv ~/hdall/scripts/vcf2maf.pl
 	mkdir -p dia/maf
 	cat $(word 1,$^) | perl ~/hdall/scripts/vcf2maf.pl \
 		--sample $* \
 		--music-roi panel-genes.roi.gz \
-		--mapping-entrez ~/hdall/results/gene-id-mapping.biomart-0.7.tsv \
+		--mapping-entrez ~/generic/data/ensembl/gene-id-mapping.biomart-0.7.tsv \
 		--min-af 0.10 \
 		2>&1 1>$@.part | $(LOG)
 	cat $(word 2,$^) | perl ~/hdall/scripts/vcf2maf.pl \
 		--sample $* \
 		--music-roi panel-genes.roi.gz \
-		--mapping-entrez ~/hdall/results/gene-id-mapping.biomart-0.7.tsv \
+		--mapping-entrez ~/generic/data/ensembl/gene-id-mapping.biomart-0.7.tsv \
 		--min-af 0.10 \
 		2>&1 1>>$@.part | $(LOG)
 	mv $@.part $@

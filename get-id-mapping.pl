@@ -101,7 +101,7 @@ close(G);
 
 # read biomart id mapping to get previous symbols
 my %approved_symbols;
-open(G, "$ENV{HOME}/hdall/results/gene-id-mapping.biomart-0.7.tsv") or die "ERROR: could not read gene list\n";
+open(G, "$ENV{HOME}/generic/data/ensembl/gene-id-mapping.biomart-0.7.tsv") or die "ERROR: could not read gene list\n";
 while(<G>)
 {
 	chomp;

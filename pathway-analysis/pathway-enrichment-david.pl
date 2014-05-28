@@ -21,7 +21,7 @@ use Carp;
 
 # read biomart id mapping
 my %name2id;
-open(GENES, "/home/STANNANET/christian.frech/hdall/results/gene-id-mapping.biomart-0.7.tsv") or die "ERROR: could not read gene list\n";
+open(GENES, "/home/STANNANET/christian.frech/generic/data/ensembl/gene-id-mapping.biomart-0.7.tsv") or die "ERROR: could not read gene list\n";
 <GENES>;
 while(<GENES>)
 {

@@ -148,7 +148,7 @@ while(<>)
 	next if ($status eq "REJECT");
 	next if ($effect =~ /^(DOWNSTREAM|INTERGENIC|INTRON|UPSTREAM|INTERGENIC_CONSERVED)$/);
 	
-	if ($effect !~ /^(SYNONYMOUS_START|SYNONYMOUS_CODING|SYNONYMOUS_STOP|UTR_5_PRIME|UTR_5_DELETED|START_GAINED|UTR_3_PRIME|UTR_3_DELETED|INTRON_CONSERVED|INTRAGENIC|EXON)$/)
+	if ($non_silent)
 	{
 		$genes{$patient}{$sample}{$gene}{'nonsyn'}{"$chr:$pos:$ref->$alt:$freq_leu:$impact:$effect"} = $genes{$patient}{$sample}{$gene}{'nonsyn'}{"$chr:$pos:$ref->$alt:$freq_leu:$impact:$effect"} 
 			? $genes{$patient}{$sample}{$gene}{'nonsyn'}{"$chr:$pos:$ref->$alt:$freq_leu:$impact:$effect"}.",$snpeff"
@@ -164,6 +164,13 @@ while(<>)
 			print STDERR "ERROR: Could not parse exon number: $line\n" if (!$exno);
 			$genes{$patient}{$sample}{$gene}{'exons_ns'}{$exno} = 1;
 		}
+	}
+
+	if ($deleterious eq "yes")
+	{
+		$genes{$patient}{$sample}{$gene}{'deleterious'}{"$chr:$pos:$ref->$alt:$freq_leu:$impact:$effect"} = $genes{$patient}{$sample}{$gene}{'deleterious'}{"$chr:$pos:$ref->$alt:$freq_leu:$impact:$effect"} 
+			? $genes{$patient}{$sample}{$gene}{'deleterious'}{"$chr:$pos:$ref->$alt:$freq_leu:$impact:$effect"}.",$snpeff"
+			: $snpeff;		
 	}
 	
 	$genes{$patient}{$sample}{$gene}{'all'}{"$chr:$pos:$ref->$alt:$freq_leu:$impact:$effect"} = $genes{$patient}{$sample}{$gene}{'all'}{"$chr:$pos:$ref->$alt:$freq_leu:$impact:$effect"} 
@@ -186,7 +193,7 @@ while(<>)
 }
 
 # TABLE: impacted-genes
-print "patient\tcomparison\tgene\tchr\tstart\tend\ttr_len\tcds_len\texons\tcosmic\tdesc\tnum_mut\tnum_mut_nonsyn\tmax_af\tmax_af_ns\timp_exons\timp_exons_ns\tmut_effects\tdomains\n";
+print "patient\tcomparison\tgene\tchr\tstart\tend\ttr_len\tcds_len\texons\tcosmic\tdesc\tnum_mut\tnum_mut_nonsyn\tnum_mut_deleterious\tmax_af\tmax_af_ns\timp_exons\timp_exons_ns\tmut_effects\tdomains\n";
 foreach my $p (keys(%genes))
 {
 	foreach my $s (keys(%{$genes{$p}}))
@@ -209,6 +216,7 @@ foreach my $p (keys(%genes))
 			
 			print scalar(values(%{$genes{$p}{$s}{$g}{'all'}})), "\t";
 			print scalar(values(%{$genes{$p}{$s}{$g}{'nonsyn'}})), "\t";
+			print scalar(values(%{$genes{$p}{$s}{$g}{'deleterious'}})), "\t";
 
 			print $genes{$p}{$s}{$g}{'max_af'} ? $genes{$p}{$s}{$g}{'max_af'} : "", "\t";
 			print $genes{$p}{$s}{$g}{'max_af_ns'} ? $genes{$p}{$s}{$g}{'max_af_ns'} : "", "\t";

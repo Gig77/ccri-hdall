@@ -14,10 +14,12 @@ use Data::Dumper;
 
 INFO("START: ", join(" ", @ARGV));
 
-my ($music_roi, $keep_variants_file, $entrez_mapping, $sample, $header, $min_af, $deleterious);
+my ($music_roi, $keep_variants_file, $entrez_mapping, $sample, $sample_tumor, $sample_normal, $header, $min_af, $deleterious);
 GetOptions
 (
 	"sample=s" => \$sample,  # e.g. 314_rem_dia
+	"sample-tumor=s" => \$sample_tumor,  # directly specify sample name; otherwise will be parsed from --sample parameter
+	"sample-normal=s" => \$sample_normal,  # directly specify sample name; otherwise will be parsed from --sample parameter
 	"music-roi=s" => \$music_roi,  # MuSiC region of interest (ROI) file (must be tabix accessible, i.e. compressed and indexed)
 #	"keep-variants-file=s" => \$keep_variants_file,  # tab-separated file with variants to keep (chr, start)
 	"mapping-entrez=s" => \$entrez_mapping,  # file with mappings from gene symbol to entrez ids
@@ -32,7 +34,7 @@ if ($header)
 	exit;
 }
 
-die "ERROR: --sample not specified\n" if (!$sample);
+die "ERROR: --sample not specified\n" if (!$sample and (!$sample_tumor or !$sample_normal));
 die "ERROR: --music-roi not specified (.gz file)\n" if (!$music_roi);
 die "ERROR: --mapping-entrez not specified\n" if (!$entrez_mapping);
 die "ERROR: ROI file does not exist: $music_roi\n" if (!-e $music_roi);
@@ -125,11 +127,20 @@ my %patient2sample = (
 	'ZE13_Relapse' => 'ZE13355_Relapse'
 );
 
-my ($patient, $sample_normal, $sample_tumor) = split("_", $sample) or die "ERROR: invalid sample\n";
-my $sample_normal_vcf = $sample_normal; 
-my $sample_tumor_vcf = $sample_tumor; 
-$sample_normal = $patient."_$sample_normal";
-$sample_tumor = $patient."_$sample_tumor";
+my ($patient, $sample_normal_vcf, $sample_tumor_vcf);
+if ($sample)
+{
+	($patient, $sample_normal, $sample_tumor) = split("_", $sample) or die "ERROR: invalid sample\n";
+	$sample_normal_vcf = $sample_normal; 
+	$sample_tumor_vcf = $sample_tumor; 
+	$sample_normal = $patient."_$sample_normal";
+	$sample_tumor = $patient."_$sample_tumor";
+}
+else
+{
+	$sample_tumor_vcf = $sample_tumor;
+	$sample_normal_vcf = $sample_normal;
+}
 
 my $roi = Tabix->new(-data => "$music_roi");
 

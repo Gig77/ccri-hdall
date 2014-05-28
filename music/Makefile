@@ -80,49 +80,49 @@ rel-af20-del/rem_rel.cnv.maf: rel-af20-del/rem_rel.maf ../cnv/hdall.cnv.tsv ~/hd
 	cat ../cnv/hdall.cnv.tsv | perl ~/hdall/scripts/pathway-analysis/cnv2maf.pl --max-size-bp 10000000 | grep "_rel" | grep "del" >> rel-af20-del/rem_rel.cnv.maf.part
 	mv rel-af20-del/rem_rel.cnv.maf.part rel-af20-del/rem_rel.cnv.maf
 
-maf/%.maf: ../filtered_variants/%.snp.filtered.vcf ../filtered_variants/%.indel.filtered.vcf ucsc-genes.hg19.roi ~/hdall/results/gene-id-mapping.biomart-0.7.tsv ~/hdall/scripts/vcf2maf.pl
+maf/%.maf: ../filtered_variants/%.snp.filtered.vcf ../filtered_variants/%.indel.filtered.vcf ucsc-genes.hg19.roi ~/generic/data/ensembl/gene-id-mapping.biomart-0.7.tsv ~/hdall/scripts/vcf2maf.pl
 	mkdir -p maf
 	cat ../filtered_variants/$*.snp.filtered.vcf | perl ~/hdall/scripts/vcf2maf.pl \
 		--sample $* \
 		--music-roi ucsc-genes.hg19.roi.gz \
-		--mapping-entrez ~/hdall/results/gene-id-mapping.biomart-0.7.tsv \
+		--mapping-entrez ~/generic/data/ensembl/gene-id-mapping.biomart-0.7.tsv \
 		2>&1 1>$@.part | grep -vP '(Leading or trailing space|variant.Format|Domain annotations come from)' | tee -a make.log
 	cat ../filtered_variants/$*.indel.filtered.vcf | perl ~/hdall/scripts/vcf2maf.pl \
 		--sample $* \
 		--music-roi ucsc-genes.hg19.roi.gz \
-		--mapping-entrez ~/hdall/results/gene-id-mapping.biomart-0.7.tsv \
+		--mapping-entrez ~/generic/data/ensembl/gene-id-mapping.biomart-0.7.tsv \
 		2>&1 1>>$@.part | grep -vP '(Leading or trailing space|variant.Format|Domain annotations come from)' | tee -a make.log
 	mv $@.part $@
 
-maf-af20/%.maf: ../filtered_variants/%.snp.filtered.vcf ../filtered_variants/%.indel.filtered.vcf ucsc-genes.hg19.roi ~/hdall/results/gene-id-mapping.biomart-0.7.tsv ~/hdall/scripts/vcf2maf.pl
+maf-af20/%.maf: ../filtered_variants/%.snp.filtered.vcf ../filtered_variants/%.indel.filtered.vcf ucsc-genes.hg19.roi ~/generic/data/ensembl/gene-id-mapping.biomart-0.7.tsv ~/hdall/scripts/vcf2maf.pl
 	mkdir -p maf-af20
 	cat ../filtered_variants/$*.snp.filtered.vcf | perl ~/hdall/scripts/vcf2maf.pl \
 		--sample $* \
 		--music-roi ucsc-genes.hg19.roi.gz \
-		--mapping-entrez ~/hdall/results/gene-id-mapping.biomart-0.7.tsv \
+		--mapping-entrez ~/generic/data/ensembl/gene-id-mapping.biomart-0.7.tsv \
 		--min-af 0.20 \
 		2>&1 1>$@.part | grep -vP '(Leading or trailing space|variant.Format|Domain annotations come from)' | tee -a make.log
 	cat ../filtered_variants/$*.indel.filtered.vcf | perl ~/hdall/scripts/vcf2maf.pl \
 		--sample $* \
 		--music-roi ucsc-genes.hg19.roi.gz \
-		--mapping-entrez ~/hdall/results/gene-id-mapping.biomart-0.7.tsv \
+		--mapping-entrez ~/generic/data/ensembl/gene-id-mapping.biomart-0.7.tsv \
 		--min-af 0.20 \
 		2>&1 1>>$@.part | grep -vP '(Leading or trailing space|variant.Format|Domain annotations come from)' | tee -a make.log
 	mv $@.part $@
 
-maf-af20-del/%.maf: ../filtered_variants/%.snp.filtered.vcf ../filtered_variants/%.indel.filtered.vcf ucsc-genes.hg19.roi ~/hdall/results/gene-id-mapping.biomart-0.7.tsv ~/hdall/scripts/vcf2maf.pl
+maf-af20-del/%.maf: ../filtered_variants/%.snp.filtered.vcf ../filtered_variants/%.indel.filtered.vcf ucsc-genes.hg19.roi ~/generic/data/ensembl/gene-id-mapping.biomart-0.7.tsv ~/hdall/scripts/vcf2maf.pl
 	mkdir -p maf-af20-del
 	cat ../filtered_variants/$*.snp.filtered.vcf | perl ~/hdall/scripts/vcf2maf.pl \
 		--sample $* \
 		--music-roi ucsc-genes.hg19.roi.gz \
-		--mapping-entrez ~/hdall/results/gene-id-mapping.biomart-0.7.tsv \
+		--mapping-entrez ~/generic/data/ensembl/gene-id-mapping.biomart-0.7.tsv \
 		--min-af 0.20 \
 		--deleterious \
 		2>&1 1>$@.part | grep -vP '(Leading or trailing space|variant.Format|Domain annotations come from)' | tee -a make.log
 	cat ../filtered_variants/$*.indel.filtered.vcf | perl ~/hdall/scripts/vcf2maf.pl \
 		--sample $* \
 		--music-roi ucsc-genes.hg19.roi.gz \
-		--mapping-entrez ~/hdall/results/gene-id-mapping.biomart-0.7.tsv \
+		--mapping-entrez ~/generic/data/ensembl/gene-id-mapping.biomart-0.7.tsv \
 		--min-af 0.20 \
 		--deleterious \
 		2>&1 1>>$@.part | grep -vP '(Leading or trailing space|variant.Format|Domain annotations come from)' | tee -a make.log

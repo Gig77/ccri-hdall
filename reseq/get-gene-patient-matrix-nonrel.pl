@@ -38,7 +38,7 @@ map { $patients{$_} = 1 } (split(",", $patient_ids)) if ($patient_ids);
 while(<>)
 {
 	chomp;
-	my ($patient, $comp, $gene, $chr, $start, $end, $tr_len, $cds_len, $exons, $cosmic, $desc, $num_mutations, $num_mutations_nonsyn, $max_af, $max_af_ns, $ex, $ex_ns, $mutations, $domains) = split/\t/;
+	my ($patient, $comp, $gene, $chr, $start, $end, $tr_len, $cds_len, $exons, $cosmic, $desc, $num_mutations, $num_mutations_nonsyn, $num_mutations_deleterious, $max_af, $max_af_ns, $ex, $ex_ns, $mutations, $domains) = split/\t/;
 	
 	$gene_info{$gene}{'chr'} = $chr;
 	$gene_info{$gene}{'start'} = $start;

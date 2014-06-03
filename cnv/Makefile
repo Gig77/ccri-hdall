@@ -1,6 +1,7 @@
 export SHELLOPTS:=errexit:pipefail
 SHELL=/bin/bash  # required to make pipefail work
 .SECONDARY:      # do not delete any intermediate files
+LOG = perl -ne 'use POSIX qw(strftime); $$|=1; print strftime("%F %02H:%02M:%S ", localtime), $$ARGV[0], "$@: $$_";'
 
 PATIENTS_EXOME = 314 399 430 446 460 545 592 715 786 792 818 842 A B C D X Y
 NOT_WORKING = 1021247 E

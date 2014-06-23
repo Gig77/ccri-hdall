@@ -225,7 +225,7 @@ m$frequency.norm <- NA
 m$frequency.norm[m$sample=="diagnosis"] <- m$frequency[m$sample=="diagnosis"]/m$blasts.dia[m$sample=="diagnosis"]*100
 m$frequency.norm[m$sample=="relapse"] <- m$frequency[m$sample=="relapse"]/m$blasts.rel[m$sample=="relapse"]*100
 m$frequency.norm[is.na(m$frequency.norm)] <- m$frequency[is.na(m$frequency.norm)]
-m$patient <- as.factor(ifelse(m$patient %in% patients.matched, paste0(m$patient,"*"), as.character(m$patient)))
+m$patient.label <- as.factor(ifelse(m$patient %in% patients.matched, paste0(m$patient,"*"), as.character(m$patient)))
 
 # subset samples
 m.relapsing <- m[m$cohort=="relapsing",]
@@ -239,6 +239,8 @@ m.relapsing.cons <- merge(m.relapsing.dia, m.relapsing.rel, by=c("patient", "mut
 m.relapsing.cons <- paste0(m.relapsing.cons$patient, ":", m.relapsing.cons$mut)
 m.nonrelapsing <- m[m$cohort=="non-relapsing" & m$sample=="diagnosis",]
 
+stop("OK")
+
 pdf("~/hdall/results/ras-heterogeneity/ras-barplot.pdf", width=18, height=13)
 
 #---
@@ -246,18 +248,18 @@ pdf("~/hdall/results/ras-heterogeneity/ras-barplot.pdf", width=18, height=13)
 #---
 
 # reorder patients by cumulative frequency
-sorted <- aggregate(frequency.norm~patient, data=m.relapsing.dia, FUN=sum)
-sorted <- sorted[order(sorted$frequency.norm, decreasing=T), c("patient", "frequency.norm")]
-m.relapsing.dia$patient <- factor(m.relapsing.dia$patient, sorted$patient)
+sorted <- aggregate(frequency.norm~patient.label, data=m.relapsing.dia, FUN=sum)
+sorted <- sorted[order(sorted$frequency.norm, decreasing=T), c("patient.label", "frequency.norm")]
+m.relapsing.dia$patient.label <- factor(m.relapsing.dia$patient.label, sorted$patient.label)
 
 # find heterogenious samples
 het.dia <- aggregate(frequency.norm~patient, data=m.relapsing.dia, FUN=length)
 het.dia.patient <- het.dia[het.dia$frequency.norm>1,"patient"]
 #m.relapsing.dia$group <- ifelse(m.relapsing.dia$patient %in% het.dia.patient, sprintf("heterogenious (%.0f%%)", length(het.dia.patient)/length(levels(m.relapsing.dia$patient))*100), sprintf("homogenious (%.0f%%)", 100-length(het.dia.patient)/length(levels(m.relapsing.dia$patient))*100))
-m.relapsing.dia$group <- ifelse(m.relapsing.dia$patient %in% het.dia.patient, "heterogenious", "homogenious")
+m.relapsing.dia$group <- ifelse(m.relapsing.dia$patient %in% het.dia.patient, "heterogeneous", "homogeneous")
 m.relapsing.dia$label <- ifelse(paste0(m.relapsing.dia$patient, ":", m.relapsing.dia$mut) %in% m.relapsing.cons, "symbol(\"\\267\")", NA)
 
-plot.dia <- ggplot(data=m.relapsing.dia, aes(x=patient, y=frequency.norm, fill=mut, order=-frequency.norm)) + 
+plot.dia <- ggplot(data=m.relapsing.dia, aes(x=patient.label, y=frequency.norm, fill=mut, order=-frequency.norm)) + 
 		facet_grid(.~group, scale="free_x", space = "free_x") +
 		geom_bar(stat="identity", width=0.9, colour="white") +
 		geom_text(aes(label=label, y=midpoint), size=8, vjust=1, colour="white", parse=TRUE) +
@@ -287,7 +289,7 @@ m.relapsing.rel$patient <- factor(m.relapsing.rel$patient, sorted$patient)
 het.rel <- aggregate(frequency.norm~patient, data=m.relapsing.rel, FUN=length)
 het.rel.patient <- het.rel[het.rel$frequency.norm>1,"patient"]
 #m.relapsing.rel$group <- ifelse(m.relapsing.rel$patient %in% het.rel.patient, sprintf("heterogenious (%.0f%%)", length(het.rel.patient)/length(levels(m.relapsing.rel$patient))*100), sprintf("homogenious (%.0f%%)", 100-length(het.rel.patient)/length(levels(m.relapsing.rel$patient))*100))
-m.relapsing.rel$group <- ifelse(m.relapsing.rel$patient %in% het.rel.patient, "heterogenious", "homogenious")
+m.relapsing.rel$group <- ifelse(m.relapsing.rel$patient %in% het.rel.patient, "heterogeneous", "homogeneous")
 m.relapsing.rel$label <- ifelse(paste0(m.relapsing.rel$patient, ":", m.relapsing.rel$mut) %in% m.relapsing.cons, "symbol(\"\\267\")", NA)
 
 plot.rel <- ggplot(data=m.relapsing.rel, aes(x=patient, y=frequency.norm, fill=mut, order=-frequency.norm)) + 
@@ -316,20 +318,44 @@ sig <- fisher.test(matrix(c(sum(het.dia$frequency.norm>1), sum(het.dia$frequency
 print(sprintf("P-value (Fisher's exact test): %g", sig$p.value))
 
 dev.off()
-stop("DONE.")
+
+stop("OK")
 
 #---
-# RELAPSING, TOGETHER
+# RELAPSING, MATCHED, DIA+REL
 #---
 
-#print(ggplot(data=m.relapsing, aes(x=patient, y=frequency.norm, fill=sample) + 
-#				geom_bar(stat="identity", position=c("dodge"), width=0.9, colour="white") +
-#				scale_fill_manual(values = cols, name="Timepoint") + 
-#				scale_y_continuous(expand = c(0,0), limits = c(0,1), breaks=seq(0, 1, 0.1)) + 
-#				theme_bw() + 
-#				theme(axis.text.x = element_text(angle = 90, hjust = 1), legend.key.size=unit(0.35, "cm")) +
-#				ylab("Allelic frequency (adjusted)") +
-#				ggtitle("RAS pathway mutations (relapsing cohort)")))
+# reorder patients by cumulative frequency
+m.relapsing.combined <- m.relapsing.dia[m.relapsing.dia$patient %in% patients.matched,]
+m.relapsing.combined <- rbind(m.relapsing.combined, m.relapsing.rel[m.relapsing.rel$patient %in% patients.matched,])
+
+# reorder patients by group and cumulative frequency
+sorted <- aggregate(frequency.norm~patient+sample+group, data=m.relapsing.combined, FUN=sum)
+sorted$sample <- as.character(sorted$sample)
+sorted$sample[sorted$sample=="relapse"] <- "0relapse"
+sorted$group[sorted$group=="homogeneous"] <- "0homogeneous"
+sorted <- sorted[order(sorted$sample, sorted$group, sorted$frequency.norm, decreasing=T),]
+m.relapsing.combined$patient <- factor(m.relapsing.combined$patient, unique(as.character(sorted$patient)))
+
+pdf("~/hdall/results/ras-heterogeneity/ras-barplot-matched.pdf", width=14, height=9)
+plot.dia <- ggplot(data=m.relapsing.combined, aes(x=patient, y=frequency.norm, fill=mut, order=-frequency.norm)) + 
+		facet_grid(sample~.) +
+		geom_bar(stat="identity", width=0.9, colour="white") +
+		geom_text(aes(label=label, y=midpoint), size=8, vjust=1, colour="white", parse=TRUE) +
+		scale_fill_manual(values = cols, breaks=c("KRAS:chr12:25378561:G>A", "NRAS:chr1:115256528:T>A", "PTPN11:chr12:112888163:G>T", "FLT3:chr13:28589780:A>C"), labels=c("KRAS", "NRAS", "PTPN11", "FLT3")) + 
+		scale_y_continuous(expand = c(0,0), limits = c(0,1), breaks=c(0.25, 0.5, 0.75, 1)) +
+		theme_bw() + 
+		theme(axis.text.x = element_text(angle = 90, hjust = 1, size=15), axis.text.y = element_text(size=13), axis.title.y = element_text(size=18, vjust=0.1), axis.title.x = element_blank(), 
+				legend.title = element_blank(), legend.text=element_text(size=13), legend.key.size=unit(0.7, "cm"), legend.justification=c(1,1), legend.position=c(1,1), legend.background=element_rect(colour="black"),
+				strip.text.x = element_text(size=15), 
+				panel.grid.major.x = element_blank(),
+				panel.grid.minor.y = element_blank(),
+				plot.title=element_text(size=20, face="bold", vjust=1), plot.margin=unit(c(0.5,1,0,1), "cm")) +
+#		geom_text(aes(label = mut.short), size = 3, hjust = 0.5, vjust = 1.2, position = "stack", colour="white") +
+		ylab("Allelic frequency") 
+#		+ ggtitle("Ras pathway mutations at diagnosis")
+print(plot.dia)
+dev.off()
 
 #---
 # NON-RELAPSING, DIA
@@ -343,19 +369,22 @@ m.nonrelapsing$patient <- factor(m.nonrelapsing$patient, sorted$patient)
 # find heterogenious samples
 het <- aggregate(frequency.norm~patient, data=m.nonrelapsing, FUN=length)
 het <- het[het$frequency.norm>1,"patient"]
-m.nonrelapsing$group <- ifelse(m.nonrelapsing$patient %in% het, "heterogenious", "homogenious")
+m.nonrelapsing$group <- ifelse(m.nonrelapsing$patient %in% het, "heterogeneous", "homogeneous")
 
+pdf("~/hdall/results/ras-heterogeneity/ras-barplot-nonrelapsing.pdf", width=14, height=9)
 print(ggplot(data=m.nonrelapsing, aes(x=patient, y=frequency.norm, fill=mut, order=-frequency.norm)) +
 				facet_grid(.~group, scale="free_x", space = "free_x") +
 				geom_bar(stat="identity", width=0.9, colour="white") +
-				scale_fill_manual(values = cols, name="Mutation") + 
-				scale_y_continuous(expand = c(0,0), limits = c(0,1), breaks=seq(0, 1, 0.1)) + 
+				scale_fill_manual(values = cols, breaks=c("KRAS:chr12:25378561:G>A", "NRAS:chr1:115256528:T>G", "PTPN11:chr12:112888163:G>T", "FLT3:chr13:28592642:C>A"), labels=c("KRAS", "NRAS", "PTPN11", "FLT3"), name="") + 
+#				scale_fill_manual(values = cols, name="Mutation") + 
+				scale_y_continuous(expand = c(0,0), limits = c(0,1), breaks=c(0.25, 0.5, 0.75, 1)) +
 				theme_bw() + 
-				theme(axis.text.x = element_text(angle = 90, hjust = 1), legend.key.size=unit(0.35, "cm")) +
+				theme(axis.text.x = element_text(angle = 90, hjust = 1), 
+						legend.key.size=unit(0.35, "cm"),
+						panel.grid.major.x = element_blank(),
+						panel.grid.minor.y = element_blank()) +
 #				geom_text(aes(label = mut.short), size = 3, hjust = 0.5, vjust = 1.2, position = "stack", colour="white") +
-				ylab("Allelic frequency (adjusted)") +
+				ylab("Allelic frequency") +
 				ggtitle("RAS pathway mutations at diagnosis (non-relapsing cohort)"))
-
-
 dev.off()
 

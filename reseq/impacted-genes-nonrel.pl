@@ -169,6 +169,13 @@ while(<>)
 		}
 	}
 	
+	if ($deleterious eq "yes")
+	{
+		$genes{$patient}{$sample}{$gene}{'deleterious'}{"$chr:$pos:$ref->$alt:$freq_leu:$impact:$effect"} = $genes{$patient}{$sample}{$gene}{'deleterious'}{"$chr:$pos:$ref->$alt:$freq_leu:$impact:$effect"} 
+			? $genes{$patient}{$sample}{$gene}{'deleterious'}{"$chr:$pos:$ref->$alt:$freq_leu:$impact:$effect"}.",$snpeff"
+			: $snpeff;		
+	}
+	
 	$genes{$patient}{$sample}{$gene}{'all'}{"$chr:$pos:$ref->$alt:$freq_leu:$impact:$effect"} = $genes{$patient}{$sample}{$gene}{'all'}{"$chr:$pos:$ref->$alt:$freq_leu:$impact:$effect"} 
 		? $genes{$patient}{$sample}{$gene}{'all'}{"$chr:$pos:$ref->$alt:$freq_leu:$impact:$effect"}.",$snpeff"
 		: $snpeff;
@@ -212,6 +219,7 @@ foreach my $p (keys(%genes))
 			
 			print scalar(values(%{$genes{$p}{$s}{$g}{'all'}})), "\t";
 			print scalar(values(%{$genes{$p}{$s}{$g}{'nonsyn'}})), "\t";
+			print scalar(values(%{$genes{$p}{$s}{$g}{'deleterious'}})), "\t";
 
 			print $genes{$p}{$s}{$g}{'max_af'} ? $genes{$p}{$s}{$g}{'max_af'} : "", "\t";
 			print $genes{$p}{$s}{$g}{'max_af_ns'} ? $genes{$p}{$s}{$g}{'max_af_ns'} : "", "\t";

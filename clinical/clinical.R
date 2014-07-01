@@ -30,13 +30,17 @@ c$blasts_rel <- as.numeric(as.character(c$blasts_rel))
 c$first_rem_months <- as.numeric(as.character(c$first_rem_months))
 c$second_rem_months <- as.numeric(as.character(c$second_rem_months))
 c$age_rel <- ifelse(c$cohort=="non-relapsing", NA, c$age_dia+c$first_rem_months/12)
-
+c$rel_timepoint <- as.character(c$rel_timepoint)
+c$rel_timepoint[c$rel_timepoint=="very early"] <- "early"
+c$rel_timepoint <- as.factor(c$rel_timepoint)
 #----
 # MERGE MUTATION DATA
 #----
 
 m <- read.delim("~/hdall/results/reseq/filtered-variants.reseq.cosmic.normaf.tsv")
 m <- m[m$status!="REJECT" & m$non_silent==T & m$freq_leu >= 0.05,]
+
+m.merged <- merge(m[m$sample=="rem_dia", c("patient", "chr", "pos", "ref", "alt", "freq_leu", "gene")], m[m$sample=="rem_rel",c("patient", "chr", "pos", "ref", "alt", "freq_leu", "gene")], by=c("patient", "chr", "pos", "ref", "alt", "gene"), all=T, suffixes=c(".dia", ".rel")) 
 
 m.exome <- read.delim("~/hdall/results/filtered-variants.cosmic.normaf.tsv")
 m.exome <- m.exome[m.exome$status!="REJECT" & m.exome$freq_leu >= 0.1,]
@@ -62,6 +66,8 @@ m.ras.flt3.nr[sapply(m.ras.flt3.nr, is.factor)] <- lapply(m.ras.flt3.nr[sapply(m
 m.ras.flt3.nr <- data.frame(patient=m.ras.flt3.nr[,1], cohort="non-relapsing", sample="diagnosis", m.ras.flt3.nr[,2:ncol(m.ras.flt3.nr)], stringsAsFactors=F)
 names(m.ras.flt3) <- names(m.ras)
 m.ras <- rbind(m.ras, m.ras.flt3)
+
+m.ras <- unique(m.ras)  # some FLT3 mutations might now be duplicated
 
 num.ras.dia <- aggregate(frequency~patient, data=m.ras[m.ras$sample=="diagnosis",], FUN=length)
 names(num.ras.dia) <- c("patient_id", "num.ras.dia")
@@ -138,6 +144,9 @@ c$ras.relapsing.rel <- ifelse(as.character(c$patient_id) %in% c(patients_non_rel
 c$ras.nonrelapsing <- ifelse(as.character(c$patient_id) %in% patients_non_rel, c$ras, NA)
 c$ras.dia <- ifelse(as.character(c$patient_id) %in% c(patients_rel_only), NA, ifelse((!is.na(c$ras.nonrelapsing) & c$ras.nonrelapsing) | (!is.na(c$ras.relapsing.dia) & c$ras.relapsing.dia), TRUE, FALSE))
 
+c$ras.heterogeneous.dia <- ifelse(c$num.ras.dia == 0, NA, c$num.ras.dia > 1)
+c$ras.conserved <- ifelse(as.character(c$patient_id) %in% c(patients_non_rel, patients_dia_only, patients_rel_only, as.character(c[!c$ras,"patient_id"])), NA, (as.character(c$patient_id) %in% as.character(m.merged[m.merged$gene %in% c("KRAS", "NRAS", "PTPN11", "FLT3") & !is.na(m.merged$freq_leu.dia) & !is.na(m.merged$freq_leu.rel), "patient"])))
+
 # allelic frequency RAS pathway mutation at diagnosis
 af <- aggregate(freq_leu~patient, data=m[m$gene %in% c("KRAS", "NRAS", "PTPN11", "FLT3") & m$sample=="rem_dia", c("patient", "freq_leu")], FUN=max)
 names(af) <- c("patient_id", "ras.relapsing.dia.af")
@@ -160,6 +169,23 @@ c$num.mut.rel.ns <- ifelse(as.character(c$patient_id) %in% patients_exome, sappl
 c$num.mut.rel.excl.patA <- ifelse(c$patient_id == "A", NA, c$num.mut.rel)
 c$num.mut.rel.ns.excl.patA <- ifelse(c$patient_id == "A", NA, c$num.mut.rel.ns)
 
+# dominant RAS pw mutation per timepoint
+m.ras.dia <- m[m$sample=="rem_dia" & m$gene %in% c("KRAS", "NRAS", "PTPN11", "FLT3"),]
+suppressWarnings(m.ras.dia <- m.ras.dia[ave(m.ras.dia$freq_leu, m.ras.dia$patient, FUN=max)==m.ras.dia$freq_leu, c("patient", "gene")])
+names(m.ras.dia) <- c("patient_id", "ras.pw.gene.dia")
+c <- merge(c, m.ras.dia, all.x=T)
+c$ras.pw.gene.dia <- as.character(c$ras.pw.gene.dia)
+c$ras.pw.gene.dia[is.na(c$ras.pw.gene.dia) & !as.character(c$patient_id) %in% c(patients_non_rel, patients_rel_only)] <- "WT"
+c$ras.pw.gene.dia <- as.factor(c$ras.pw.gene.dia)
+
+m.ras.rel <- m[(m$sample=="rem_rel" | m$sample=="rem_rel2") & m$gene %in% c("KRAS", "NRAS", "PTPN11", "FLT3"),]
+suppressWarnings(m.ras.rel <- m.ras.rel[ave(m.ras.rel$freq_leu, m.ras.rel$patient, FUN=max)==m.ras.rel$freq_leu, c("patient", "gene")])
+names(m.ras.rel) <- c("patient_id", "ras.pw.gene.rel")
+c <- merge(c, m.ras.rel, all.x=T)
+c$ras.pw.gene.rel <- as.character(c$ras.pw.gene.rel)
+c$ras.pw.gene.rel[is.na(c$ras.pw.gene.rel) & !as.character(c$patient_id) %in% c(patients_non_rel, patients_dia_only)] <- "WT"
+c$ras.pw.gene.rel <- as.factor(c$ras.pw.gene.rel)
+
 #----
 # GENE DELETIONS
 #----
@@ -168,18 +194,18 @@ c$num.mut.rel.ns.excl.patA <- ifelse(c$patient_id == "A", NA, c$num.mut.rel.ns)
 inconclusive.patients.dia <- c("1020076", "1023616", "KA14651")
 inconclusive.patients.rel <- c("1021631", "1022914", "1025409", "BM18", "FS1", "LM18", "PC16", "SJM16")
 
-c$ikzf1.del.dia <- ifelse(c$cohort=="relapsing" & !(c$patient_id %in% inconclusive.patients.dia), ifelse(c$patient_id %in% c("KE12025", "HD7", "B100", "243"), TRUE, FALSE), NA)
-c$ikzf1.del.rel <- ifelse(c$cohort=="relapsing" & !(c$patient_id %in% inconclusive.patients.rel), ifelse(c$patient_id %in% c("446", "MB2", "KE12025", "HJ15", "KA17", "KL16"), TRUE, FALSE), NA)
+c$ikzf1.del.dia <- ifelse(as.character(c$patient_id) %in% c(patients_non_rel, patients_rel_only, inconclusive.patients.dia), NA, ifelse(c$patient_id %in% c("KE12025", "HD7", "B100", "243"), TRUE, FALSE))
+c$ikzf1.del.rel <- ifelse(as.character(c$patient_id) %in% c(patients_non_rel, patients_dia_only, inconclusive.patients.rel), NA, ifelse(c$patient_id %in% c("446", "MB2", "KE12025", "HJ15", "KA17", "KL16"), TRUE, FALSE))
 c$ikzf1.del <- c$ikzf1.del.dia | c$ikzf1.del.rel
-c$ikzf2.del.rel <- ifelse(c$cohort=="relapsing" & !(c$patient_id %in% inconclusive.patients.rel), ifelse(c$patient_id %in% c("Y", "LB17", "KD20493", "CA18", "G", "X", "BL16"), TRUE, FALSE), NA)
-c$ikzf.del.rel <- c$ikzf1.del.rel | c$ikzf2.del.rel
-c$ikzf.del <- c$ikzf1.del | c$ikzf2.del.rel
+#c$ikzf2.del.rel <- ifelse(c$cohort=="relapsing" & !(c$patient_id %in% inconclusive.patients.rel), ifelse(c$patient_id %in% c("Y", "LB17", "KD20493", "CA18", "G", "X", "BL16"), TRUE, FALSE), NA)
+#c$ikzf.del.rel <- c$ikzf1.del.rel | c$ikzf2.del.rel
+#c$ikzf.del <- c$ikzf1.del | c$ikzf2.del.rel
 c$crebbp.relapsing.rel.mut_or_del <- ifelse(is.na(c$crebbp.relapsing.rel), NA, c$crebbp.relapsing.rel | c$patient_id %in% c("C", "LB17", "KE12025", "1024589"))
 c$crebbp.relapsing.dia.mut_or_del <- ifelse(is.na(c$crebbp.relapsing.dia), NA, c$crebbp.relapsing.dia | c$patient_id %in% c("592", "KE12025", "HD7"))
 c$crebbp.relapsing.mut_or_del <- c$crebbp.relapsing.dia.mut_or_del | c$crebbp.relapsing.rel.mut_or_del
 
-c$kras.or.ikzf.rel <- c$kras.relapsing.rel | c$ikzf.del.rel
-c$kras.or.nras.or.ikzf.rel <- c$kras.relapsing.rel | c$nras.relapsing.rel | c$ikzf.del.rel
+c$kras.or.ikzf1.rel <- c$kras.relapsing.rel | c$ikzf1.del.rel
+c$kras.or.nras.or.ikzf1.rel <- c$kras.relapsing.rel | c$nras.relapsing.rel | c$ikzf1.del.rel
 
 cr <- c[c$cohort=="relapsing",]
 
@@ -193,6 +219,8 @@ c$clonal.kinetic <- as.factor(c$clonal.kinetic)
 
 #boxplot(first_rem_months ~ sex, data=cr, na.action=na.exclude, outline=F, names=c("female", "male"))
 #stripchart(first_rem_months ~ sex, data=cr, method="jitter", na.action=na.exclude, vertical=T, pch=19, col=c("red", "blue"), add=T)
+
+write.table(c, file="~/hdall/results/clinical/clinical_data.processed.tsv", col.names=T, row.names=F, sep="\t", quote=F)
 
 stop("OK")
 
@@ -263,23 +291,28 @@ dev.off()
 #---
 # associations with CREBBP mutation status at diagnosis
 #---
+c$crebbp.dia.deleterious <- ifelse(as.character(c$patient_id) %in% c(patients_rel_only), NA, as.character(c$patient_id) %in% as.character(m[m$gene=="CREBBP" & m$sample=="rem_dia" & m$deleterious=="yes", "patient"]) | as.character(c$patient_id) %in% as.character(m.nonrel[m.nonrel$gene=="CREBBP" & m.nonrel$deleterious=="yes", "patient"]))
+
 pdf("~/hdall/results/clinical/clinical-crebbp-dia-vs-all.pdf")
 test_pairwise_assoc(c, sig.level=0.99, 
-		include=c("crebbp.dia", "crebbp.relapsing.dia"), 
+		include=c("crebbp.dia", "crebbp.relapsing.dia", "crebbp.dia.deleterious"), 
 		exclude=c("crebbp", "crebbp.relapsing", "crebbp.relapsing.rel", "crebbp.nonrelapsing", "crebbp.and.ras.relapsing.dia", "crebbp.and.ras.relapsing.rel", "crebbp.and.kras.relapsing.dia", "crebbp.and.kras.relapsing.rel", "crebbp.relapsing.mut_or_del", "crebbp.relapsing.dia.mut_or_del", "crebbp.relapsing.rel.mut_or_del", 
 				  "patient_id", "exome", "panel", "mrd_level_rel", "rel_protocol", "BM.transplantation.date", "study_no_relapse", "patno_kiel_rem", "patno_berlin_rel", "X", "comment"),
-		exclude.group=list(c("crebbp.dia", "crebbp.relapsing.dia")),
-		)
+		exclude.group=list(c("crebbp.dia", "crebbp.relapsing.dia", "crebbp.dia.deleterious")))
 dev.off()
 
 #---
 # associations with CREBBP mutation status at relapse
 #---
+c$crebbp.relapsing.rel.no_dis <- c$crebbp.relapsing.rel 
+c$crebbp.relapsing.rel.no_dis[c$patient_id %in% patients_exome] <- NA
+
 pdf("~/hdall/results/clinical/clinical-crebbp-rel-vs-all.pdf")
 test_pairwise_assoc(c, sig.level=0.99, 
-		include=c("crebbp.relapsing.rel"), 
+		include=c("crebbp.relapsing.rel", "crebbp.relapsing.rel.no_dis"), 
 		exclude=c("crebbp", "crebbp.relapsing", "crebbp.dia", "crebbp.relapsing.dia", "crebbp.nonrelapsing", "crebbp.and.ras.relapsing.dia", "crebbp.and.ras.relapsing.rel", "crebbp.and.kras.relapsing.dia", "crebbp.and.kras.relapsing.rel", "crebbp.relapsing.mut_or_del", "crebbp.relapsing.dia.mut_or_del", "crebbp.relapsing.rel.mut_or_del", 
-				  "patient_id", "exome", "panel", "mrd_level_rel", "rel_protocol", "BM.transplantation.date", "study_no_relapse", "patno_kiel_rem", "patno_berlin_rel", "X", "comment")
+				  "patient_id", "exome", "panel", "mrd_level_rel", "rel_protocol", "BM.transplantation.date", "study_no_relapse", "patno_kiel_rem", "patno_berlin_rel", "X", "comment"),
+	    exclude.group=list(c("wtkras.wtcrebbp.relapsing.rel", "crebbp.relapsing.rel", "wtkras.mcrebbp.relapsing.rel", "mkras.mcrebbp.relapsing.rel", "mkras.wtcrebbp.relapsing.rel", "crebbp.relapsing.rel.no_dis"))  
 )
 dev.off()
 
@@ -290,12 +323,21 @@ pdf("~/hdall/results/clinical/clinical-crebbp+kras-rel-vs-all.pdf")
 test_pairwise_assoc(c, sig.level=0.99, 
 		include=c("crebbp.and.kras.relapsing.rel"), 
 		exclude=c("crebbp", "crebbp.relapsing", "crebbp.dia", "crebbp.relapsing.dia", "crebbp.relapsing.rel", "crebbp.nonrelapsing", "crebbp.and.ras.relapsing.dia", "crebbp.and.ras.relapsing.rel", "crebbp.and.kras.relapsing.dia", "crebbp.relapsing.mut_or_del", "crebbp.relapsing.dia.mut_or_del", "crebbp.relapsing.rel.mut_or_del", "kras", 
-				  "kras.relapsing", "kras.relapsing.dia", "kras.relapsing.rel", "kras.nonrelapsing", "kras.dia", "ras", "ras.relapsing", "ras.relapsing.dia", "ras.relapsing.rel", "ras.nonrelapsing", "ras.dia", "num.ras.rel", "num.ras.dia", "kras.or.ptpn11", "kras.or.ptpn11.relapsing", "kras.or.ptpn11.relapsing.dia", "kras.or.ptpn11.relapsing.rel", "kras.or.ikzf.rel", "kras.or.nras.or.ikzf.rel", 
+				  "kras.relapsing", "kras.relapsing.dia", "kras.relapsing.rel", "kras.nonrelapsing", "kras.dia", "ras", "ras.relapsing", "ras.relapsing.dia", "ras.relapsing.rel", "ras.nonrelapsing", "ras.dia", "num.ras.rel", "num.ras.dia", "kras.or.ptpn11", "kras.or.ptpn11.relapsing", "kras.or.ptpn11.relapsing.dia", "kras.or.ptpn11.relapsing.rel", "kras.or.ikzf1.rel", "kras.or.nras.or.ikzf1.rel", 
 				  "patient_id", "exome", "panel", "mrd_level_rel", "rel_protocol", "BM.transplantation.date", "study_no_relapse", "patno_kiel_rem", "patno_berlin_rel", "X", "comment")
 )
 dev.off()
 
 #---
+# associations with RAS pw genes at diagnosis and relapse
+#---
+pdf("~/hdall/results/clinical/clinical-ras.pw.gene-vs-all.pdf")
+test_pairwise_assoc(c, sig.level=0.99, 
+		include=c("ras.pw.gene.dia", "ras.pw.gene.rel"), 
+		exclude=c("patient_id", "exome", "panel", "mrd_level_rel", "rel_protocol", "BM.transplantation.date", "study_no_relapse", "patno_kiel_rem", "patno_berlin_rel", "X", "comment"),
+		exclude.group=list(c("ras.pw.gene.dia", "ras.pw.gene.rel", "kras.relapsing", "kras.relapsing.dia", "kras.relapsing.rel", "kras.nonrelapsing", "kras.dia", "ras", "ras.relapsing", "ras.relapsing.dia", "ras.relapsing.rel", "ras.nonrelapsing", "ras.dia", "num.ras.rel", "num.ras.dia", "kras.or.ptpn11", "kras.or.ptpn11.relapsing", "kras.or.ptpn11.relapsing.dia", "kras.or.ptpn11.relapsing.rel", "kras.or.ikzf1.rel", "kras.or.nras.or.ikzf1.rel", "nras", "nras.relapsing", "nras.relapsing.rel", "nras.relapsing.dia", "nras.dia", "ptpn11", "ptpn11.dia", "ptpn11.relapsing", "ptpn11.relapsing.rel", "ptpn11.relapsing.dia", "ptpn11.dia", "kras", "nras", "nras.relapsing", "ptpn11", "ptpn11.relapsing", "crebbp.and.kras.relapsing.rel", "kras", "crebbp.and.ras.relapsing.rel", "crebbp.and.kras.relapsing.dia")))
+dev.off()
+
 # correlation of mutations with age
 #---
 png("~/hdall/results/clinical/supp-figure.corr.age-dia.num-mut-dia.png", width=2048, height=1024)
@@ -320,124 +362,19 @@ tests <- test_pairwise_assoc(c,
 		sig.level=0.1, 
 		exclude=c("patient_id", "exome", "panel", "mrd_level_rel", "rel_protocol", "BM.transplantation.date", "study_no_relapse", "patno_kiel_rem", "patno_berlin_rel", "X", "comment"),
 		exclude.group=list(c("crebbp", "crebbp.relapsing", "crebbp.relapsing.dia", "crebbp.relapsing.rel", "crebbp.nonrelapsing", "crebbp.dia", "crebbp.and.ras.relapsing.dia", "crebbp.and.ras.relapsing.rel", "crebbp.and.kras.relapsing.dia", "crebbp.and.kras.relapsing.rel", "crebbp.relapsing.mut_or_del", "crebbp.relapsing.dia.mut_or_del", "crebbp.relapsing.rel.mut_or_del"),
-				 		   c("kras", "kras.relapsing", "kras.relapsing.dia", "kras.relapsing.rel", "kras.nonrelapsing", "kras.dia", "ras", "ras.relapsing", "ras.relapsing.dia", "ras.relapsing.rel", "ras.nonrelapsing", "ras.dia", "crebbp.and.ras.relapsing.dia", "crebbp.and.ras.relapsing.rel", "crebbp.and.kras.relapsing.dia", "crebbp.and.kras.relapsing.rel", "num.ras.rel", "num.ras.dia", "kras.or.ptpn11", "kras.or.ptpn11.relapsing", "kras.or.ptpn11.relapsing.dia", "kras.or.ptpn11.relapsing.rel", "kras.or.ikzf.rel", "kras.or.nras.or.ikzf.rel"),
-						   c("nras", "nras.relapsing", "nras.relapsing.dia", "nras.relapsing.rel", "nras.nonrelapsing", "nras.dia", "ras", "ras.relapsing", "ras.relapsing.dia", "ras.relapsing.rel", "ras.nonrelapsing", "ras.dia", "crebbp.and.ras.relapsing.dia", "crebbp.and.ras.relapsing.rel", "num.ras.rel", "num.ras.dia", "kras.or.nras.or.ikzf.rel"),
+				 		   c("kras", "kras.relapsing", "kras.relapsing.dia", "kras.relapsing.rel", "kras.nonrelapsing", "kras.dia", "ras", "ras.relapsing", "ras.relapsing.dia", "ras.relapsing.rel", "ras.nonrelapsing", "ras.dia", "crebbp.and.ras.relapsing.dia", "crebbp.and.ras.relapsing.rel", "crebbp.and.kras.relapsing.dia", "crebbp.and.kras.relapsing.rel", "num.ras.rel", "num.ras.dia", "kras.or.ptpn11", "kras.or.ptpn11.relapsing", "kras.or.ptpn11.relapsing.dia", "kras.or.ptpn11.relapsing.rel", "kras.or.ikzf1.rel", "kras.or.nras.or.ikzf1.rel"),
+						   c("nras", "nras.relapsing", "nras.relapsing.dia", "nras.relapsing.rel", "nras.nonrelapsing", "nras.dia", "ras", "ras.relapsing", "ras.relapsing.dia", "ras.relapsing.rel", "ras.nonrelapsing", "ras.dia", "crebbp.and.ras.relapsing.dia", "crebbp.and.ras.relapsing.rel", "num.ras.rel", "num.ras.dia", "kras.or.nras.or.ikzf1.rel"),
 						   c("ptpn11", "ptpn11.relapsing", "ptpn11.relapsing.dia", "ptpn11.relapsing.rel", "ptpn11.nonrelapsing", "ptpn11.dia", "ras", "ras.relapsing", "ras.relapsing.dia", "ras.relapsing.rel", "ras.nonrelapsing", "ras.dia", "crebbp.and.ras.relapsing.dia", "crebbp.and.ras.relapsing.rel", "num.ras.rel", "num.ras.dia", "kras.or.ptpn11", "kras.or.ptpn11.relapsing", "kras.or.ptpn11.relapsing.dia", "kras.or.ptpn11.relapsing.rel"),
 						   c("num.mut.dia", "num.mut.dia.ns"),
-						   c("ikzf1.del.dia", "ikzf1.del.rel", "ikzf1.del", "ikzf.del.rel", "ikzf.del", "kras.or.ikzf.rel", "kras.or.nras.or.ikzf.rel"),
-						   c("ikzf2.del.rel", "ikzf.del.rel", "ikzf.del", "kras.or.ikzf.rel", "kras.or.nras.or.ikzf.rel"),
+						   c("ikzf1.del.dia", "ikzf1.del.rel", "ikzf1.del", "kras.or.ikzf1.rel", "kras.or.nras.or.ikzf1.rel"),
+						   c("kras.or.ikzf1.rel", "kras.or.nras.or.ikzf1.rel"),
 						   c("num.mut.rel", "num.mut.rel.ns", "num.mut.rel.excl.patA", "num.mut.rel.ns.excl.patA"),
 						   c("second_event_after_first_relapse", "overall_outcome", "dead", "sec_rel", "had_second_event_after_first"))
 )
 dev.off()
 
-#------------------------
-# KAPLAN MAYER SURVIVAL PLOTS
-#------------------------
 
-pdf("~/hdall/results/clinical/kaplan-mutations-at-relapse.pdf")
-
-plot(survfit(Surv(time=c$second_rem_months, c$dead)~1), col=c("blue", "red"), xlab="months", ylab="pOS after 1st relapse", conf.int=F)
-
-plot(survfit(Surv(time=second_rem_months, dead)~kras.relapsing.rel, data=c), col=c("blue", "red"), xlab="months", ylab="pOS after 1st relapse", conf.int=F)
-legend(80, 0.2, c("wtKRAS", "mKRAS"), lwd=c(1,1), col=c("blue", "red"))
-
-plot(survfit(Surv(time=second_rem_months, had_second_event_after_first)~kras.relapsing.rel, data=c), col=c("blue", "red"), xlab="months", ylab="pEFS after 1st relapse", conf.int=F)
-legend(80, 0.2, c("wtKRAS", "mKRAS"), lwd=c(1,1), col=c("blue", "red"))
-
-plot(survfit(Surv(time=second_rem_months, sec_rel)~kras.relapsing.rel, data=c), col=c("blue", "red"), xlab="months", ylab="pRFS after 1st relapse", conf.int=F)
-legend(80, 0.2, c("wtKRAS", "mKRAS"), lwd=c(1,1), col=c("blue", "red"))
-
-plot(survfit(Surv(time=second_rem_months, dead)~nras.relapsing.rel, data=c), col=c("blue", "red"), xlab="months", ylab="pOS after 1st relapse", conf.int=F)
-legend(80, 0.2, c("wtNRAS", "mNRAS"), lwd=c(1,1), col=c("blue", "red"))
-
-plot(survfit(Surv(time=second_rem_months, had_second_event_after_first)~nras.relapsing.rel, data=c), col=c("blue", "red"), xlab="months", ylab="pEFS after 1st relapse", conf.int=F)
-legend(80, 0.2, c("wtNRAS", "mNRAS"), lwd=c(1,1), col=c("blue", "red"))
-
-plot(survfit(Surv(time=second_rem_months, dead)~ptpn11.relapsing.rel, data=c), col=c("blue", "red"), xlab="months", ylab="pOS after 1st relapse", conf.int=F)
-legend(80, 0.2, c("wtPTPN11", "mPTPN11"), lwd=c(1,1), col=c("blue", "red"))
-
-plot(survfit(Surv(time=second_rem_months, had_second_event_after_first)~ptpn11.relapsing.rel, data=c), col=c("blue", "red"), xlab="months", ylab="pEFS after 1st relapse", conf.int=F)
-legend(80, 0.2, c("wtPTPN11", "mPTPN11"), lwd=c(1,1), col=c("blue", "red"))
-
-plot(survfit(Surv(time=second_rem_months, dead)~ras.relapsing.rel, data=c), col=c("blue", "red"), xlab="months", ylab="pOS after 1st relapse", conf.int=F)
-legend(80, 0.2, c("wtRAS", "mRAS"), lwd=c(1,1), col=c("blue", "red"))
-
-plot(survfit(Surv(time=second_rem_months, had_second_event_after_first)~ras.relapsing.rel, data=c), col=c("blue", "red"), xlab="months", ylab="pEFS after 1st relapse", conf.int=F)
-legend(80, 0.2, c("wtRAS", "mRAS"), lwd=c(1,1), col=c("blue", "red"))
-
-plot(survfit(Surv(time=second_rem_months, dead)~crebbp.relapsing.rel, data=c), col=c("blue", "red"), xlab="months", ylab="pOS after 1st relapse", conf.int=F)
-legend(80, 0.2, c("wtCREBBP", "mCREBBP"), lwd=c(1,1), col=c("blue", "red"))
-
-plot(survfit(Surv(time=second_rem_months, had_second_event_after_first)~crebbp.relapsing.rel, data=c), col=c("blue", "red"), xlab="months", ylab="pEFS after 1st relapse", conf.int=F)
-legend(80, 0.2, c("wtCREBBP", "mCREBBP"), lwd=c(1,1), col=c("blue", "red"))
-
-plot(survfit(Surv(time=second_rem_months, dead)~crebbp.and.kras.relapsing.rel, data=c), col=c("blue", "red"), xlab="months", ylab="pOS after 1st relapse", conf.int=F)
-legend(50, 0.2, c("wtCREBBP or wtKRAS", "mCREBBP and mKRAS"), lwd=c(1,1), col=c("blue", "red"))
-
-plot(survfit(Surv(time=second_rem_months, had_second_event_after_first)~crebbp.and.kras.relapsing.rel, data=c), col=c("blue", "red"), xlab="months", ylab="pEFS after 1st relapse", conf.int=F)
-legend(50, 0.2, c("wtCREBBP or wtKRAS", "mCREBBP and mKRAS"), lwd=c(1,1), col=c("blue", "red"))
-
-plot(survfit(Surv(time=second_rem_months, dead)~mrd_risk_rel, data=c), col=c("red", "blue"), xlab="months", ylab="pOS after 1st relapse", conf.int=F)
-legend(80, 0.2, c("MRD HR", "MRD LR"), lwd=c(1,1), col=c("red", "blue"))
-
-plot(survfit(Surv(time=second_rem_months, had_second_event_after_first)~mrd_risk_rel, data=c), col=c("red", "blue"), xlab="months", ylab="pEFS after 1st relapse", conf.int=F)
-legend(80, 0.2, c("MRD HR", "MRD LR"), lwd=c(1,1), col=c("red", "blue"))
-
-plot(survfit(Surv(time=second_rem_months, sec_rel)~mrd_risk_rel, data=c), col=c("red", "blue"), xlab="months", ylab="pRFS after 1st relapse", conf.int=F)
-legend(80, 0.2, c("MRD HR", "MRD LR"), lwd=c(1,1), col=c("red", "blue"))
-
-plot(survfit(Surv(time=second_rem_months, dead)~kras.or.ikzf.rel, data=c), col=c("blue", "red"), xlab="months", ylab="pOS after 1st relapse", conf.int=F)
-legend(60, 0.2, c("wt KRAS and IKZF1/2", "mKRAS or IKZF1/2-del"), lwd=c(1,1), col=c("blue", "red"))
-
-plot(survfit(Surv(time=second_rem_months, had_second_event_after_first)~kras.or.ikzf.rel, data=c), col=c("blue", "red"), xlab="months", ylab="pEFS after 1st relapse", conf.int=F)
-legend(50, 0.2, c("wt KRAS and IKZF1/2", "mKRAS or IKZF1/2-del"), lwd=c(1,1), col=c("blue", "red"))
-
-plot(survfit(Surv(time=second_rem_months, sec_rel)~kras.or.ikzf.rel, data=c), col=c("blue", "red"), xlab="months", ylab="pRFS after 1st relapse", conf.int=F)
-legend(60, 0.2, c("wt KRAS and IKZF1/2", "mKRAS or IKZF1/2-del"), lwd=c(1,1), col=c("blue", "red"))
-
-
-dev.off()
-
-#------------------------
-# KAPLAN MAYER RAS PW AT RELAPSE
-#------------------------
-
-c$rasgene.relapse.minaf10 <- NA
-c$rasgene.relapse.minaf10[as.character(c$patient_id) %in% as.character(m[m$gene=="KRAS" & (m$sample=="rem_rel" | m$sample=="rem_rel2") & m$freq_leu >= 0.1, "patient"])] <- "KRAS"
-c$rasgene.relapse.minaf10[as.character(c$patient_id) %in% as.character(m[m$gene=="NRAS" & (m$sample=="rem_rel" | m$sample=="rem_rel2") & m$freq_leu >= 0.1, "patient"])] <- "NRAS"
-c$rasgene.relapse.minaf10[as.character(c$patient_id) %in% as.character(m[m$gene=="PTPN11" & (m$sample=="rem_rel" | m$sample=="rem_rel2") & m$freq_leu >= 0.1, "patient"])] <- "PTPN11"
-c$rasgene.relapse.minaf10[c$cohort=="relapsing" & is.na(c$rasgene.relapse.minaf10)] <- "WT"
-
-#plot(survfit(Surv(time=second_rem_months, sec_rel)~rasgene.relapse.minaf10, data=c), col=c("red", "blue", "black", "orange"), xlab="months", ylab="pRFS after 1st relapse", conf.int=F)
-
-pdf("~/hdall/results/clinical/kaplan-raspw-at-relapse.pdf")
-
-plot(survfit(Surv(time=second_rem_months, had_second_event_after_first)~ras.relapsing.rel, data=c), col=c("blue", "red"), xlab="months", ylab="pEFS after 1st relapse", conf.int=F)
-legend(80, 0.2, c("wtRAS", "mRAS"), lwd=c(1,1), col=c("blue", "red"))
-
-plot(survfit(Surv(time=second_rem_months, had_second_event_after_first)~rasgene.relapse.minaf10, data=c), col=c("red", "blue", "orange", "black"), xlab="months", ylab="pEFS after 1st relapse", conf.int=F)
-legend(90, 0.2, c("PTPN11", "NRAS", "wt", "KRAS"), lwd=c(1,1), col=c("orange", "blue", "black", "red"))
-
-dev.off()
-
-#------------------------
-# KAPLAN MAYER CREBBP/KRAS
-#------------------------
-c$kras.crebbp.rel <- NA
-c$kras.crebbp.rel[c$kras.relapsing.rel & !c$crebbp.relapsing.rel] <- "mKRAS+wtCREBBP"
-c$kras.crebbp.rel[!c$kras.relapsing.rel & c$crebbp.relapsing.rel] <- "wtKRAS+mCREBBP"
-c$kras.crebbp.rel[c$kras.relapsing.rel & c$crebbp.relapsing.rel] <- "mKRAS+mCREBBP"
-c$kras.crebbp.rel[!c$kras.relapsing.rel & !c$crebbp.relapsing.rel] <- "wtKRAS+wtCREBBP"
-
-plot(survfit(Surv(time=second_rem_months, c$had_second_event_after_first)~kras.crebbp.rel, data=c), col=c("blue", "red", "orange", "black"), xlab="months", ylab="pEFS after 1st relapse", conf.int=F, main="relapse")
-legend(70, 0.2, c("wtKRAS+mCREBBP", "wtKRAS+wtCREBBP", "mKRAS+mCREBBP", "mKRAS+wtCREBBP"), lwd=c(1,1), col=c("orange", "black", "blue", "red"))
-
-c$mkras.wtcrebbp.relapsing.rel <- c$kras.relapsing.rel & !c$crebbp.relapsing.rel
-c$wtkras.mcrebbp.relapsing.rel <- !c$kras.relapsing.rel & c$crebbp.relapsing.rel
-c$mkras.mcrebbp.relapsing.rel <- c$kras.relapsing.rel & c$crebbp.relapsing.rel
-c$wtkras.wtcrebbp.relapsing.rel <- !c$kras.relapsing.rel & !c$crebbp.relapsing.rel
-
+#----------------------------------------------------------
 pdf("~/hdall/results/clinical/ras-crebbp-mrd.pdf")
 
 pair.table <- table(c[,c("mrd_risk_rel", "mkras.wtcrebbp.relapsing.rel")])
@@ -456,6 +393,10 @@ pair.table <- table(c[,c("mrd_risk_rel", "wtkras.wtcrebbp.relapsing.rel")])
 mosaic(pair.table, pop=F, main=sprintf("p=%.2g", fisher.test(pair.table)$p.value))
 labeling_cells(text=pair.table)(pair.table)
 
+pair.table <- table(c[,c("mrd_risk_rel", "ras.relapsing.rel")])
+mosaic(pair.table, pop=F, main=sprintf("p=%.2g", fisher.test(pair.table)$p.value))
+labeling_cells(text=pair.table)(pair.table)
+
 pair.table <- table(c[,c("mrd_risk_rel", "kras.relapsing.rel")])
 mosaic(pair.table, pop=F, main=sprintf("p=%.2g", fisher.test(pair.table)$p.value))
 labeling_cells(text=pair.table)(pair.table)
@@ -468,9 +409,75 @@ pair.table <- table(c[,c("mrd_risk_rel", "ptpn11.relapsing.rel")])
 mosaic(pair.table, pop=F, main=sprintf("p=%.2g", fisher.test(pair.table)$p.value))
 labeling_cells(text=pair.table)(pair.table)
 
+c$flt3 <- as.character(c$patient_id) %in% as.character(m[m$gene=="FLT3", "patient"]) | as.character(c$patient_id) %in% as.character(m.nonrel[m.nonrel$gene=="FLT3", "patient"])
+c$flt3.relapsing <- ifelse(as.character(c$patient_id) %in% patients_non_rel, NA, c$flt3)
+c$flt3.relapsing.dia <- ifelse(as.character(c$patient_id) %in% c(patients_non_rel, patients_rel_only), NA, (as.character(c$patient_id) %in% as.character(m[m$gene=="FLT3" & m$sample=="rem_dia", "patient"])))
+c$flt3.relapsing.rel <- ifelse(as.character(c$patient_id) %in% c(patients_non_rel, patients_dia_only), NA, (as.character(c$patient_id) %in% as.character(m[m$gene=="FLT3" & (m$sample=="rem_rel" | m$sample=="rem_rel2"), "patient"])))
+pair.table <- table(c[,c("mrd_risk_rel", "flt3.relapsing.rel")])
+mosaic(pair.table, pop=F, main=sprintf("p=%.2g", fisher.test(pair.table)$p.value))
+labeling_cells(text=pair.table)(pair.table)
+
 pair.table <- table(c[,c("mrd_risk_rel", "crebbp.relapsing.rel")])
 mosaic(pair.table, pop=F, main=sprintf("p=%.2g", fisher.test(pair.table)$p.value))
 labeling_cells(text=pair.table)(pair.table)
+
+dev.off()
+
+#----------------------------------------------------------
+pdf("~/hdall/results/clinical/ras-crebbp.time-to-relapse.pdf")
+
+pair.table <- table(c[,c("rel_timepoint", "ras.relapsing.rel")])
+mosaic(pair.table, pop=F, main=sprintf("p=%.2g", fisher.test(pair.table)$p.value))
+labeling_cells(text=pair.table)(pair.table)
+
+pair.table <- table(c[,c("rel_timepoint", "kras.relapsing.rel")])
+mosaic(pair.table, pop=F, main=sprintf("p=%.2g", fisher.test(pair.table)$p.value))
+labeling_cells(text=pair.table)(pair.table)
+
+pair.table <- table(c[,c("rel_timepoint", "nras.relapsing.rel")])
+mosaic(pair.table, pop=F, main=sprintf("p=%.2g", fisher.test(pair.table)$p.value))
+labeling_cells(text=pair.table)(pair.table)
+
+pair.table <- table(c[,c("rel_timepoint", "ptpn11.relapsing.rel")])
+mosaic(pair.table, pop=F, main=sprintf("p=%.2g", fisher.test(pair.table)$p.value))
+labeling_cells(text=pair.table)(pair.table)
+
+pair.table <- table(c[,c("rel_timepoint", "flt3.relapsing.rel")])
+mosaic(pair.table, pop=F, main=sprintf("p=%.2g", fisher.test(pair.table)$p.value))
+labeling_cells(text=pair.table)(pair.table)
+
+pair.table <- table(c[,c("rel_timepoint", "crebbp.relapsing.rel")])
+mosaic(pair.table, pop=F, main=sprintf("p=%.2g", fisher.test(pair.table)$p.value))
+labeling_cells(text=pair.table)(pair.table)
+
+dev.off()
+
+
+
+# association of CREBBP/KRAS double mutants at relapse in a mCREBBP and mKRAS background, respectively
+#---
+pdf("~/hdall/results/clinical/ras-crebbp-double.vs.single.pdf")
+
+c$mkras_in_mcrebb_background.rel <- ifelse(c$crebbp.relapsing.rel, ifelse(c$kras.relapsing.rel, TRUE, FALSE), NA)
+
+pair.table <- table(c[,c("mrd_risk_rel", "mkras_in_mcrebb_background.rel")])
+mosaic(pair.table, pop=F, main=sprintf("p=%.2g", fisher.test(pair.table)$p.value))
+labeling_cells(text=pair.table)(pair.table)
+
+pair.table <- table(c[,c("rel_timepoint", "mkras_in_mcrebb_background")])
+mosaic(pair.table, pop=F, main=sprintf("p=%.2g", fisher.test(pair.table)$p.value))
+labeling_cells(text=pair.table)(pair.table)
+
+c$mcrebbp_in_mkras_background.rel <- ifelse(c$kras.relapsing.rel, ifelse(c$crebbp.relapsing.rel, TRUE, FALSE), NA)
+
+pair.table <- table(c[,c("mrd_risk_rel", "mcrebbp_in_mkras_background.rel")])
+mosaic(pair.table, pop=F, main=sprintf("p=%.2g", fisher.test(pair.table)$p.value))
+labeling_cells(text=pair.table)(pair.table)
+
+pair.table <- table(c[,c("rel_timepoint", "mcrebbp_in_mkras_background.rel")])
+mosaic(pair.table, pop=F, main=sprintf("p=%.2g", fisher.test(pair.table)$p.value))
+labeling_cells(text=pair.table)(pair.table)
+
 
 dev.off()
 
@@ -481,6 +488,14 @@ stop("DONE")
 # legend(80, 1, c("female", "male"), lwd=c(1,1), col=c("blue", "red"))
 # p <- survdiff(Surv(first_rem_months)~sex, data=c))  # don't know how this works yet
 #par(mfrow=c(3,3), mar=c(2.5,4,1.5,2))
+
+#----
+# RAS PW AF AT DIA WITH RELAPSE TP
+#----
+
+pdf("~/hdall/results/clinical/ras-af-dia.vs.rel-timepoint.pdf")
+test_pairwise_assoc(c, include.group=c("ras.relapsing.dia.af", "rel_timepoint"))
+dev.off()
 
 #----
 # FIRST REMISSION DURATION BY CREBBP MUTATION STATUS

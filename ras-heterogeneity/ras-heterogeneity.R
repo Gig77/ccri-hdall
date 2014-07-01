@@ -6,7 +6,9 @@ hotspots <- data.frame(gene=c("KRAS", "KRAS", "KRAS", "KRAS", "KRAS", "KRAS", "K
 					   stringsAsFactors=F)
 #hotspots <- data.frame(gene=c("PTPN11"), chr=c("chr12"), pos=c(112888189), stringsAsFactors=F)			   
 mutations <- data.frame(patient=character(0), cohort=character(0), sample=character(0), gene=character(0), chr=character(0), pos=numeric(0), ref=character(0), alt=character(0), alt.reads=numeric(0), tot.reads=numeric(0), frequency=numeric(0), stringsAsFactors=F)
+mutations.rem <- mutations
 
+patients.exome <- c("314", "399", "430", "446", "460", "545", "715", "786", "792", "818", "842", "A", "B", "C", "D", "X", "Y", "1021247", "592")
 patients.matched <- c("KA14651", "1009302", "1019357", "1020540", "1020583", "1021247", "1021392", "1021631", "1022914", "1023056", "1023392", "1024518", "1024543", "1025108", "1025409", "1187", "314", "399", "430", "446", "460", "545", "592", "715", "786", "792", "818", "842", "A", "B", "C", "D", "FB11", "G", "HS6", "K", "MB2", "X", "243", "933", "944", "KD20493", "KE12025", "MJ16441", "NH17331", "PJ13414", "RD17412", "RS13466", "ST13892", "ZA16211", "Y")
 patients.relonly <- c("1017005", "1021865", "1023545", "AD15", "BL16", "BM18", "CA18", "DM1", "FE1", "FS1", "GD18", "GD1", "HJ15", "HJA15", "HL1", "KA17", "KJ17", "KL16", "LB17", "LM18", "MJ1", "ML10", "MV16", "NS18", "PC16", "RT15", "RT16", "SJM16", "SKR1", "SL1", "SLM1", "ST14", "WA1", "ZE13")
 patients.diaonly <- c("1004564", "1010661", "1010781", "1019964", "1020076", "1021087", "1023338", "1023616", "1024589", "1026233", "1026662", "B100", "EF7", "FB14", "G44", "HD7")
@@ -59,11 +61,20 @@ for (i in 1:nrow(hotspots)) {
 	for (p in c(patients.matched, patients.relonly)) {
 		mutations <- process_bam(p, "relapsing", "relapse", paste0("~/hdall/data/reseq/bam/", p, "_Relapse.duplicate_marked.realigned.recalibrated.bam"), hotspots[i, "gene"], hotspots[i, "chr"], hotspots[i, "pos"], mutations)
 	}
-#	for (p in c("ZE13")) {
+	#	for (p in c("ZE13")) {
 #		mutations <- process_bam(p, "relapsing", "relapse", paste0("~/hdall/data/reseq/bam/", p, "_Relapse.duplicate_marked.realigned.recalibrated.bam"), hotspots[i, "gene"], hotspots[i, "chr"], hotspots[i, "pos"], mutations)
 #	}
 }
 
 write.table(mutations, file="~/hdall/results/ras-heterogeneity/ras.hotspots.tsv", col.names=T, row.names=F, sep="\t", quote=F)
 
+# CONTROL: check remission samples
+
+for (i in 1:nrow(hotspots)) {
+	for (p in setdiff(c(patients.matched, patients.relonly, patients.diaonly), patients.exome)) {
+		mutations.rem <- process_bam(p, "relapsing", "remission", paste0("~/hdall/data/reseq/bam/", p, "_Remission.duplicate_marked.realigned.recalibrated.bam"), hotspots[i, "gene"], hotspots[i, "chr"], hotspots[i, "pos"], mutations.rem)
+	}
+}
+
+write.table(mutations.rem, file="~/hdall/results/ras-heterogeneity/ras.hotspots.remission.tsv", col.names=T, row.names=F, sep="\t", quote=F)
 

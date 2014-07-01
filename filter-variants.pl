@@ -432,6 +432,25 @@ while (my $line = $vcf->next_line())
 		$freq_tum = $x->{gtypes}{$cmp_sample}{FA};
 		$freq_rem = $x->{gtypes}{$rem_sample}{FA};
 		
+		# 2014-06-26 | CF | correct MuTect AF estimates for patient KD20493
+		if ($patient eq "KD20493" & $x->{CHROM} eq "chr16")
+		{
+			if ($cmp_type eq "rem_dia") {
+				if ($x->{POS} eq "3786734") { $freq_tum = 0.344; }
+				if ($x->{POS} eq "3786736") { $freq_tum = 0.340; }
+				if ($x->{POS} eq "3786737") { $freq_tum = 0.340; }
+				if ($x->{POS} eq "3786740") { $freq_tum = 0.341; }
+				if ($x->{POS} eq "3786741") { $freq_tum = 0.344; }
+			} 
+			elsif ($cmp_type eq "rem_rel") {
+				if ($x->{POS} eq "3786734") { $freq_tum = 0.308; }
+				if ($x->{POS} eq "3786736") { $freq_tum = 0.304; }
+				if ($x->{POS} eq "3786737") { $freq_tum = 0.304; }
+				if ($x->{POS} eq "3786740") { $freq_tum = 0.307; }
+				if ($x->{POS} eq "3786741") { $freq_tum = 0.304; }				
+			}
+		} 
+		
 		#next if ($status eq "REJECT" and ($dp_tum <= 50 or $dp_rem <= 50 or $freq_tum < 0.2 or $freq_rem > 0.05));	
 	}
 	elsif ($var_type eq 'indel') # indel

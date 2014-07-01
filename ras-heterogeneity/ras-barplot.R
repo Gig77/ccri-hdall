@@ -239,8 +239,6 @@ m.relapsing.cons <- merge(m.relapsing.dia, m.relapsing.rel, by=c("patient", "mut
 m.relapsing.cons <- paste0(m.relapsing.cons$patient, ":", m.relapsing.cons$mut)
 m.nonrelapsing <- m[m$cohort=="non-relapsing" & m$sample=="diagnosis",]
 
-stop("OK")
-
 pdf("~/hdall/results/ras-heterogeneity/ras-barplot.pdf", width=18, height=13)
 
 #---

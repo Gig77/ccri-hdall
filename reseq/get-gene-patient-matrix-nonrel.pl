@@ -53,6 +53,11 @@ while(<>)
 	map { 
 		my ($chr, $start, $change, $freq, $impact, $effect) = split(":");
 		
+		if (!$freq)
+		{
+			print STDERR "ERROR: freq unknown:\n$_\n";
+		}
+		
 		if ($mut_details)
 		{
 			$variants{$comp}{$gene}{$patient}{"$chr:$start:$change"} = sprintf("%d(%s)", $freq*100, $impact2flag{$impact}); 	

@@ -166,8 +166,11 @@ png("~/hdall/results/stats/mutation-profile-stacked.png", width=2000, height=200
 do_plot()
 dev.off()
 
-print(sprintf("Average ratio Ts/Tv at diagnosis: %.3f", mean(aggregate(as.numeric(freq.dia) ~ patient, data = df[df$mutation %in% c("A:T>G:C", "G:C>A:T"),], sum)[,2]/aggregate(as.numeric(freq.dia) ~ patient, data = df[!df$mutation %in% c("A:T>G:C", "G:C>A:T"),], sum)[,2])))
-print(sprintf("Average ratio Ts/Tv at relapse: %.3f", mean(aggregate(as.numeric(freq.rel.specific) ~ patient, data = df[df$mutation %in% c("A:T>G:C", "G:C>A:T"),], sum)[,2]/aggregate(as.numeric(freq.rel.specific) ~ patient, data = df[!df$mutation %in% c("A:T>G:C", "G:C>A:T"),], sum)[,2])))
+d <- aggregate(as.numeric(freq.dia) ~ patient, data = df[df$mutation %in% c("A:T>G:C", "G:C>A:T"),], sum)[,2]/aggregate(as.numeric(freq.dia) ~ patient, data = df[!df$mutation %in% c("A:T>G:C", "G:C>A:T"),], sum)[,2]
+r <- aggregate(as.numeric(freq.rel.specific) ~ patient, data = df[df$mutation %in% c("A:T>G:C", "G:C>A:T"),], sum)[,2]/aggregate(as.numeric(freq.rel.specific) ~ patient, data = df[!df$mutation %in% c("A:T>G:C", "G:C>A:T"),], sum)[,2]
+print(sprintf("Average ratio Ts/Tv at diagnosis: %.3f", mean(d)))
+print(sprintf("Average ratio Ts/Tv at relapse: %.3f", mean(r)))
+print(sprintf("Paired one-sided t-test: %.3g", t.test(d,r,paired=T,alternative="greater")$p.value))
 
 write.table(df, file="~/hdall/results/stats/mutation-profile.data.af10.tsv", col.names=T, row.names=F, sep="\t", quote=F)
 

@@ -2,6 +2,7 @@ options(warn=1)
 library(survival)
 library(cmprsk)
 
+rm(list=ls())
 c <- read.delim("~/hdall/results/clinical/clinical_data.processed.tsv")
 
 pdf("~/hdall/results/clinical/kaplan-figure-paper.pdf", width=10, height=13.3)
@@ -10,13 +11,13 @@ par(mfrow=c(4,3),mar=c(4,4,1,1))
 
 # --- MRD ---
 
-rm(form); form <- Surv(time=second_rem_months, dead)~mrd_risk_rel
+form <- Surv(time=second_rem_months, dead)~mrd_risk_rel
 fit <- survfit(form, data=c) 
 plot(fit, col=c("red", "blue"), lty=c(1, 5), xlab="months", ylab="pOS after 1st relapse", conf.int=F, xlim=c(0,125), yaxt='n')
 axis(side=2, at=seq(0, 1, by=0.1))
 text(60, fit[1]$surv[max(which(fit[1]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[1]$surv[max(which(fit[1]$time<=60))], fit[1]$std.err[max(which(fit[1]$time<=60))]), col="red", adj=0)
 text(60, fit[2]$surv[max(which(fit[2]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[2]$surv[max(which(fit[2]$time<=60))], fit[2]$std.err[max(which(fit[2]$time<=60))]), col="blue", adj=0)
-fit.overall <- survfit(Surv(time=c$second_rem_months, c$dead)~1)
+fit.overall <- survfit(Surv(time=c$second_rem_months[!is.na(c$mrd_risk_rel)], c$dead[!is.na(c$mrd_risk_rel)])~1)
 lines(fit.overall, col="darkgray", lty=2, conf.int=F)
 text(60, fit.overall$surv[max(which(fit.overall$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit.overall$surv[max(which(fit.overall$time<=60))], fit.overall$std.err[max(which(fit.overall$time<=60))]), col="darkgray", adj=0)
 legend("bottomright", c(sprintf("MRD SR (%d/%d)", sum(fit[2]$n.event), fit[2]$n), sprintf("overall (%d/%d)", sum(fit.overall$n.event), fit.overall$n), sprintf("MRD HR (%d/%d)", sum(fit[1]$n.event), fit[1]$n)), lwd=c(1,1), col=c("blue", "darkgray", "red"), lty=c(5, 2, 1))
@@ -28,7 +29,7 @@ plot(fit, col=c("red", "blue"), lty=c(1, 5), xlab="months", ylab="pEFS after 1st
 axis(side=2, at=seq(0, 1, by=0.1))
 text(60, fit[1]$surv[max(which(fit[1]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[1]$surv[max(which(fit[1]$time<=60))], fit[1]$std.err[max(which(fit[1]$time<=60))]), col="red", adj=0)
 text(60, fit[2]$surv[max(which(fit[2]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[2]$surv[max(which(fit[2]$time<=60))], fit[2]$std.err[max(which(fit[2]$time<=60))]), col="blue", adj=0)
-fit.overall <- survfit(Surv(time=c$second_rem_months, c$had_second_event_after_first)~1)
+fit.overall <- survfit(Surv(time=c$second_rem_months[!is.na(c$mrd_risk_rel)], c$had_second_event_after_first[!is.na(c$mrd_risk_rel)])~1)
 lines(fit.overall, col="darkgray", lty=2, conf.int=F)
 text(60, fit.overall$surv[max(which(fit.overall$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit.overall$surv[max(which(fit.overall$time<=60))], fit.overall$std.err[max(which(fit.overall$time<=60))]), col="darkgray", adj=0)
 legend("bottomright", c(sprintf("MRD SR (%d/%d)", sum(fit[2]$n.event), fit[2]$n), sprintf("overall (%d/%d)", sum(fit.overall$n.event), fit.overall$n), sprintf("MRD HR (%d/%d)", sum(fit[1]$n.event), fit[1]$n)), lwd=c(1,1), col=c("blue", "darkgray", "red"), lty=c(5, 2, 1))
@@ -41,7 +42,7 @@ plot(fit, col=c("red", "blue"), lty=c(1, 5), xlab="months", ylab="pRFS after 1st
 axis(side=2, at=seq(0, 1, by=0.1))
 text(60, fit[1]$surv[max(which(fit[1]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[1]$surv[max(which(fit[1]$time<=60))], fit[1]$std.err[max(which(fit[1]$time<=60))]), col="red", adj=0)
 text(60, fit[2]$surv[max(which(fit[2]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[2]$surv[max(which(fit[2]$time<=60))], fit[2]$std.err[max(which(fit[2]$time<=60))]), col="blue", adj=0)
-fit.overall <- survfit(Surv(time=c$second_rem_months, c$sec_rel)~1) 
+fit.overall <- survfit(Surv(time=c$second_rem_months[!is.na(c$mrd_risk_rel)], c$sec_rel[!is.na(c$mrd_risk_rel)])~1) 
 lines(fit.overall, col="darkgray", lty=2, conf.int=F)
 text(60, fit.overall$surv[max(which(fit.overall$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit.overall$surv[max(which(fit.overall$time<=60))], fit.overall$std.err[max(which(fit.overall$time<=60))]), col="darkgray", adj=0)
 legend("bottomright", c(sprintf("MRD SR (%d/%d)", sum(fit[2]$n.event), fit[2]$n), sprintf("overall (%d/%d)", sum(fit.overall$n.event), fit.overall$n), sprintf("MRD HR (%d/%d)", sum(fit[1]$n.event), fit[1]$n)), lwd=c(1,1), col=c("blue", "darkgray", "red"), lty=c(5, 2, 1))
@@ -169,7 +170,7 @@ axis(side=2, at=seq(0, 1, by=0.1))
 text(60, fit[1]$surv[max(which(fit[1]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[1]$surv[max(which(fit[1]$time<=60))], fit[1]$std.err[max(which(fit[1]$time<=60))]), col="black", adj=0)
 text(60, fit[2]$surv[max(which(fit[2]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[2]$surv[max(which(fit[2]$time<=60))], fit[2]$std.err[max(which(fit[2]$time<=60))]), col="red", adj=0)
 text(60, fit[3]$surv[max(which(fit[3]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[3]$surv[max(which(fit[3]$time<=60))], fit[3]$std.err[max(which(fit[3]$time<=60))]), col="blue", adj=0)
-legend("bottomright", c(sprintf("wtCREBBP+wtKRAS (%d/%d)", sum(fit[3]$n.event), fit[3]$n), sprintf("mCREBBP (%d/%d)", sum(fit[1]$n.event), fit[1]$n), sprintf("wtCREBBP+mKRAS (%d/%d)", sum(fit[2]$n.event), fit[2]$n)), lty=c(4, 3, 1), col=c("blue", "black", "red"))
+legend("right", c(sprintf("wtCREBBP+wtKRAS (%d/%d)", sum(fit[3]$n.event), fit[3]$n), sprintf("mCREBBP (%d/%d)", sum(fit[1]$n.event), fit[1]$n), sprintf("wtCREBBP+mKRAS (%d/%d)", sum(fit[2]$n.event), fit[2]$n)), lty=c(4, 3, 1), col=c("blue", "black", "red"))
 text(1, 0, sprintf("p=%.2g", 1 - pchisq(survdiff(form, data=c)$chisq, length(survdiff(form, data=c)$n) - 1)), adj=0)
 
 rm(form); form <- Surv(time=second_rem_months, had_second_event_after_first)~kras.crebbp.rel
@@ -179,7 +180,7 @@ axis(side=2, at=seq(0, 1, by=0.1))
 text(60, fit[1]$surv[max(which(fit[1]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[1]$surv[max(which(fit[1]$time<=60))], fit[1]$std.err[max(which(fit[1]$time<=60))]), col="black", adj=0)
 text(60, fit[2]$surv[max(which(fit[2]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[2]$surv[max(which(fit[2]$time<=60))], fit[2]$std.err[max(which(fit[2]$time<=60))]), col="red", adj=0)
 text(60, fit[3]$surv[max(which(fit[3]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[3]$surv[max(which(fit[3]$time<=60))], fit[3]$std.err[max(which(fit[3]$time<=60))]), col="blue", adj=0)
-legend("bottomright", c(sprintf("wtCREBBP+wtKRAS (%d/%d)", sum(fit[3]$n.event), fit[3]$n), sprintf("mCREBBP (%d/%d)", sum(fit[1]$n.event), fit[1]$n), sprintf("wtCREBBP+mKRAS (%d/%d)", sum(fit[2]$n.event), fit[2]$n)), lty=c(4, 3, 1), col=c("blue", "black", "red"))
+legend("right", c(sprintf("wtCREBBP+wtKRAS (%d/%d)", sum(fit[3]$n.event), fit[3]$n), sprintf("mCREBBP (%d/%d)", sum(fit[1]$n.event), fit[1]$n), sprintf("wtCREBBP+mKRAS (%d/%d)", sum(fit[2]$n.event), fit[2]$n)), lty=c(4, 3, 1), col=c("blue", "black", "red"))
 text(1, 0, sprintf("p=%.2g", 1 - pchisq(survdiff(form, data=c)$chisq, length(survdiff(form, data=c)$n) - 1)), adj=0)
 
 rm(form); form <- Surv(time=second_rem_months, sec_rel)~kras.crebbp.rel

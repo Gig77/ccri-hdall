@@ -3,11 +3,13 @@
 
 # 715, 545, Y, 592, 430
 p <- "715"
-min.cov <- 9
+min.cov <- 9 # patient 715
+#min.cov <- 30 # other patients
 cov.max.std.dev <- 2
 max.af <- 0.7
 min.af <- 0.1
-genes.to.label <- c("CREBBP", "KRAS", "NRAS", "FLT3", "PTPN11", "MLL2")
+#genes.to.label <- c("CREBBP", "KRAS", "NRAS", "FLT3", "PTPN11", "MLL2")
+genes.to.label <- c()
 exclude.chr <- c("chrX", "chrY")
 blast.count <- list("715.dia" = 92, "715.rel" = 92, "715.rel3" = "92", "545.dia" = 97, "545.rel" = 86, "Y.dia" = 98, "Y.rel" = 95, "592.dia" = 94, "592.rel" = 98, "430.dia" = 81, "430.rel" = 72)
 
@@ -15,7 +17,7 @@ blast.count <- list("715.dia" = 92, "715.rel" = 92, "715.rel3" = "92", "545.dia"
 data <- read.csv("~/hdall/results/filtered-variants.cosmic.normaf.tsv", sep="\t")
 data <- data[data$patient == p & data$status!="REJECT",]
 #data <- data[data$var_type=="snp",]  # variant type filter
-data <- data[data$non_silent==1,]  # only non-silent
+data <- data[data$non_silent==1,]  # only non-silent for patient 715
 data <- data[!(data$chr %in% exclude.chr),]  # sex chromosome filter
 data <- data[data$dp_leu_tot >= min.cov & data$dp_rem_tot >= min.cov,]  # minimum coverage filter
 data <- data[data$dp_rem_tot < mean(data$dp_rem_tot) + cov.max.std.dev * sd(data$dp_rem_tot),] # maximum coverage filter
@@ -85,8 +87,17 @@ m <- m[m$dia>=min.af | m$rel>=min.af | m$rel3>=min.af,]
 # remove variants with AF > 70% (likely inaccurate measurement)
 m <- m[m$dia<=max.af & m$rel<=max.af & m$rel3<=max.af,]
 
+# assign colors depending on AFs
 if (p != "715")
 {
+	m$col <- "#000000"
+	m$col[m$dia>0.15 & m$rel>0.15] <- "#C6C7C8" # gray
+	m$col[m$dia>0.25 & m$rel==0] <- "#4A8ECC" # black
+	m$col[m$dia==0 & m$rel>0.25] <- "#BCAFD6" # violet
+	m$col[m$dia==0 & m$rel>0 & m$rel<=0.25] <- "#FFF57C" # yellow
+	m$col[m$dia > 0 & m$dia<=0.25 & m$rel > 0.25] <- "#F58E7D"
+	m$col[m$dia > 0 & m$dia<=0.25 & m$rel==0] <- "#548A2F" # green
+	
 	#png(paste0("~/hdall/results/figures/clonal-progression-", p, ".png"))
 	pdf(paste0("~/hdall/results/figures/clonal-progression-", p, ".pdf"))
 	plot(0, 0, xlim=c(1, 3.1), ylim=c(0, 0.7), type="n", xaxt="n", yaxt="n", xlab="", ylab="allelic frequency", main=paste(p, " (n=", nrow(m), ")", sep=""))
@@ -97,7 +108,7 @@ if (p != "715")
 		fdia <- m[i,"dia"]
 		frel <- m[i,"rel"]
 		#lines(c(1, 2), c(min(m[i,"dia"], 1), min(m[i,"rel"], 1)), type="b", col=rgb(min(m[i,"dia"], 1),0,min(m[i,"rel"], 1), min(c(mean(c(m[i,"dia"], m[i,"rel"]))/2, 1))))
-		lines(c(1.3, 2.8), c(fdia, frel), type="b", col=rgb(fdia, 0, frel, ifelse(m[i, "gene"] %in% genes.to.label, 1, 0.3)), lwd=ifelse(m[i, "gene"] %in% genes.to.label, 4, 1))
+		lines(c(1.3, 2.8), c(fdia, frel), type="b", col=m[i,"col"], lwd=ifelse(m[i, "gene"] %in% genes.to.label, 4, 1))
 		
 		if (m[i, "gene"] %in% genes.to.label) {
 			if (fdia > 0) { text(1.25, fdia, paste0(m[i, "gene"], " --"), adj=c(1, 0.5), cex=0.8) }
@@ -106,7 +117,7 @@ if (p != "715")
 	}
 } else {
 	m$col <- "#000000"
-	m$col[m$dia>0.25 & m$rel>0.1 & m$rel3>0.25] <- "#E6E7E8"
+	m$col[m$dia>0.25 & m$rel>0.1 & m$rel3>0.25] <- "#C6C7C8"
 	m$col[m$dia>0.25 & m$rel==0 & m$rel3==0] <- "#4A8ECC"
 	m$col[m$dia>0.25 & m$rel>0 & m$rel<=0.25 & m$rel3==0] <- "#231F20"
 	m$col[m$dia==0 & m$rel>0.25 & m$rel3 > 0.25] <- "#C9252B"

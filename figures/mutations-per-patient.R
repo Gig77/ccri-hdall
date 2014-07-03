@@ -55,7 +55,7 @@ mut <- as.data.frame(bardata)
 mut$dia <- mut$'diagnosis-specific' + mut$conserved
 mut$rel <- mut$'relapse-specific' + mut$conserved
 test <- kruskal.test(list(mut$dia, mut$rel))
-boxplot(mut$dia, mut$rel, xlab="timepoint", ylab="number non-silent mutations", na.action=na.exclude, outline=F, cex.axis=0.8, main=paste0("p=", sprintf("%.2g", test$p.value), " (Kruskal-Wallis)"), xaxt="n", cex.lab=1.3)
-axis(1, at=c(1,2), labels=c("diagnosis", "relapse"))
+boxplot(mut$dia, mut$rel, xlab=sprintf("p=%.2g", test$p.value), ylab="# non-silent mutations", na.action=na.exclude, outline=F, cex.axis=1.5, xaxt="n", cex.lab=2, ylim=c(0,100))
+axis(1, at=c(1,2), cex.axis=1.5, labels=c("diagnosis", "relapse"))
 stripchart(list(mut$dia, mut$rel), method="jitter", vertical=T, pch=19, col=c("red", "blue"), add=T)
 dev.off()

@@ -145,16 +145,18 @@ c$ras.nonrelapsing <- ifelse(as.character(c$patient_id) %in% patients_non_rel, c
 c$ras.dia <- ifelse(as.character(c$patient_id) %in% c(patients_rel_only), NA, ifelse((!is.na(c$ras.nonrelapsing) & c$ras.nonrelapsing) | (!is.na(c$ras.relapsing.dia) & c$ras.relapsing.dia), TRUE, FALSE))
 
 c$ras.heterogeneous.dia <- ifelse(c$num.ras.dia == 0, NA, c$num.ras.dia > 1)
+c$ras.heterogeneous.rel <- ifelse(c$num.ras.rel == 0, NA, c$num.ras.rel > 1)
 c$ras.conserved <- ifelse(as.character(c$patient_id) %in% c(patients_non_rel, patients_dia_only, patients_rel_only, as.character(c[!c$ras,"patient_id"])), NA, (as.character(c$patient_id) %in% as.character(m.merged[m.merged$gene %in% c("KRAS", "NRAS", "PTPN11", "FLT3") & !is.na(m.merged$freq_leu.dia) & !is.na(m.merged$freq_leu.rel), "patient"])))
 
+
 # allelic frequency RAS pathway mutation at diagnosis
-af <- aggregate(freq_leu~patient, data=m[m$gene %in% c("KRAS", "NRAS", "PTPN11", "FLT3") & m$sample=="rem_dia", c("patient", "freq_leu")], FUN=max)
-names(af) <- c("patient_id", "ras.relapsing.dia.af")
+af <- aggregate(frequency~patient, data=m.ras[m.ras$sample=="diagnosis", c("patient", "frequency")], FUN=max)
+names(af) <- c("patient_id", "ras.dia.af")
 c <- merge(c, af, all.x=T)
 
 # allelic frequency RAS pathway mutation at relapse
-af <- aggregate(freq_leu~patient, data=m[m$gene %in% c("KRAS", "NRAS", "PTPN11", "FLT3") & (m$sample=="rem_rel" | m$sample=="rem_rel2"), c("patient", "freq_leu")], FUN=max)
-names(af) <- c("patient_id", "ras.relapsing.rel.af")
+af <- aggregate(frequency~patient, data=m.ras[m.ras$sample=="relapse", c("patient", "frequency")], FUN=max)
+names(af) <- c("patient_id", "ras.rel.af")
 c <- merge(c, af, all.x=T)
 
 c$crebbp.and.kras.relapsing.dia <- c$crebbp.relapsing.dia & c$kras.relapsing.dia
@@ -185,6 +187,23 @@ c <- merge(c, m.ras.rel, all.x=T)
 c$ras.pw.gene.rel <- as.character(c$ras.pw.gene.rel)
 c$ras.pw.gene.rel[is.na(c$ras.pw.gene.rel) & !as.character(c$patient_id) %in% c(patients_non_rel, patients_dia_only)] <- "WT"
 c$ras.pw.gene.rel <- as.factor(c$ras.pw.gene.rel)
+
+# ALTERNATIVELY, USE DATA FROM HOTSPOT CALLER; BUT: CHANGES KAPLAN-MAIER PLOT FOR PTPN11 positive case
+#m.ras.dia <- m.ras[m.ras$sample=="diagnosis",]
+#suppressWarnings(m.ras.dia <- m.ras.dia[ave(m.ras.dia$frequency, m.ras.dia$patient, FUN=max)==m.ras.dia$frequency, c("patient", "gene")])
+#names(m.ras.dia) <- c("patient_id", "ras.pw.gene.dia")
+#c <- merge(c, m.ras.dia, all.x=T)
+#c$ras.pw.gene.dia <- as.character(c$ras.pw.gene.dia)
+#c$ras.pw.gene.dia[is.na(c$ras.pw.gene.dia) & !as.character(c$patient_id) %in% c(patients_rel_only)] <- "WT"
+#c$ras.pw.gene.dia <- as.factor(c$ras.pw.gene.dia)
+
+#m.ras.rel <- m.ras[m.ras$sample=="relapse",]
+#suppressWarnings(m.ras.rel <- m.ras.rel[ave(m.ras.rel$frequency, m.ras.rel$patient, FUN=max)==m.ras.rel$frequency, c("patient", "gene")])
+#names(m.ras.rel) <- c("patient_id", "ras.pw.gene.rel")
+#c <- merge(c, m.ras.rel, all.x=T)
+#c$ras.pw.gene.rel <- as.character(c$ras.pw.gene.rel)
+#c$ras.pw.gene.rel[is.na(c$ras.pw.gene.rel) & !as.character(c$patient_id) %in% c(patients_non_rel, patients_dia_only)] <- "WT"
+#c$ras.pw.gene.rel <- as.factor(c$ras.pw.gene.rel)
 
 #----
 # GENE DELETIONS
@@ -336,6 +355,42 @@ test_pairwise_assoc(c, sig.level=0.99,
 		include=c("ras.pw.gene.dia", "ras.pw.gene.rel"), 
 		exclude=c("patient_id", "exome", "panel", "mrd_level_rel", "rel_protocol", "BM.transplantation.date", "study_no_relapse", "patno_kiel_rem", "patno_berlin_rel", "X", "comment"),
 		exclude.group=list(c("ras.pw.gene.dia", "ras.pw.gene.rel", "kras.relapsing", "kras.relapsing.dia", "kras.relapsing.rel", "kras.nonrelapsing", "kras.dia", "ras", "ras.relapsing", "ras.relapsing.dia", "ras.relapsing.rel", "ras.nonrelapsing", "ras.dia", "num.ras.rel", "num.ras.dia", "kras.or.ptpn11", "kras.or.ptpn11.relapsing", "kras.or.ptpn11.relapsing.dia", "kras.or.ptpn11.relapsing.rel", "kras.or.ikzf1.rel", "kras.or.nras.or.ikzf1.rel", "nras", "nras.relapsing", "nras.relapsing.rel", "nras.relapsing.dia", "nras.dia", "ptpn11", "ptpn11.dia", "ptpn11.relapsing", "ptpn11.relapsing.rel", "ptpn11.relapsing.dia", "ptpn11.dia", "kras", "nras", "nras.relapsing", "ptpn11", "ptpn11.relapsing", "crebbp.and.kras.relapsing.rel", "kras", "crebbp.and.ras.relapsing.rel", "crebbp.and.kras.relapsing.dia")))
+dev.off()
+
+#---
+# associations with PTPN11 mutation status
+#---
+pdf("~/hdall/results/clinical/clinical-ptpn11-rel-vs-all.pdf")
+test_pairwise_assoc(c, sig.level=0.99, 
+		include=c("ptpn11.relapsing.rel"), 
+		exclude=c("ptpn11", "ptpn11.relapsing", "ptpn11.dia", "ptpn11.relapsing.dia", "ptpn11.nonrelapsing", "ras.pw.gene.rel", "ras.pw.gene.dia", "kras.or.ptpn11.relapsing.rel", "kras.or.ptpn11", "kras.or.ptpn11.relapsing", "ras.relapsing.rel", "ras.relapsing.dia", "kras.or.ptpn11.relapsing.dia", "ras", "ras.relapsing", "ras.dia",
+				"patient_id", "exome", "panel", "mrd_level_rel", "rel_protocol", "BM.transplantation.date", "study_no_relapse", "patno_kiel_rem", "patno_berlin_rel", "X", "comment")  
+)
+dev.off()
+
+pdf("~/hdall/results/clinical/clinical-ptpn11-dia-vs-all.pdf")
+test_pairwise_assoc(c, sig.level=0.99, 
+		include=c("ptpn11.relapsing.dia"), 
+		exclude=c("ptpn11", "ptpn11.relapsing", "ptpn11.dia", "ptpn11.relapsing.rel", "ptpn11.nonrelapsing", "ras.pw.gene.rel", "ras.pw.gene.dia", "kras.or.ptpn11.relapsing.rel", "kras.or.ptpn11", "kras.or.ptpn11.relapsing", "ras.relapsing.rel", "ras.relapsing.dia", "kras.or.ptpn11.relapsing.dia", "ras", "ras.relapsing", "ras.dia",
+				"patient_id", "exome", "panel", "mrd_level_rel", "rel_protocol", "BM.transplantation.date", "study_no_relapse", "patno_kiel_rem", "patno_berlin_rel", "X", "comment")
+)
+dev.off()
+
+#---
+# association of RAS pw clonal status at diagnosis with cohort
+#---
+pdf("~/hdall/results/clinical/ras.pw.af.dia-relapsing.vs.nonrelapsing.pdf")
+par(mfrow=c(2,3))
+boxplot(ras.dia.af~cohort, c[c$ras.pw.gene.dia=="KRAS",], xlab=sprintf("p=%.2g", kruskal.test(ras.dia.af~cohort, c[c$ras.pw.gene.dia=="KRAS",], na.action=na.exclude)$p.value), ylab="AF", main="KRAS", na.action=na.exclude, outline=F, cex.axis=0.8)
+stripchart(ras.dia.af~cohort, c[c$ras.pw.gene.dia=="KRAS",], method="jitter", na.action=na.exclude, vertical=T, pch=19, col=c$ras.pw.gene.dia, add=T)
+boxplot(ras.dia.af~cohort, c[c$ras.pw.gene.dia=="NRAS",], xlab=sprintf("p=%.2g", kruskal.test(ras.dia.af~cohort, c[c$ras.pw.gene.dia=="NRAS",], na.action=na.exclude)$p.value), ylab="AF", main="NRAS", na.action=na.exclude, outline=F, cex.axis=0.8)
+stripchart(ras.dia.af~cohort, c[c$ras.pw.gene.dia=="NRAS",], method="jitter", na.action=na.exclude, vertical=T, pch=19, col=c$ras.pw.gene.dia, add=T)
+boxplot(ras.dia.af~cohort, c[c$ras.pw.gene.dia=="PTPN11",], xlab=sprintf("p=%.2g", kruskal.test(ras.dia.af~cohort, c[c$ras.pw.gene.dia=="PTPN11",], na.action=na.exclude)$p.value), ylab="AF", main="PTPN11", na.action=na.exclude, outline=F, cex.axis=0.8)
+stripchart(ras.dia.af~cohort, c[c$ras.pw.gene.dia=="PTPN11",], method="jitter", na.action=na.exclude, vertical=T, pch=19, col=c$ras.pw.gene.dia, add=T)
+boxplot(ras.dia.af~cohort, c[c$ras.pw.gene.dia=="FLT3",], xlab=sprintf("p=%.2g", kruskal.test(ras.dia.af~cohort, c[c$ras.pw.gene.dia=="FLT3",], na.action=na.exclude)$p.value), ylab="AF", main="FLT3", na.action=na.exclude, outline=F, cex.axis=0.8)
+stripchart(ras.dia.af~cohort, c[c$ras.pw.gene.dia=="FLT3",], method="jitter", na.action=na.exclude, vertical=T, pch=19, col=c$ras.pw.gene.dia, add=T)
+boxplot(ras.dia.af~cohort, c, xlab=sprintf("p=%.2g", kruskal.test(ras.dia.af~cohort, c, na.action=na.exclude)$p.value), ylab="AF", main="combined", na.action=na.exclude, outline=F, cex.axis=0.8)
+stripchart(ras.dia.af~cohort, c, method="jitter", na.action=na.exclude, vertical=T, pch=19, col=c$ras.pw.gene.dia, add=T)
 dev.off()
 
 # correlation of mutations with age
@@ -494,7 +549,23 @@ stop("DONE")
 #----
 
 pdf("~/hdall/results/clinical/ras-af-dia.vs.rel-timepoint.pdf")
-test_pairwise_assoc(c, include.group=c("ras.relapsing.dia.af", "rel_timepoint"))
+test_pairwise_assoc(c, include.group=c("ras.dia.af", "rel_timepoint"))
+dev.off()
+
+#----
+# RAS PW AF AT DIA WITH RELAPSE TP
+#----
+
+pdf("~/hdall/results/clinical/ras-heterogeneity.pdf")
+test_pairwise_assoc(c[c$cohort=="relapsing",], include.group=c("ras.heterogeneous.dia", "rel_timepoint"))
+test_pairwise_assoc(c[c$cohort=="relapsing",], include.group=c("ras.heterogeneous.dia", "first_rem_months"))
+test_pairwise_assoc(c[c$cohort=="relapsing",], include.group=c("ras.heterogeneous.dia", "mrd_risk_dia"))
+test_pairwise_assoc(c[c$cohort=="relapsing",], include.group=c("ras.heterogeneous.dia", "mrd_risk_rel"))
+test_pairwise_assoc(c, include.group=c("ras.heterogeneous.rel", "rel_timepoint"))
+test_pairwise_assoc(c, include.group=c("ras.heterogeneous.rel", "first_rem_months"))
+test_pairwise_assoc(c, include.group=c("ras.heterogeneous.rel", "second_rem_months"))
+test_pairwise_assoc(c, include.group=c("ras.heterogeneous.rel", "mrd_risk_dia"))
+test_pairwise_assoc(c, include.group=c("ras.heterogeneous.rel", "mrd_risk_rel"))
 dev.off()
 
 #----

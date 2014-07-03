@@ -275,34 +275,34 @@ dev.off()
 
 #pdf("~/hdall/results/clinical/kaplan-mutations-at-diagnosis.pdf")
 
-#plot(survfit(Surv(time=first_rem_months, relapsing)~kras.dia, data=c), col=c("blue", "red"), xlab="total remission (months)", ylab="pOS", conf.int=F)
+#plot(survfit(Surv(time=first_rem_months, relapsing)~kras.dia, data=c), col=c("blue", "red"), xlab="remission (months)", ylab="pOS", conf.int=F)
 #legend(170, 0.2, c("wtKRAS dia", "mKRAS dia"), lwd=c(1,1), col=c("blue", "red"))
 
-#plot(survfit(Surv(time=first_rem_months, had_second_event_after_first)~kras.dia, data=c), col=c("blue", "red"), xlab="total remission (months)", ylab="pEFS", conf.int=F)
+#plot(survfit(Surv(time=first_rem_months, had_second_event_after_first)~kras.dia, data=c), col=c("blue", "red"), xlab="remission (months)", ylab="pEFS", conf.int=F)
 #legend(170, 0.2, c("wtKRAS dia", "mKRAS dia"), lwd=c(1,1), col=c("blue", "red"))
 
-#plot(survfit(Surv(time=first_rem_months, relapsing)~nras.dia, data=c), col=c("blue", "red"), xlab="total remission (months)", ylab="pOS", conf.int=F)
+#plot(survfit(Surv(time=first_rem_months, relapsing)~nras.dia, data=c), col=c("blue", "red"), xlab="remission (months)", ylab="pOS", conf.int=F)
 #legend(170, 0.2, c("wtNRAS dia", "mNRAS dia"), lwd=c(1,1), col=c("blue", "red"))
 
-#plot(survfit(Surv(time=first_rem_months, had_second_event_after_first)~nras.dia, data=c), col=c("blue", "red"), xlab="total remission (months)", ylab="pEFS", conf.int=F)
+#plot(survfit(Surv(time=first_rem_months, had_second_event_after_first)~nras.dia, data=c), col=c("blue", "red"), xlab="remission (months)", ylab="pEFS", conf.int=F)
 #legend(170, 0.2, c("wtNRAS dia", "mNRAS dia"), lwd=c(1,1), col=c("blue", "red"))
 
-#plot(survfit(Surv(time=first_rem_months, relapsing)~ptpn11.dia, data=c), col=c("blue", "red"), xlab="total remission (months)", ylab="pOS", conf.int=F)
+#plot(survfit(Surv(time=first_rem_months, relapsing)~ptpn11.dia, data=c), col=c("blue", "red"), xlab="remission (months)", ylab="pOS", conf.int=F)
 #legend(170, 0.2, c("wtPTPN11 dia", "mPTPN11 dia"), lwd=c(1,1), col=c("blue", "red"))
 
-#plot(survfit(Surv(time=first_rem_months, had_second_event_after_first)~ptpn11.dia, data=c), col=c("blue", "red"), xlab="total remission (months)", ylab="pEFS", conf.int=F)
+#plot(survfit(Surv(time=first_rem_months, had_second_event_after_first)~ptpn11.dia, data=c), col=c("blue", "red"), xlab="remission (months)", ylab="pEFS", conf.int=F)
 #legend(170, 0.2, c("wtPTPN11 dia", "mPTPN11 dia"), lwd=c(1,1), col=c("blue", "red"))
 
-#plot(survfit(Surv(time=first_rem_months, relapsing)~ras.dia, data=c), col=c("blue", "red"), xlab="total remission (months)", ylab="pOS", conf.int=F)
+#plot(survfit(Surv(time=first_rem_months, relapsing)~ras.dia, data=c), col=c("blue", "red"), xlab="remission (months)", ylab="pOS", conf.int=F)
 #legend(170, 0.2, c("wtRAS dia", "mRAS dia"), lwd=c(1,1), col=c("blue", "red"))
 
-#plot(survfit(Surv(time=first_rem_months, had_second_event_after_first)~ras.dia, data=c), col=c("blue", "red"), xlab="total remission (months)", ylab="pEFS", conf.int=F)
+#plot(survfit(Surv(time=first_rem_months, had_second_event_after_first)~ras.dia, data=c), col=c("blue", "red"), xlab="remission (months)", ylab="pEFS", conf.int=F)
 #legend(170, 0.2, c("wtRAS dia", "mRAS dia"), lwd=c(1,1), col=c("blue", "red"))
 
-#plot(survfit(Surv(time=first_rem_months, relapsing)~crebbp.dia, data=c), col=c("blue", "red"), xlab="total remission (months)", ylab="pOS", conf.int=F)
+#plot(survfit(Surv(time=first_rem_months, relapsing)~crebbp.dia, data=c), col=c("blue", "red"), xlab="remission (months)", ylab="pOS", conf.int=F)
 #legend(170, 0.2, c("wtCREBBP dia", "mCREBBP dia"), lwd=c(1,1), col=c("blue", "red"))
 
-#plot(survfit(Surv(time=first_rem_months, had_second_event_after_first)~crebbp.dia, data=c), col=c("blue", "red"), xlab="total remission (months)", ylab="pEFS", conf.int=F)
+#plot(survfit(Surv(time=first_rem_months, had_second_event_after_first)~crebbp.dia, data=c), col=c("blue", "red"), xlab="remission (months)", ylab="pEFS", conf.int=F)
 #legend(170, 0.2, c("wtCREBBP dia", "mCREBBP dia"), lwd=c(1,1), col=c("blue", "red"))
 
 #dev.off()
@@ -360,19 +360,12 @@ dev.off()
 #---
 # associations with PTPN11 mutation status
 #---
-pdf("~/hdall/results/clinical/clinical-ptpn11-rel-vs-all.pdf")
+pdf("~/hdall/results/clinical/clinical-ptpn11-vs-all.pdf")
 test_pairwise_assoc(c, sig.level=0.99, 
-		include=c("ptpn11.relapsing.rel"), 
-		exclude=c("ptpn11", "ptpn11.relapsing", "ptpn11.dia", "ptpn11.relapsing.dia", "ptpn11.nonrelapsing", "ras.pw.gene.rel", "ras.pw.gene.dia", "kras.or.ptpn11.relapsing.rel", "kras.or.ptpn11", "kras.or.ptpn11.relapsing", "ras.relapsing.rel", "ras.relapsing.dia", "kras.or.ptpn11.relapsing.dia", "ras", "ras.relapsing", "ras.dia",
-				"patient_id", "exome", "panel", "mrd_level_rel", "rel_protocol", "BM.transplantation.date", "study_no_relapse", "patno_kiel_rem", "patno_berlin_rel", "X", "comment")  
-)
-dev.off()
-
-pdf("~/hdall/results/clinical/clinical-ptpn11-dia-vs-all.pdf")
-test_pairwise_assoc(c, sig.level=0.99, 
-		include=c("ptpn11.relapsing.dia"), 
-		exclude=c("ptpn11", "ptpn11.relapsing", "ptpn11.dia", "ptpn11.relapsing.rel", "ptpn11.nonrelapsing", "ras.pw.gene.rel", "ras.pw.gene.dia", "kras.or.ptpn11.relapsing.rel", "kras.or.ptpn11", "kras.or.ptpn11.relapsing", "ras.relapsing.rel", "ras.relapsing.dia", "kras.or.ptpn11.relapsing.dia", "ras", "ras.relapsing", "ras.dia",
-				"patient_id", "exome", "panel", "mrd_level_rel", "rel_protocol", "BM.transplantation.date", "study_no_relapse", "patno_kiel_rem", "patno_berlin_rel", "X", "comment")
+		include=c("ptpn11.relapsing.rel", "ptpn11.relapsing.dia", "ptpn11.dia"), 
+		exclude=c("ptpn11", "ptpn11.relapsing", "ptpn11.nonrelapsing", "ras.pw.gene.rel", "ras.pw.gene.dia", "kras.or.ptpn11.relapsing.rel", "kras.or.ptpn11", "kras.or.ptpn11.relapsing", "ras.relapsing.rel", "ras.relapsing.dia", "kras.or.ptpn11.relapsing.dia", "ras", "ras.relapsing", "ras.dia",
+				"patient_id", "exome", "panel", "mrd_level_rel", "rel_protocol", "BM.transplantation.date", "study_no_relapse", "patno_kiel_rem", "patno_berlin_rel", "X", "comment"),  
+		exclude.group=list(c("ptpn11.relapsing.rel", "ptpn11.relapsing.dia", "ptpn11.dia"))
 )
 dev.off()
 

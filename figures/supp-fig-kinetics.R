@@ -1,7 +1,7 @@
 #library("RColorBrewer")
 
 min_cov = 50
-patients <- c("C", "B", "818", "592", "446")  # 314, 399 excluded due to low coverage; patients 715, 545, 430 are main figure plots; 460 removed b/c only few mutations
+patients <- c("B", "818", "446", "C", "592")  # 314, 399 excluded due to low coverage; patients 715, 545, 430 are main figure plots; 460 removed b/c only few mutations
 #genes.to.label <- c("CREBBP", "KRAS", "NRAS", "FLT3", "PTPN11", "MLL2", "ATM", "WHSC1", "TRRAP", "TP53", "ZNF516", "NDC80", "TLX3", "GDPD2", "FBXL7")
 genes.to.label <- c()
 blast.count <- list(
@@ -50,7 +50,7 @@ m <- m[m$dia>=0.1 | m$rel>=0.1,]
 # remove variants with AF > 70% (likely inaccurate measurement)
 m <- m[m$dia<=0.7 & m$rel<=0.7,]
 
-pdf("~/hdall/results/clonal-analysis/clonal-progression-array-patients.pdf")
+pdf("~/hdall/results/figures/supp-fig-kinetics.pdf")
 par(mfrow = c(3, 2), mar=c(3,4,2,1))
 
 for(p in patients)
@@ -67,8 +67,10 @@ for(p in patients)
 	m.patient$col[m.patient$dia > 0 & m.patient$dia<=0.25 & m.patient$rel==0] <- "#548A2F" # green
 	
 	plot(0, 0, xlim=c(1, 3.1), ylim=c(0, 0.7), type="n", xaxt="n", yaxt="n", xlab="", ylab="adj. allelic frequency", main=paste(p, " (n=", nrow(m.patient), ")", sep=""))
-	axis(1, at=c(1.3, 2.8), labels=c(paste0("diagnosis\n(", blast.count[[paste0(p, ".dia")]], "% blasts)"), paste0("relapse\n(", blast.count[[paste0(p, ".rel")]], "% blasts)")), padj=0.5)
-	axis(2, at = seq(0, 1, 0.1), las = 1) 
+	#axis(1, at=c(1.3, 2.8), labels=c(paste0("diagnosis\n(", blast.count[[paste0(p, ".dia")]], "% blasts)"), paste0("relapse\n(", blast.count[[paste0(p, ".rel")]], "% blasts)")), padj=0.5)
+	axis(1, at=c(1.3, 2.8), labels=c("diagnosis", "relapse"), padj=0.5)
+	axis(2, at = seq(0, 1, 0.1), las = 1)
+	abline(h=0.25, lty=2)
 	
 	for(i in 1:nrow(m.patient)) {
 		fdia <- m.patient[i,"dia"]

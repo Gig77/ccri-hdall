@@ -5,6 +5,8 @@ library(cmprsk)
 rm(list=ls())
 c <- read.delim("~/hdall/results/clinical/clinical_data.processed.tsv")
 
+# ==========================================================================================================
+
 pdf("~/hdall/results/clinical/kaplan-figure-paper.pdf", width=10, height=13.3)
 
 par(mfrow=c(4,3),mar=c(4,4,1,1))
@@ -120,21 +122,21 @@ text(1, 0, sprintf("p=%.2g", 1 - pchisq(survdiff(form, data=c)$chisq, length(sur
 # --- RAS PW BY GENE ---
 
 c$ras.pw.gene.rel <- as.character(c$ras.pw.gene.rel)
-c$ras.pw.gene.rel[c$ras.pw.gene.rel=="FLT3"] <- "WT"  # lump FLT3 into WT group for now (only few cases)
+#c$ras.pw.gene.rel[c$ras.pw.gene.rel=="FLT3"] <- "WT"  # lump FLT3 into WT group for now (only few cases)
 
 rm(form); form <- Surv(time=second_rem_months, dead)~ras.pw.gene.rel
-rm(fit); fit <- survfit(form, data=c) 
+rm(fit); fit <- survfit(form, data=c[c$ras.pw.gene.rel!="FLT3",]) 
 plot(fit, col=c("red", "blue", "orange", "black"), lty=c(1, 3, 4, 2), xlab="months", ylab="pOS after 1st relapse", conf.int=F, yaxt='n')
 axis(side=2, at=seq(0, 1, by=0.1))
 text(60, fit[1]$surv[max(which(fit[1]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[1]$surv[max(which(fit[1]$time<=60))], fit[1]$std.err[max(which(fit[1]$time<=60))]), col="red", adj=0)
-text(60, fit[2]$surv[max(which(fit[2]$time<=60))]-0.05, sprintf("%.2f, SE=%.2f", fit[2]$surv[max(which(fit[2]$time<=60))], fit[2]$std.err[max(which(fit[2]$time<=60))]), col="blue", adj=0)
+text(60, fit[2]$surv[max(which(fit[2]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[2]$surv[max(which(fit[2]$time<=60))], fit[2]$std.err[max(which(fit[2]$time<=60))]), col="blue", adj=0)
 text(60, fit[3]$surv[max(which(fit[3]$time<=60))]-0.05, sprintf("%.2f, SE=%.2f", fit[3]$surv[max(which(fit[3]$time<=60))], fit[3]$std.err[max(which(fit[3]$time<=60))]), col="orange", adj=0)
-text(60, fit[4]$surv[max(which(fit[4]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[4]$surv[max(which(fit[4]$time<=60))], fit[4]$std.err[max(which(fit[4]$time<=60))]), col="black", adj=0)
+text(60, fit[4]$surv[max(which(fit[4]$time<=60))]-0.05, sprintf("%.2f, SE=%.2f", fit[4]$surv[max(which(fit[4]$time<=60))], fit[4]$std.err[max(which(fit[4]$time<=60))]), col="black", adj=0)
 legend("bottomright", c(sprintf("mPTPN11 (%d/%d)", sum(fit[3]$n.event), fit[3]$n), sprintf("mNRAS (%d/%d)", sum(fit[2]$n.event), fit[2]$n), sprintf("wtRAS (%d/%d)", sum(fit[4]$n.event), fit[4]$n), sprintf("mKRAS (%d/%d)", sum(fit[1]$n.event), fit[1]$n)), lty=c(4, 3, 2, 1), col=c("orange", "blue", "black", "red"))
-text(1, 0, sprintf("p=%.2g", 1 - pchisq(survdiff(form, data=c)$chisq, length(survdiff(form, data=c)$n) - 1)), adj=0)
+text(1, 0, sprintf("p=%.2g", 1 - pchisq(survdiff(form, data=c[c$ras.pw.gene.rel!="FLT3",])$chisq, length(survdiff(form, data=c[c$ras.pw.gene.rel!="FLT3",])$n) - 1)), adj=0)
 
 rm(form); form <- Surv(time=second_rem_months, had_second_event_after_first)~ras.pw.gene.rel
-rm(fit); fit <- survfit(form, data=c) 
+rm(fit); fit <- survfit(form, data=c[c$ras.pw.gene.rel!="FLT3",]) 
 plot(fit, col=c("red", "blue", "orange", "black"), lty=c(1, 3, 4, 2), xlab="months", ylab="pEFS after 1st relapse", conf.int=F, yaxt='n')
 axis(side=2, at=seq(0, 1, by=0.1))
 text(60, fit[1]$surv[max(which(fit[1]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[1]$surv[max(which(fit[1]$time<=60))], fit[1]$std.err[max(which(fit[1]$time<=60))]), col="red", adj=0)
@@ -142,18 +144,18 @@ text(60, fit[2]$surv[max(which(fit[2]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f",
 text(60, fit[3]$surv[max(which(fit[3]$time<=60))]-0.05, sprintf("%.2f, SE=%.2f", fit[3]$surv[max(which(fit[3]$time<=60))], fit[3]$std.err[max(which(fit[3]$time<=60))]), col="orange", adj=0)
 text(60, fit[4]$surv[max(which(fit[4]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[4]$surv[max(which(fit[4]$time<=60))], fit[4]$std.err[max(which(fit[4]$time<=60))]), col="black", adj=0)
 legend("bottomright", c(sprintf("mPTPN11 (%d/%d)", sum(fit[3]$n.event), fit[3]$n), sprintf("mNRAS (%d/%d)", sum(fit[2]$n.event), fit[2]$n), sprintf("wtRAS (%d/%d)", sum(fit[4]$n.event), fit[4]$n), sprintf("mKRAS (%d/%d)", sum(fit[1]$n.event), fit[1]$n)), lty=c(4, 3, 2, 1), col=c("orange", "blue", "black", "red"))
-text(1, 0, sprintf("p=%.2g", 1 - pchisq(survdiff(form, data=c)$chisq, length(survdiff(form, data=c)$n) - 1)), adj=0)
+text(1, 0, sprintf("p=%.2g", 1 - pchisq(survdiff(form, data=c[c$ras.pw.gene.rel!="FLT3",])$chisq, length(survdiff(form, data=c[c$ras.pw.gene.rel!="FLT3",])$n) - 1)), adj=0)
 
 rm(form); form <- Surv(time=second_rem_months, sec_rel)~ras.pw.gene.rel
-rm(fit); fit <- survfit(form, data=c) 
+rm(fit); fit <- survfit(form, data=c[c$ras.pw.gene.rel!="FLT3",]) 
 plot(fit, col=c("red", "blue", "orange", "black"), lty=c(1, 3, 4, 2), xlab="months", ylab="pRFS after 1st relapse", conf.int=F, yaxt='n')
 axis(side=2, at=seq(0, 1, by=0.1))
 text(60, fit[1]$surv[max(which(fit[1]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[1]$surv[max(which(fit[1]$time<=60))], fit[1]$std.err[max(which(fit[1]$time<=60))]), col="red", adj=0)
 text(60, fit[2]$surv[max(which(fit[2]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[2]$surv[max(which(fit[2]$time<=60))], fit[2]$std.err[max(which(fit[2]$time<=60))]), col="blue", adj=0)
 text(60, fit[3]$surv[max(which(fit[3]$time<=60))]-0.05, sprintf("%.2f, SE=%.2f", fit[3]$surv[max(which(fit[3]$time<=60))], fit[3]$std.err[max(which(fit[3]$time<=60))]), col="orange", adj=0)
-text(60, fit[4]$surv[max(which(fit[4]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[4]$surv[max(which(fit[4]$time<=60))], fit[4]$std.err[max(which(fit[4]$time<=60))]), col="black", adj=0)
+text(60, fit[4]$surv[max(which(fit[4]$time<=60))]-0.05, sprintf("%.2f, SE=%.2f", fit[4]$surv[max(which(fit[4]$time<=60))], fit[4]$std.err[max(which(fit[4]$time<=60))]), col="black", adj=0)
 legend("bottomright", c(sprintf("mPTPN11 (%d/%d)", sum(fit[3]$n.event), fit[3]$n), sprintf("mNRAS (%d/%d)", sum(fit[2]$n.event), fit[2]$n), sprintf("wtRAS (%d/%d)", sum(fit[4]$n.event), fit[4]$n), sprintf("mKRAS (%d/%d)", sum(fit[1]$n.event), fit[1]$n)), lty=c(4, 3, 2, 1), col=c("orange", "blue", "black", "red"))
-text(1, 0, sprintf("p=%.2g", 1 - pchisq(survdiff(form, data=c)$chisq, length(survdiff(form, data=c)$n) - 1)), adj=0)
+text(1, 0, sprintf("p=%.2g", 1 - pchisq(survdiff(form, data=c[c$ras.pw.gene.rel!="FLT3",])$chisq, length(survdiff(form, data=c[c$ras.pw.gene.rel!="FLT3",])$n) - 1)), adj=0)
 
 # --- RAS/CREBBP co-occurrence ---
 
@@ -197,6 +199,107 @@ c$mkras.wtcrebbp.relapsing.rel <- c$kras.relapsing.rel & !c$crebbp.relapsing.rel
 c$wtkras.mcrebbp.relapsing.rel <- !c$kras.relapsing.rel & c$crebbp.relapsing.rel
 c$mkras.mcrebbp.relapsing.rel <- c$kras.relapsing.rel & c$crebbp.relapsing.rel
 c$wtkras.wtcrebbp.relapsing.rel <- !c$kras.relapsing.rel & !c$crebbp.relapsing.rel
+
+dev.off()
+
+# ==========================================================================================================
+
+pdf("~/hdall/results/clinical/kaplan-ras-gene-vs-ras-wt-pairwise.pdf", width=10, height=13.3)
+
+par(mfrow=c(4,3),mar=c(4,4,1,1))
+
+# --- KRAS vs. WT ---
+
+c$ras.pw.gene.rel.pairwise <- ifelse(c$ras.pw.gene.rel %in% c("NRAS", "PTPN11", "FLT3"), NA, c$ras.pw.gene.rel)
+
+rm(form); form <- Surv(time=second_rem_months, dead)~ras.pw.gene.rel.pairwise
+rm(fit); fit <- survfit(form, data=c) 
+plot(fit, col=c("red", "black"), lty=c(1, 2), xlab="months", ylab="pOS after 1st relapse", conf.int=F, yaxt='n')
+axis(side=2, at=seq(0, 1, by=0.1))
+text(60, fit[1]$surv[max(which(fit[1]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[1]$surv[max(which(fit[1]$time<=60))], fit[1]$std.err[max(which(fit[1]$time<=60))]), col="red", adj=0)
+text(60, fit[2]$surv[max(which(fit[2]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[2]$surv[max(which(fit[2]$time<=60))], fit[2]$std.err[max(which(fit[2]$time<=60))]), col="black", adj=0)
+legend("bottomright", c(sprintf("wtRAS (%d/%d)", sum(fit[2]$n.event), fit[2]$n), sprintf("mKRAS (%d/%d)", sum(fit[1]$n.event), fit[1]$n)), lty=c(2, 1), col=c("black", "red"))
+text(1, 0, sprintf("p=%.2g", 1 - pchisq(survdiff(form, data=c)$chisq, length(survdiff(form, data=c)$n) - 1)), adj=0)
+
+rm(form); form <- Surv(time=second_rem_months, had_second_event_after_first)~ras.pw.gene.rel.pairwise
+rm(fit); fit <- survfit(form, data=c) 
+plot(fit, col=c("red", "black"), lty=c(1, 2), xlab="months", ylab="pOS after 1st relapse", conf.int=F, yaxt='n')
+axis(side=2, at=seq(0, 1, by=0.1))
+text(60, fit[1]$surv[max(which(fit[1]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[1]$surv[max(which(fit[1]$time<=60))], fit[1]$std.err[max(which(fit[1]$time<=60))]), col="red", adj=0)
+text(60, fit[2]$surv[max(which(fit[2]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[2]$surv[max(which(fit[2]$time<=60))], fit[2]$std.err[max(which(fit[2]$time<=60))]), col="black", adj=0)
+legend("bottomright", c(sprintf("wtRAS (%d/%d)", sum(fit[2]$n.event), fit[2]$n), sprintf("mKRAS (%d/%d)", sum(fit[1]$n.event), fit[1]$n)), lty=c(2, 1), col=c("black", "red"))
+text(1, 0, sprintf("p=%.2g", 1 - pchisq(survdiff(form, data=c)$chisq, length(survdiff(form, data=c)$n) - 1)), adj=0)
+
+rm(form); form <- Surv(time=second_rem_months, sec_rel)~ras.pw.gene.rel.pairwise
+rm(fit); fit <- survfit(form, data=c) 
+plot(fit, col=c("red", "black"), lty=c(1, 2), xlab="months", ylab="pOS after 1st relapse", conf.int=F, yaxt='n')
+axis(side=2, at=seq(0, 1, by=0.1))
+text(60, fit[1]$surv[max(which(fit[1]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[1]$surv[max(which(fit[1]$time<=60))], fit[1]$std.err[max(which(fit[1]$time<=60))]), col="red", adj=0)
+text(60, fit[2]$surv[max(which(fit[2]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[2]$surv[max(which(fit[2]$time<=60))], fit[2]$std.err[max(which(fit[2]$time<=60))]), col="black", adj=0)
+legend("bottomright", c(sprintf("wtRAS (%d/%d)", sum(fit[2]$n.event), fit[2]$n), sprintf("mKRAS (%d/%d)", sum(fit[1]$n.event), fit[1]$n)), lty=c(2, 1), col=c("black", "red"))
+text(1, 0, sprintf("p=%.2g", 1 - pchisq(survdiff(form, data=c)$chisq, length(survdiff(form, data=c)$n) - 1)), adj=0)
+
+# --- NRAS vs. WT ---
+
+c$ras.pw.gene.rel.pairwise <- ifelse(c$ras.pw.gene.rel %in% c("KRAS", "PTPN11", "FLT3"), NA, c$ras.pw.gene.rel)
+
+rm(form); form <- Surv(time=second_rem_months, dead)~ras.pw.gene.rel.pairwise
+rm(fit); fit <- survfit(form, data=c) 
+plot(fit, col=c("red", "black"), lty=c(1, 2), xlab="months", ylab="pOS after 1st relapse", conf.int=F, yaxt='n')
+axis(side=2, at=seq(0, 1, by=0.1))
+text(60, fit[1]$surv[max(which(fit[1]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[1]$surv[max(which(fit[1]$time<=60))], fit[1]$std.err[max(which(fit[1]$time<=60))]), col="red", adj=0)
+text(60, fit[2]$surv[max(which(fit[2]$time<=60))]-0.05, sprintf("%.2f, SE=%.2f", fit[2]$surv[max(which(fit[2]$time<=60))], fit[2]$std.err[max(which(fit[2]$time<=60))]), col="black", adj=0)
+legend("bottomright", c(sprintf("wtRAS (%d/%d)", sum(fit[2]$n.event), fit[2]$n), sprintf("mNRAS (%d/%d)", sum(fit[1]$n.event), fit[1]$n)), lty=c(2, 1), col=c("black", "red"))
+text(1, 0, sprintf("p=%.2g", 1 - pchisq(survdiff(form, data=c)$chisq, length(survdiff(form, data=c)$n) - 1)), adj=0)
+
+rm(form); form <- Surv(time=second_rem_months, had_second_event_after_first)~ras.pw.gene.rel.pairwise
+rm(fit); fit <- survfit(form, data=c) 
+plot(fit, col=c("red", "black"), lty=c(1, 2), xlab="months", ylab="pOS after 1st relapse", conf.int=F, yaxt='n')
+axis(side=2, at=seq(0, 1, by=0.1))
+text(60, fit[1]$surv[max(which(fit[1]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[1]$surv[max(which(fit[1]$time<=60))], fit[1]$std.err[max(which(fit[1]$time<=60))]), col="red", adj=0)
+text(60, fit[2]$surv[max(which(fit[2]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[2]$surv[max(which(fit[2]$time<=60))], fit[2]$std.err[max(which(fit[2]$time<=60))]), col="black", adj=0)
+legend("bottomright", c(sprintf("wtRAS (%d/%d)", sum(fit[2]$n.event), fit[2]$n), sprintf("mNRAS (%d/%d)", sum(fit[1]$n.event), fit[1]$n)), lty=c(2, 1), col=c("black", "red"))
+text(1, 0, sprintf("p=%.2g", 1 - pchisq(survdiff(form, data=c)$chisq, length(survdiff(form, data=c)$n) - 1)), adj=0)
+
+rm(form); form <- Surv(time=second_rem_months, sec_rel)~ras.pw.gene.rel.pairwise
+rm(fit); fit <- survfit(form, data=c) 
+plot(fit, col=c("red", "black"), lty=c(1, 2), xlab="months", ylab="pOS after 1st relapse", conf.int=F, yaxt='n')
+axis(side=2, at=seq(0, 1, by=0.1))
+text(60, fit[1]$surv[max(which(fit[1]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[1]$surv[max(which(fit[1]$time<=60))], fit[1]$std.err[max(which(fit[1]$time<=60))]), col="red", adj=0)
+text(60, fit[2]$surv[max(which(fit[2]$time<=60))]-0.05, sprintf("%.2f, SE=%.2f", fit[2]$surv[max(which(fit[2]$time<=60))], fit[2]$std.err[max(which(fit[2]$time<=60))]), col="black", adj=0)
+legend("bottomright", c(sprintf("wtRAS (%d/%d)", sum(fit[2]$n.event), fit[2]$n), sprintf("mNRAS (%d/%d)", sum(fit[1]$n.event), fit[1]$n)), lty=c(2, 1), col=c("black", "red"))
+text(1, 0, sprintf("p=%.2g", 1 - pchisq(survdiff(form, data=c)$chisq, length(survdiff(form, data=c)$n) - 1)), adj=0)
+
+# --- PTPN11 vs. WT ---
+
+c$ras.pw.gene.rel.pairwise <- ifelse(c$ras.pw.gene.rel %in% c("KRAS", "NRAS", "FLT3"), NA, c$ras.pw.gene.rel)
+
+rm(form); form <- Surv(time=second_rem_months, dead)~ras.pw.gene.rel.pairwise
+rm(fit); fit <- survfit(form, data=c) 
+plot(fit, col=c("red", "black"), lty=c(1, 2), xlab="months", ylab="pOS after 1st relapse", conf.int=F, yaxt='n')
+axis(side=2, at=seq(0, 1, by=0.1))
+text(60, fit[1]$surv[max(which(fit[1]$time<=60))]-0.05, sprintf("%.2f, SE=%.2f", fit[1]$surv[max(which(fit[1]$time<=60))], fit[1]$std.err[max(which(fit[1]$time<=60))]), col="red", adj=0)
+text(60, fit[2]$surv[max(which(fit[2]$time<=60))]-0.05, sprintf("%.2f, SE=%.2f", fit[2]$surv[max(which(fit[2]$time<=60))], fit[2]$std.err[max(which(fit[2]$time<=60))]), col="black", adj=0)
+legend("bottomright", c(sprintf("wtRAS (%d/%d)", sum(fit[2]$n.event), fit[2]$n), sprintf("mPTPN11 (%d/%d)", sum(fit[1]$n.event), fit[1]$n)), lty=c(2, 1), col=c("black", "red"))
+text(1, 0, sprintf("p=%.2g", 1 - pchisq(survdiff(form, data=c)$chisq, length(survdiff(form, data=c)$n) - 1)), adj=0)
+
+rm(form); form <- Surv(time=second_rem_months, had_second_event_after_first)~ras.pw.gene.rel.pairwise
+rm(fit); fit <- survfit(form, data=c) 
+plot(fit, col=c("red", "black"), lty=c(1, 2), xlab="months", ylab="pOS after 1st relapse", conf.int=F, yaxt='n')
+axis(side=2, at=seq(0, 1, by=0.1))
+text(60, fit[1]$surv[max(which(fit[1]$time<=60))]-0.05, sprintf("%.2f, SE=%.2f", fit[1]$surv[max(which(fit[1]$time<=60))], fit[1]$std.err[max(which(fit[1]$time<=60))]), col="red", adj=0)
+text(60, fit[2]$surv[max(which(fit[2]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[2]$surv[max(which(fit[2]$time<=60))], fit[2]$std.err[max(which(fit[2]$time<=60))]), col="black", adj=0)
+legend("bottomright", c(sprintf("wtRAS (%d/%d)", sum(fit[2]$n.event), fit[2]$n), sprintf("mPTPN11 (%d/%d)", sum(fit[1]$n.event), fit[1]$n)), lty=c(2, 1), col=c("black", "red"))
+text(1, 0, sprintf("p=%.2g", 1 - pchisq(survdiff(form, data=c)$chisq, length(survdiff(form, data=c)$n) - 1)), adj=0)
+
+rm(form); form <- Surv(time=second_rem_months, sec_rel)~ras.pw.gene.rel.pairwise
+rm(fit); fit <- survfit(form, data=c) 
+plot(fit, col=c("red", "black"), lty=c(1, 2), xlab="months", ylab="pOS after 1st relapse", conf.int=F, yaxt='n')
+axis(side=2, at=seq(0, 1, by=0.1))
+text(60, fit[1]$surv[max(which(fit[1]$time<=60))]-0.05, sprintf("%.2f, SE=%.2f", fit[1]$surv[max(which(fit[1]$time<=60))], fit[1]$std.err[max(which(fit[1]$time<=60))]), col="red", adj=0)
+text(60, fit[2]$surv[max(which(fit[2]$time<=60))]-0.05, sprintf("%.2f, SE=%.2f", fit[2]$surv[max(which(fit[2]$time<=60))], fit[2]$std.err[max(which(fit[2]$time<=60))]), col="black", adj=0)
+legend("bottomright", c(sprintf("wtRAS (%d/%d)", sum(fit[2]$n.event), fit[2]$n), sprintf("mPTPN11 (%d/%d)", sum(fit[1]$n.event), fit[1]$n)), lty=c(2, 1), col=c("black", "red"))
+text(1, 0, sprintf("p=%.2g", 1 - pchisq(survdiff(form, data=c)$chisq, length(survdiff(form, data=c)$n) - 1)), adj=0)
 
 dev.off()
 

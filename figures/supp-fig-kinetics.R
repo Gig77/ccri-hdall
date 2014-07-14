@@ -23,7 +23,7 @@ names(rel)[7] <- "rel"
 
 # reseq variants
 data.reseq <- read.csv("~/hdall/results/reseq/filtered-variants.reseq.cosmic.normaf.tsv", sep="\t")
-data.reseq <- data.reseq[data.reseq$patient == p & data.reseq$status!="REJECT",]
+data.reseq <- data.reseq[data.reseq$status!="REJECT",]
 dia.reseq <- data.reseq[data.reseq$sample=="rem_dia", c("patient", "chr", "pos", "ref", "alt", "gene", "freq_leu_norm")]
 names(dia.reseq)[7] <- "dia.reseq"
 rel.reseq <- data.reseq[data.reseq$sample=="rem_rel", c("patient", "chr", "pos", "ref", "alt", "gene", "freq_leu_norm")]
@@ -60,17 +60,17 @@ for(p in patients)
 	# assign colors based on kinetics
 	m.patient$col <- "#000000"
 	m.patient$col[m.patient$dia>0.15 & m.patient$rel>0.15] <- "#C6C7C8" # gray
-	m.patient$col[m.patient$dia>0.25 & m.patient$rel==0] <- "#4A8ECC" # black
-	m.patient$col[m.patient$dia==0 & m.patient$rel>0.25] <- "#BCAFD6" # violet
-	m.patient$col[m.patient$dia==0 & m.patient$rel>0 & m.patient$rel<=0.25] <- "#FFF57C" # yellow
-	m.patient$col[m.patient$dia > 0 & m.patient$dia<=0.25 & m.patient$rel > 0.25] <- "#F58E7D"
-	m.patient$col[m.patient$dia > 0 & m.patient$dia<=0.25 & m.patient$rel==0] <- "#548A2F" # green
+	m.patient$col[m.patient$dia>0.35 & m.patient$rel==0] <- "#4A8ECC" # black
+	m.patient$col[m.patient$dia==0 & m.patient$rel>0.35] <- "#BCAFD6" # violet
+	m.patient$col[m.patient$dia==0 & m.patient$rel>0 & m.patient$rel<=0.35] <- "#FFF57C" # yellow
+	m.patient$col[m.patient$dia > 0 & m.patient$dia<=0.35 & m.patient$rel > 0.35] <- "#F58E7D"
+	m.patient$col[m.patient$dia > 0 & m.patient$dia<=0.35 & m.patient$rel==0] <- "#548A2F" # green
 	
 	plot(0, 0, xlim=c(1, 3.1), ylim=c(0, 0.7), type="n", xaxt="n", yaxt="n", xlab="", ylab="adj. allelic frequency", main=paste(p, " (n=", nrow(m.patient), ")", sep=""))
 	#axis(1, at=c(1.3, 2.8), labels=c(paste0("diagnosis\n(", blast.count[[paste0(p, ".dia")]], "% blasts)"), paste0("relapse\n(", blast.count[[paste0(p, ".rel")]], "% blasts)")), padj=0.5)
 	axis(1, at=c(1.3, 2.8), labels=c("diagnosis", "relapse"), padj=0.5)
 	axis(2, at = seq(0, 1, 0.1), las = 1)
-	abline(h=0.25, lty=2)
+	#abline(h=0.25, lty=2)
 	
 	for(i in 1:nrow(m.patient)) {
 		fdia <- m.patient[i,"dia"]

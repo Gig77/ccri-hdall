@@ -66,15 +66,15 @@ for(p in patients)
 	m.patient$col[m.patient$dia > 0 & m.patient$dia<=0.35 & m.patient$rel > 0.35] <- "#F58E7D"
 	m.patient$col[m.patient$dia > 0 & m.patient$dia<=0.35 & m.patient$rel==0] <- "#548A2F" # green
 	
-	plot(0, 0, xlim=c(1, 3.1), ylim=c(0, 0.7), type="n", xaxt="n", yaxt="n", xlab="", ylab="adj. allelic frequency", main=paste(p, " (n=", nrow(m.patient), ")", sep=""))
+	plot(0, 0, xlim=c(1, 3.1), ylim=c(0, 70), type="n", xaxt="n", yaxt="n", xlab="", ylab="AF (%)", main=paste(p, " (n=", nrow(m.patient), ")", sep=""))
 	#axis(1, at=c(1.3, 2.8), labels=c(paste0("diagnosis\n(", blast.count[[paste0(p, ".dia")]], "% blasts)"), paste0("relapse\n(", blast.count[[paste0(p, ".rel")]], "% blasts)")), padj=0.5)
-	axis(1, at=c(1.3, 2.8), labels=c("diagnosis", "relapse"), padj=0.5)
-	axis(2, at = seq(0, 1, 0.1), las = 1)
+	axis(1, at=c(1.3, 2.8), labels=c("Dx", "Rel"), padj=0.5)
+	axis(2, at = seq(0, 100, 10), las = 1)
 	#abline(h=0.25, lty=2)
 	
 	for(i in 1:nrow(m.patient)) {
-		fdia <- m.patient[i,"dia"]
-		frel <- m.patient[i,"rel"]
+		fdia <- m.patient[i,"dia"] * 100
+		frel <- m.patient[i,"rel"] * 100
 		lines(c(1.3, 2.8), c(fdia, frel), type="b", col=m.patient[i,"col"], lwd=ifelse(m.patient[i, "gene"] %in% genes.to.label, 3, 1))
 		
 		if (m.patient[i, "gene"] %in% genes.to.label) {

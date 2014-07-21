@@ -38,28 +38,34 @@ legend("bottomright", c(sprintf("MRD SR (%d/%d)", sum(fit[2]$n.event), fit[2]$n)
 text(1, 0, sprintf("p=%.2g", 1 - pchisq(survdiff(form, data=c)$chisq, length(survdiff(form, data=c)$n) - 1)), adj=0)
 
 #RFS; do not use because of competitive risk (death); use cumulative incidence instead
-rm(form); form <- Surv(time=second_rem_months, sec_rel)~mrd_risk_rel
-rm(fit); fit <- survfit(form, data=c) 
-plot(fit, col=c("red", "blue"), lty=c(1, 5), xlab="months", ylab="pRFS after 1st relapse", conf.int=F, xlim=c(0,125), yaxt='n')
-axis(side=2, at=seq(0, 1, by=0.1))
-text(60, fit[1]$surv[max(which(fit[1]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[1]$surv[max(which(fit[1]$time<=60))], fit[1]$std.err[max(which(fit[1]$time<=60))]), col="red", adj=0)
-text(60, fit[2]$surv[max(which(fit[2]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[2]$surv[max(which(fit[2]$time<=60))], fit[2]$std.err[max(which(fit[2]$time<=60))]), col="blue", adj=0)
-fit.overall <- survfit(Surv(time=c$second_rem_months[!is.na(c$mrd_risk_rel)], c$sec_rel[!is.na(c$mrd_risk_rel)])~1) 
-lines(fit.overall, col="darkgray", lty=2, conf.int=F)
-text(60, fit.overall$surv[max(which(fit.overall$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit.overall$surv[max(which(fit.overall$time<=60))], fit.overall$std.err[max(which(fit.overall$time<=60))]), col="darkgray", adj=0)
-legend("bottomright", c(sprintf("MRD SR (%d/%d)", sum(fit[2]$n.event), fit[2]$n), sprintf("overall (%d/%d)", sum(fit.overall$n.event), fit.overall$n), sprintf("MRD HR (%d/%d)", sum(fit[1]$n.event), fit[1]$n)), lwd=c(1,1), col=c("blue", "darkgray", "red"), lty=c(5, 2, 1))
-text(1, 0, sprintf("p=%.2g", 1 - pchisq(survdiff(form, data=c)$chisq, length(survdiff(form, data=c)$n) - 1)), adj=0)
+#rm(form); form <- Surv(time=second_rem_months, sec_rel)~mrd_risk_rel
+#rm(fit); fit <- survfit(form, data=c) 
+#plot(fit, col=c("red", "blue"), lty=c(1, 5), xlab="months", ylab="pRFS after 1st relapse", conf.int=F, xlim=c(0,125), yaxt='n')
+#axis(side=2, at=seq(0, 1, by=0.1))
+#text(60, fit[1]$surv[max(which(fit[1]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[1]$surv[max(which(fit[1]$time<=60))], fit[1]$std.err[max(which(fit[1]$time<=60))]), col="red", adj=0)
+#text(60, fit[2]$surv[max(which(fit[2]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[2]$surv[max(which(fit[2]$time<=60))], fit[2]$std.err[max(which(fit[2]$time<=60))]), col="blue", adj=0)
+#fit.overall <- survfit(Surv(time=c$second_rem_months[!is.na(c$mrd_risk_rel)], c$sec_rel[!is.na(c$mrd_risk_rel)])~1) 
+#lines(fit.overall, col="darkgray", lty=2, conf.int=F)
+#text(60, fit.overall$surv[max(which(fit.overall$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit.overall$surv[max(which(fit.overall$time<=60))], fit.overall$std.err[max(which(fit.overall$time<=60))]), col="darkgray", adj=0)
+#legend("bottomright", c(sprintf("MRD SR (%d/%d)", sum(fit[2]$n.event), fit[2]$n), sprintf("overall (%d/%d)", sum(fit.overall$n.event), fit.overall$n), sprintf("MRD HR (%d/%d)", sum(fit[1]$n.event), fit[1]$n)), lwd=c(1,1), col=c("blue", "darkgray", "red"), lty=c(5, 2, 1))
+#text(1, 0, sprintf("p=%.2g", 1 - pchisq(survdiff(form, data=c)$chisq, length(survdiff(form, data=c)$n) - 1)), adj=0)
 
 #cumulative incidence
-#fit <- cuminc(c$second_rem_months, c$second_event_after_first_relapse, c$mrd_risk_rel, cencode="none")
-#plot(fit[1:2], xlab="months", ylab="cumulative incidence 2nd relapse", curvlab=c("MRD HR", "MRD SR"), col=c("red", "blue"), wh=c(-100,-100), yaxt='n', lty=c(1, 2), xlim=c(0,125))
-#axis(side=2, at=seq(0, 1, by=0.1))
-#text(60, timepoints(fit, 60)$est["HR 2nd rel",]+0.03, sprintf("%.2f, SE=%.2f", timepoints(fit, 60)$est["HR 2nd rel",], timepoints(fit, 60)$var["HR 2nd rel",]), col="red", adj=0)
-#text(60, timepoints(fit, 60)$est["SR 2nd rel",]+0.03, sprintf("%.2f, SE=%.2f", timepoints(fit, 60)$est["SR 2nd rel",], timepoints(fit, 60)$var["SR 2nd rel",]), col="blue", adj=0)
-#legend("topleft", c(sprintf("MRD HR (%d/%d)", sum(complete.cases(c[c$mrd_risk_rel=="HR" & c$second_event_after_first_relapse=="2nd rel", "second_rem_months"])),  sum(complete.cases(c[c$mrd_risk_rel=="HR",c("second_rem_months", "second_event_after_first_relapse")]))), 
-#				    sprintf("MRD SR (%d/%d)", sum(complete.cases(c[c$mrd_risk_rel=="SR" & c$second_event_after_first_relapse=="2nd rel", "second_rem_months"])),  sum(complete.cases(c[c$mrd_risk_rel=="SR",c("second_rem_months", "second_event_after_first_relapse")])))), 
-#			lwd=c(1,1), col=c("red", "blue"), lty=c(1, 2))
-#text(120, 1, sprintf("p=%.2g", fit$Tests["2nd rel", "pv"]), adj=1)
+fit <- cuminc(c$second_rem_months, c$second_event_after_first_relapse, c$mrd_risk_rel, cencode="none")
+plot(fit[1:2], xlab="months", ylab="cumulative incidence 2nd relapse", curvlab=c("MRD HR", "MRD SR"), col=c("red", "blue"), wh=c(-100,-100), yaxt='n', lty=c(1, 2), xlim=c(0,125))
+axis(side=2, at=seq(0, 1, by=0.1))
+text(60, timepoints(fit, 60)$est["HR 2nd rel",]+0.03, sprintf("%.2f, SE=%.2f", timepoints(fit, 60)$est["HR 2nd rel",], timepoints(fit, 60)$var["HR 2nd rel",]), col="red", adj=0)
+text(60, timepoints(fit, 60)$est["SR 2nd rel",]+0.03, sprintf("%.2f, SE=%.2f", timepoints(fit, 60)$est["SR 2nd rel",], timepoints(fit, 60)$var["SR 2nd rel",]), col="blue", adj=0)
+fit.overall <- cuminc(c$second_rem_months, c$second_event_after_first_relapse, cencode="none") 
+tp <- c(0, unique(c$second_rem_months[!is.na(c$second_rem_months) & !is.na(c$mrd_risk_rel) & c$second_event_after_first_relapse=="2nd rel"]), max(c[!is.na(c$second_rem_months) & !is.na(c$mrd_risk_rel) & !is.na(c$second_event_after_first_relapse), "second_rem_months"]))
+tp <- tp[order(tp)]
+lines(tp, timepoints(fit.overall, tp)$est[1,], col="darkgray", lty=2, type="s")
+text(60, timepoints(fit.overall, 60)$est[1,]+0.03, sprintf("%.2f, SE=%.2f", timepoints(fit.overall, 60)$est[1,], timepoints(fit.overall, 60)$var[1,]), col="darkgray", adj=0)
+box()
+legend("topleft", c(sprintf("MRD HR (%d/%d)", sum(complete.cases(c[c$mrd_risk_rel=="HR" & c$second_event_after_first_relapse=="2nd rel", "second_rem_months"])),  sum(complete.cases(c[c$mrd_risk_rel=="HR",c("second_rem_months", "second_event_after_first_relapse")]))), 
+				    sprintf("MRD SR (%d/%d)", sum(complete.cases(c[c$mrd_risk_rel=="SR" & c$second_event_after_first_relapse=="2nd rel", "second_rem_months"])),  sum(complete.cases(c[c$mrd_risk_rel=="SR",c("second_rem_months", "second_event_after_first_relapse")])))), 
+			lwd=c(1,1), col=c("red", "blue"), lty=c(1, 2))
+text(120, 1, sprintf("p=%.2g", fit$Tests["2nd rel", "pv"]), adj=1)
 
 # --- RAS PW ---
 
@@ -81,14 +87,26 @@ text(60, fit[2]$surv[max(which(fit[2]$time<=60))]-0.05, sprintf("%.2f, SE=%.2f",
 legend("bottomright", c(sprintf("mRAS (%d/%d)", sum(fit[2]$n.event), fit[2]$n), sprintf("wtRAS (%d/%d)", sum(fit[1]$n.event), fit[1]$n)), lwd=c(1,1), col=c("red", "blue"), lty=c(1, 5))
 text(1, 0, sprintf("p=%.2g", 1 - pchisq(survdiff(form, data=c)$chisq, length(survdiff(form, data=c)$n) - 1)), adj=0)
 
-rm(form); form <- Surv(time=second_rem_months, sec_rel)~ras.relapsing.rel
-rm(fit); fit <- survfit(form, data=c) 
-plot(fit, col=c("blue", "red"), lty=c(5, 1), xlab="months", ylab="pRFS after 1st relapse", conf.int=F, xlim=c(0,125), yaxt='n')
+#RFS; do not use because of competitive risk (death); use cumulative incidence instead
+#rm(form); form <- Surv(time=second_rem_months, sec_rel)~ras.relapsing.rel
+#rm(fit); fit <- survfit(form, data=c) 
+#plot(fit, col=c("blue", "red"), lty=c(5, 1), xlab="months", ylab="pRFS after 1st relapse", conf.int=F, xlim=c(0,125), yaxt='n')
+#axis(side=2, at=seq(0, 1, by=0.1))
+#text(60, fit[1]$surv[max(which(fit[1]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[1]$surv[max(which(fit[1]$time<=60))], fit[1]$std.err[max(which(fit[1]$time<=60))]), col="blue", adj=0)
+#text(60, fit[2]$surv[max(which(fit[2]$time<=60))]-0.05, sprintf("%.2f, SE=%.2f", fit[2]$surv[max(which(fit[2]$time<=60))], fit[2]$std.err[max(which(fit[2]$time<=60))]), col="red", adj=0)
+#legend("bottomright", c(sprintf("mRAS (%d/%d)", sum(fit[2]$n.event), fit[2]$n), sprintf("wtRAS (%d/%d)", sum(fit[1]$n.event), fit[1]$n)), lwd=c(1,1), col=c("red", "blue"), lty=c(1, 5))
+#text(1, 0, sprintf("p=%.2g", 1 - pchisq(survdiff(form, data=c)$chisq, length(survdiff(form, data=c)$n) - 1)), adj=0)
+
+fit <- cuminc(c$second_rem_months, c$second_event_after_first_relapse, c$ras.relapsing.rel, cencode="none")
+plot(fit[1:2], xlab="months", ylab="cumulative incidence 2nd relapse", curvlab=c("wtRAS", "mRAS"), col=c("blue", "red"), wh=c(-100,-100), yaxt='n', lty=c(1, 2), xlim=c(0,125))
 axis(side=2, at=seq(0, 1, by=0.1))
-text(60, fit[1]$surv[max(which(fit[1]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[1]$surv[max(which(fit[1]$time<=60))], fit[1]$std.err[max(which(fit[1]$time<=60))]), col="blue", adj=0)
-text(60, fit[2]$surv[max(which(fit[2]$time<=60))]-0.05, sprintf("%.2f, SE=%.2f", fit[2]$surv[max(which(fit[2]$time<=60))], fit[2]$std.err[max(which(fit[2]$time<=60))]), col="red", adj=0)
-legend("bottomright", c(sprintf("mRAS (%d/%d)", sum(fit[2]$n.event), fit[2]$n), sprintf("wtRAS (%d/%d)", sum(fit[1]$n.event), fit[1]$n)), lwd=c(1,1), col=c("red", "blue"), lty=c(1, 5))
-text(1, 0, sprintf("p=%.2g", 1 - pchisq(survdiff(form, data=c)$chisq, length(survdiff(form, data=c)$n) - 1)), adj=0)
+text(60, timepoints(fit, 60)$est["TRUE 2nd rel",]+0.03, sprintf("%.2f, SE=%.2f", timepoints(fit, 60)$est["TRUE 2nd rel",], timepoints(fit, 60)$var["TRUE 2nd rel",]), col="red", adj=0)
+text(60, timepoints(fit, 60)$est["FALSE 2nd rel",]-0.05, sprintf("%.2f, SE=%.2f", timepoints(fit, 60)$est["FALSE 2nd rel",], timepoints(fit, 60)$var["FALSE 2nd rel",]), col="blue", adj=0)
+box()
+legend("topleft", c(sprintf("mRAS (%d/%d)", sum(complete.cases(c[c$ras.relapsing.rel & c$second_event_after_first_relapse=="2nd rel", "second_rem_months"])),  sum(complete.cases(c[c$ras.relapsing.rel, c("second_rem_months", "second_event_after_first_relapse")]))), 
+				   sprintf("wtRAS (%d/%d)", sum(complete.cases(c[!c$ras.relapsing.rel & c$second_event_after_first_relapse=="2nd rel", "second_rem_months"])),  sum(complete.cases(c[!c$ras.relapsing.rel, c("second_rem_months", "second_event_after_first_relapse")])))), 
+		lwd=c(1,1), col=c("red", "blue"), lty=c(1, 2))
+text(120, 1, sprintf("p=%.2g", fit$Tests["2nd rel", "pv"]), adj=1)
 
 # --- CREBBP ---
 
@@ -146,16 +164,32 @@ text(60, fit[4]$surv[max(which(fit[4]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f",
 legend("bottomright", c(sprintf("mPTPN11 (%d/%d)", sum(fit[3]$n.event), fit[3]$n), sprintf("mNRAS (%d/%d)", sum(fit[2]$n.event), fit[2]$n), sprintf("wtRAS (%d/%d)", sum(fit[4]$n.event), fit[4]$n), sprintf("mKRAS (%d/%d)", sum(fit[1]$n.event), fit[1]$n)), lty=c(4, 3, 2, 1), col=c("orange", "blue", "black", "red"))
 text(1, 0, sprintf("p=%.2g", 1 - pchisq(survdiff(form, data=c[c$ras.pw.gene.rel!="FLT3",])$chisq, length(survdiff(form, data=c[c$ras.pw.gene.rel!="FLT3",])$n) - 1)), adj=0)
 
-rm(form); form <- Surv(time=second_rem_months, sec_rel)~ras.pw.gene.rel
-rm(fit); fit <- survfit(form, data=c[c$ras.pw.gene.rel!="FLT3",]) 
-plot(fit, col=c("red", "blue", "orange", "black"), lty=c(1, 3, 4, 2), xlab="months", ylab="pRFS after 1st relapse", conf.int=F, yaxt='n')
+#RFS; do not use because of competitive risk (death); use cumulative incidence instead
+#rm(form); form <- Surv(time=second_rem_months, sec_rel)~ras.pw.gene.rel
+#rm(fit); fit <- survfit(form, data=c[c$ras.pw.gene.rel!="FLT3",]) 
+#plot(fit, col=c("red", "blue", "orange", "black"), lty=c(1, 3, 4, 2), xlab="months", ylab="pRFS after 1st relapse", conf.int=F, yaxt='n')
+#axis(side=2, at=seq(0, 1, by=0.1))
+#text(60, fit[1]$surv[max(which(fit[1]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[1]$surv[max(which(fit[1]$time<=60))], fit[1]$std.err[max(which(fit[1]$time<=60))]), col="red", adj=0)
+#text(60, fit[2]$surv[max(which(fit[2]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[2]$surv[max(which(fit[2]$time<=60))], fit[2]$std.err[max(which(fit[2]$time<=60))]), col="blue", adj=0)
+#text(60, fit[3]$surv[max(which(fit[3]$time<=60))]-0.05, sprintf("%.2f, SE=%.2f", fit[3]$surv[max(which(fit[3]$time<=60))], fit[3]$std.err[max(which(fit[3]$time<=60))]), col="orange", adj=0)
+#text(60, fit[4]$surv[max(which(fit[4]$time<=60))]-0.05, sprintf("%.2f, SE=%.2f", fit[4]$surv[max(which(fit[4]$time<=60))], fit[4]$std.err[max(which(fit[4]$time<=60))]), col="black", adj=0)
+#legend("bottomright", c(sprintf("mPTPN11 (%d/%d)", sum(fit[3]$n.event), fit[3]$n), sprintf("mNRAS (%d/%d)", sum(fit[2]$n.event), fit[2]$n), sprintf("wtRAS (%d/%d)", sum(fit[4]$n.event), fit[4]$n), sprintf("mKRAS (%d/%d)", sum(fit[1]$n.event), fit[1]$n)), lty=c(4, 3, 2, 1), col=c("orange", "blue", "black", "red"))
+#text(1, 0, sprintf("p=%.2g", 1 - pchisq(survdiff(form, data=c[c$ras.pw.gene.rel!="FLT3",])$chisq, length(survdiff(form, data=c[c$ras.pw.gene.rel!="FLT3",])$n) - 1)), adj=0)
+
+fit <- cuminc(c$second_rem_months, c$second_event_after_first_relapse, c$ras.pw.gene.rel, cencode="none", subset=c$ras.pw.gene.rel!="FLT3")
+plot(fit[1:4], xlab="months", ylab="cumulative incidence 2nd relapse", curvlab=c("mKRAS", "mNRAS", "mPTPN11", "wtRAS"), col=c("red", "blue", "orange", "black"), wh=c(-100,-100), yaxt='n', lty=c(1, 3, 4, 2), xlim=c(0,125))
 axis(side=2, at=seq(0, 1, by=0.1))
-text(60, fit[1]$surv[max(which(fit[1]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[1]$surv[max(which(fit[1]$time<=60))], fit[1]$std.err[max(which(fit[1]$time<=60))]), col="red", adj=0)
-text(60, fit[2]$surv[max(which(fit[2]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[2]$surv[max(which(fit[2]$time<=60))], fit[2]$std.err[max(which(fit[2]$time<=60))]), col="blue", adj=0)
-text(60, fit[3]$surv[max(which(fit[3]$time<=60))]-0.05, sprintf("%.2f, SE=%.2f", fit[3]$surv[max(which(fit[3]$time<=60))], fit[3]$std.err[max(which(fit[3]$time<=60))]), col="orange", adj=0)
-text(60, fit[4]$surv[max(which(fit[4]$time<=60))]-0.05, sprintf("%.2f, SE=%.2f", fit[4]$surv[max(which(fit[4]$time<=60))], fit[4]$std.err[max(which(fit[4]$time<=60))]), col="black", adj=0)
-legend("bottomright", c(sprintf("mPTPN11 (%d/%d)", sum(fit[3]$n.event), fit[3]$n), sprintf("mNRAS (%d/%d)", sum(fit[2]$n.event), fit[2]$n), sprintf("wtRAS (%d/%d)", sum(fit[4]$n.event), fit[4]$n), sprintf("mKRAS (%d/%d)", sum(fit[1]$n.event), fit[1]$n)), lty=c(4, 3, 2, 1), col=c("orange", "blue", "black", "red"))
-text(1, 0, sprintf("p=%.2g", 1 - pchisq(survdiff(form, data=c[c$ras.pw.gene.rel!="FLT3",])$chisq, length(survdiff(form, data=c[c$ras.pw.gene.rel!="FLT3",])$n) - 1)), adj=0)
+text(60, timepoints(fit, 60)$est["KRAS 2nd rel",]+0.03, sprintf("%.2f, SE=%.2f", timepoints(fit, 60)$est["KRAS 2nd rel",], timepoints(fit, 60)$var["KRAS 2nd rel",]), col="red", adj=0)
+text(60, timepoints(fit, 60)$est["NRAS 2nd rel",]-0.04, sprintf("%.2f, SE=%.2f", timepoints(fit, 60)$est["NRAS 2nd rel",], timepoints(fit, 60)$var["NRAS 2nd rel",]), col="blue", adj=0)
+text(60, timepoints(fit, 60)$est["PTPN11 2nd rel",]+0.03, sprintf("%.2f, SE=%.2f", timepoints(fit, 60)$est["PTPN11 2nd rel",], timepoints(fit, 60)$var["PTPN11 2nd rel",]), col="orange", adj=0)
+text(60, timepoints(fit, 60)$est["WT 2nd rel",]+0.03, sprintf("%.2f, SE=%.2f", timepoints(fit, 60)$est["WT 2nd rel",], timepoints(fit, 60)$var["WT 2nd rel",]), col="black", adj=0)
+box()
+legend("topleft", c(sprintf("mKRAS (%d/%d)", sum(complete.cases(c[c$ras.pw.gene.rel=="KRAS" & c$second_event_after_first_relapse=="2nd rel", "second_rem_months"])),  sum(complete.cases(c[c$ras.pw.gene.rel=="KRAS", c("second_rem_months", "second_event_after_first_relapse")]))), 
+				    sprintf("mNRAS (%d/%d)", sum(complete.cases(c[c$ras.pw.gene.rel=="NRAS" & c$second_event_after_first_relapse=="2nd rel", "second_rem_months"])),  sum(complete.cases(c[c$ras.pw.gene.rel=="NRAS", c("second_rem_months", "second_event_after_first_relapse")]))), 
+					sprintf("mPTPN11 (%d/%d)", sum(complete.cases(c[c$ras.pw.gene.rel=="PTPN11" & c$second_event_after_first_relapse=="2nd rel", "second_rem_months"])),  sum(complete.cases(c[c$ras.pw.gene.rel=="PTPN11", c("second_rem_months", "second_event_after_first_relapse")]))), 
+					sprintf("wtRAS (%d/%d)", sum(complete.cases(c[c$ras.pw.gene.rel=="WT" & c$second_event_after_first_relapse=="2nd rel", "second_rem_months"])),  sum(complete.cases(c[c$ras.pw.gene.rel=="WT", c("second_rem_months", "second_event_after_first_relapse")])))), 
+					lwd=c(1,1), col=c("red", "blue", "orange", "black"), lty=c(1, 3, 4, 2))
+text(120, 1, sprintf("p=%.2g", fit$Tests["2nd rel", "pv"]), adj=1)
 
 # --- RAS/CREBBP co-occurrence ---
 
@@ -185,15 +219,29 @@ text(60, fit[3]$surv[max(which(fit[3]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f",
 legend("right", c(sprintf("wtCREBBP+wtKRAS (%d/%d)", sum(fit[3]$n.event), fit[3]$n), sprintf("mCREBBP (%d/%d)", sum(fit[1]$n.event), fit[1]$n), sprintf("wtCREBBP+mKRAS (%d/%d)", sum(fit[2]$n.event), fit[2]$n)), lty=c(4, 3, 1), col=c("blue", "black", "red"))
 text(1, 0, sprintf("p=%.2g", 1 - pchisq(survdiff(form, data=c)$chisq, length(survdiff(form, data=c)$n) - 1)), adj=0)
 
-rm(form); form <- Surv(time=second_rem_months, sec_rel)~kras.crebbp.rel
-rm(fit); fit <- survfit(form, data=c) 
-plot(fit, col=c("black", "red", "blue"), lty=c(3, 1, 4), xlab="months", ylab="pRFS after 1st relapse", conf.int=F, yaxt='n')
+#RFS; do not use because of competitive risk (death); use cumulative incidence instead
+#rm(form); form <- Surv(time=second_rem_months, sec_rel)~kras.crebbp.rel
+#rm(fit); fit <- survfit(form, data=c) 
+#plot(fit, col=c("black", "red", "blue"), lty=c(3, 1, 4), xlab="months", ylab="pRFS after 1st relapse", conf.int=F, yaxt='n')
+#axis(side=2, at=seq(0, 1, by=0.1))
+#text(60, fit[1]$surv[max(which(fit[1]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[1]$surv[max(which(fit[1]$time<=60))], fit[1]$std.err[max(which(fit[1]$time<=60))]), col="black", adj=0)
+#text(60, fit[2]$surv[max(which(fit[2]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[2]$surv[max(which(fit[2]$time<=60))], fit[2]$std.err[max(which(fit[2]$time<=60))]), col="red", adj=0)
+#text(60, fit[3]$surv[max(which(fit[3]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[3]$surv[max(which(fit[3]$time<=60))], fit[3]$std.err[max(which(fit[3]$time<=60))]), col="blue", adj=0)
+#legend("bottomright", c(sprintf("wtCREBBP+wtKRAS (%d/%d)", sum(fit[3]$n.event), fit[3]$n), sprintf("mCREBBP (%d/%d)", sum(fit[1]$n.event), fit[1]$n), sprintf("wtCREBBP+mKRAS (%d/%d)", sum(fit[2]$n.event), fit[2]$n)), lty=c(4, 3, 1), col=c("blue", "black", "red"))
+#text(1, 0, sprintf("p=%.2g", 1 - pchisq(survdiff(form, data=c)$chisq, length(survdiff(form, data=c)$n) - 1)), adj=0)
+
+fit <- cuminc(c$second_rem_months, c$second_event_after_first_relapse, c$kras.crebbp.rel, cencode="none")
+plot(fit[1:3], xlab="months", ylab="cumulative incidence 2nd relapse", curvlab=c("mCREBBP", "wtCREBBP+mKRAS", "wtCREBBP+wtKRAS"), col=c("black", "red", "blue"), wh=c(-100,-100), yaxt='n', lty=c(3, 1, 4), xlim=c(0,125))
 axis(side=2, at=seq(0, 1, by=0.1))
-text(60, fit[1]$surv[max(which(fit[1]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[1]$surv[max(which(fit[1]$time<=60))], fit[1]$std.err[max(which(fit[1]$time<=60))]), col="black", adj=0)
-text(60, fit[2]$surv[max(which(fit[2]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[2]$surv[max(which(fit[2]$time<=60))], fit[2]$std.err[max(which(fit[2]$time<=60))]), col="red", adj=0)
-text(60, fit[3]$surv[max(which(fit[3]$time<=60))]+0.03, sprintf("%.2f, SE=%.2f", fit[3]$surv[max(which(fit[3]$time<=60))], fit[3]$std.err[max(which(fit[3]$time<=60))]), col="blue", adj=0)
-legend("bottomright", c(sprintf("wtCREBBP+wtKRAS (%d/%d)", sum(fit[3]$n.event), fit[3]$n), sprintf("mCREBBP (%d/%d)", sum(fit[1]$n.event), fit[1]$n), sprintf("wtCREBBP+mKRAS (%d/%d)", sum(fit[2]$n.event), fit[2]$n)), lty=c(4, 3, 1), col=c("blue", "black", "red"))
-text(1, 0, sprintf("p=%.2g", 1 - pchisq(survdiff(form, data=c)$chisq, length(survdiff(form, data=c)$n) - 1)), adj=0)
+text(60, timepoints(fit, 60)$est["mCREBBP 2nd rel",]+0.03, sprintf("%.2f, SE=%.2f", timepoints(fit, 60)$est["mCREBBP 2nd rel",], timepoints(fit, 60)$var["mCREBBP 2nd rel",]), col="black", adj=0)
+text(60, timepoints(fit, 60)$est["wtCREBBP+mKRAS 2nd rel",]-0.04, sprintf("%.2f, SE=%.2f", timepoints(fit, 60)$est["wtCREBBP+mKRAS 2nd rel",], timepoints(fit, 60)$var["wtCREBBP+mKRAS 2nd rel",]), col="red", adj=0)
+text(60, timepoints(fit, 60)$est["wtCREBBP+wtKRAS 2nd rel",]+0.03, sprintf("%.2f, SE=%.2f", timepoints(fit, 60)$est["wtCREBBP+wtKRAS 2nd rel",], timepoints(fit, 60)$var["wtCREBBP+wtKRAS 2nd rel",]), col="blue", adj=0)
+box()
+legend("topleft", c(sprintf("mCREBBP (%d/%d)", sum(complete.cases(c[c$kras.crebbp.rel=="mCREBBP" & c$second_event_after_first_relapse=="2nd rel", "second_rem_months"])),  sum(complete.cases(c[c$kras.crebbp.rel=="mCREBBP", c("second_rem_months", "second_event_after_first_relapse")]))), 
+				sprintf("wtCREBBP+mKRAS (%d/%d)", sum(complete.cases(c[c$kras.crebbp.rel=="wtCREBBP+mKRAS" & c$second_event_after_first_relapse=="2nd rel", "second_rem_months"])),  sum(complete.cases(c[c$kras.crebbp.rel=="wtCREBBP+mKRAS", c("second_rem_months", "second_event_after_first_relapse")]))), 
+				sprintf("wtCREBBP+wtKRAS (%d/%d)", sum(complete.cases(c[c$kras.crebbp.rel=="wtCREBBP+wtKRAS" & c$second_event_after_first_relapse=="2nd rel", "second_rem_months"])),  sum(complete.cases(c[c$kras.crebbp.rel=="wtCREBBP+wtKRAS", c("second_rem_months", "second_event_after_first_relapse")])))), 
+		lwd=c(1,1), col=c("black", "red", "blue"), lty=c(3, 1, 4))
+text(120, 1, sprintf("p=%.2g", fit$Tests["2nd rel", "pv"]), adj=1)
 
 c$mkras.wtcrebbp.relapsing.rel <- c$kras.relapsing.rel & !c$crebbp.relapsing.rel
 c$wtkras.mcrebbp.relapsing.rel <- !c$kras.relapsing.rel & c$crebbp.relapsing.rel

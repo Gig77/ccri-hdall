@@ -61,10 +61,10 @@ for(p in patients)
 	m.patient$col <- "#000000"
 	m.patient$col[m.patient$dia>0.15 & m.patient$rel>0.15] <- "#C6C7C8" # gray
 	m.patient$col[m.patient$dia>0.35 & m.patient$rel==0] <- "#4A8ECC" # black
-	m.patient$col[m.patient$dia==0 & m.patient$rel>0.35] <- "#BCAFD6" # violet
-	m.patient$col[m.patient$dia==0 & m.patient$rel>0 & m.patient$rel<=0.35] <- "#FFF57C" # yellow
+	m.patient$col[m.patient$dia==0 & m.patient$rel>0.35] <- "#76C58F"
+	m.patient$col[m.patient$dia==0 & m.patient$rel>0 & m.patient$rel<=0.35] <- "#548A2F"
 	m.patient$col[m.patient$dia > 0 & m.patient$dia<=0.35 & m.patient$rel > 0.35] <- "#F58E7D"
-	m.patient$col[m.patient$dia > 0 & m.patient$dia<=0.35 & m.patient$rel==0] <- "#548A2F" # green
+	m.patient$col[m.patient$dia > 0 & m.patient$dia<=0.35 & m.patient$rel==0] <- "#000000" # black
 	
 	plot(0, 0, xlim=c(1, 3.1), ylim=c(0, 70), type="n", xaxt="n", yaxt="n", xlab="", ylab="AF (%)", main=paste(p, " (n=", nrow(m.patient), ")", sep=""))
 	#axis(1, at=c(1.3, 2.8), labels=c(paste0("diagnosis\n(", blast.count[[paste0(p, ".dia")]], "% blasts)"), paste0("relapse\n(", blast.count[[paste0(p, ".rel")]], "% blasts)")), padj=0.5)

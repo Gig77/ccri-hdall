@@ -2,9 +2,9 @@
 #X11.options(type="Xlib")
 
 # 715, 545, Y, 592, 430
-p <- "715"
-min.cov <- 9 # patient 715
-#min.cov <- 30 # other patients
+p <- "545"
+#min.cov <- 9 # patient 715
+min.cov <- 30 # other patients
 cov.max.std.dev <- 2
 max.af <- 0.7
 min.af <- 0.1
@@ -17,7 +17,7 @@ blast.count <- list("715.dia" = 92, "715.rel" = 92, "715.rel3" = "92", "545.dia"
 data <- read.csv("~/hdall/results/filtered-variants.cosmic.normaf.tsv", sep="\t")
 data <- data[data$patient == p & data$status!="REJECT",]
 #data <- data[data$var_type=="snp",]  # variant type filter
-data <- data[data$non_silent==1,]  # only non-silent for patient 715
+#data <- data[data$non_silent==1,]  # only non-silent for patient 715, all for other patients
 data <- data[!(data$chr %in% exclude.chr),]  # sex chromosome filter
 data <- data[data$dp_leu_tot >= min.cov & data$dp_rem_tot >= min.cov,]  # minimum coverage filter
 data <- data[data$dp_rem_tot < mean(data$dp_rem_tot) + cov.max.std.dev * sd(data$dp_rem_tot),] # maximum coverage filter
@@ -93,10 +93,10 @@ if (p != "715")
 	m$col <- "#000000"
 	m$col[m$dia>0.15 & m$rel>0.15] <- "#C6C7C8" # gray
 	m$col[m$dia>0.25 & m$rel==0] <- "#4A8ECC" # black
-	m$col[m$dia==0 & m$rel>0.25] <- "#BCAFD6" # violet
-	m$col[m$dia==0 & m$rel>0 & m$rel<=0.25] <- "#FFF57C" # yellow
+	m$col[m$dia==0 & m$rel>0.25] <- "#76C58F" 
+	m$col[m$dia==0 & m$rel>0 & m$rel<=0.25] <- "#548A2F"
 	m$col[m$dia > 0 & m$dia<=0.25 & m$rel > 0.25] <- "#F58E7D"
-	m$col[m$dia > 0 & m$dia<=0.25 & m$rel==0] <- "#548A2F" # green
+	m$col[m$dia > 0 & m$dia<=0.25 & m$rel==0] <- "#000000" # black
 	
 	#png(paste0("~/hdall/results/figures/clonal-progression-", p, ".png"))
 	pdf(paste0("~/hdall/results/figures/clonal-progression-", p, ".pdf"))

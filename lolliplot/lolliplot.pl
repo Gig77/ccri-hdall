@@ -199,7 +199,7 @@ while(<V>)
 		}
 		
 		$variants{"dia"}{$ucsc}{"$patient\t$var_type\t$status\t$chr\t$pos\t$aa_change"} = "$effect" if ($sample eq "rem_dia");
-		$variants{"rel"}{$ucsc}{"$patient\t$var_type\t$status\t$chr\t$pos\t$aa_change"} = "$effect" if ($sample eq "rem_rel");
+		$variants{"rel"}{$ucsc}{"$patient\t$var_type\t$status\t$chr\t$pos\t$aa_change"} = "$effect" if (($patient ne "715" and $sample eq "rem_rel") | ($patient eq "715" and $sample eq "rem_rel2")); # for patient 715 relapse sample is actually third relapse... 
 		$variants{"both"}{$ucsc}{"$patient\t$var_type\t$status\t$chr\t$pos\t$aa_change"} = "$effect";		 
 	}
 

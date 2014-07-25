@@ -14,7 +14,7 @@ PATIENTS_REL_ONLY=1017005 1021865 1023545 AD15 BL16 BM18 CA18 DM1 FE1 FS1 GD18 G
 PATIENTS_DIA_ONLY=1004564 1010661 1010781 1019964 1020076 1021087 1023338 1023616 1024589 1026233 1026662 B100 EF7 FB14 G44 HD7
 PATIENTS_DIA_NON_REL=331 380 442 350 461 466 529 591 602 619 633 634 642 653 666 672 697 698 700 709 724 762 776 777 779 782 409 NRD_1 73 NRD_2 NRD_3 60 594 687 748 754 646 530 718 681 39 49 45 54 110 111 134 143 147 199 NRD_4
 
-all: filtered-variants.merged.tsv coverage gene-patient-matrix.reseq.nonrel.tsv filtered-variants.reseq.cosmic.normaf.paper.tsv filtered-variants.reseq.nonrel.paper.tsv gene-patient-matrix.reseq.tsv lolliplot/lolliplot_CREBBP_NM_004380_both.svg lolliplot/matched/lolliplot_CREBBP_NM_004380_both.svg
+all: filtered-variants.merged.tsv coverage gene-patient-matrix.reseq.nonrel.tsv filtered-variants.reseq.cosmic.normaf.paper.tsv filtered-variants.reseq.nonrel.paper.tsv gene-patient-matrix.reseq.tsv lolliplot/minaf10/lolliplot_CREBBP_NM_004380_both.svg lolliplot/minaf10/matched/lolliplot_CREBBP_NM_004380_both.svg lolliplot/no-minaf/lolliplot_CREBBP_NM_004380_both.svg
 
 .PHONY: varscan
 varscan: $(foreach P, $(PATIENTS_DIA_NON_REL), snpeff/$P_dia.reseq.varscan.dbsnp.snpeff.dbNSFP.vcf)
@@ -85,24 +85,32 @@ snpeff/%.dbsnp.snpeff.dbNSFP.vcf: snpeff/%.dbsnp.snpeff.vcf
 # lolliplots
 #-------------
 
-lolliplot/lolliplot_CREBBP_NM_004380_both.svg: ../id-mappings.tsv ../lolliplot/pfam-regions.filtered.tsv filtered-variants.reseq.tsv ~/hdall/scripts/lolliplot/lolliplot.pl
-	rm -f lolliplot/*.svg 
+lolliplot/minaf10/lolliplot_CREBBP_NM_004380_both.svg: ../id-mappings.tsv ../lolliplot/pfam-regions.filtered.tsv filtered-variants.reseq.tsv ~/hdall/scripts/lolliplot/lolliplot.pl
+	rm -f lolliplot/minaf10/*.svg 
 	perl ~/hdall/scripts/lolliplot/lolliplot.pl \
 		--hugos CREBBP,KRAS,NRAS,PTPN11,FLT3 \
 		--filtered-variants filtered-variants.reseq.tsv \
 		--min-af 0.1 \
-		--output-directory lolliplot/ \
+		--output-directory lolliplot/minaf10/ \
+		2>&1 | $(LOG)
+
+lolliplot/no-minaf/lolliplot_CREBBP_NM_004380_both.svg: ../id-mappings.tsv ../lolliplot/pfam-regions.filtered.tsv filtered-variants.reseq.tsv ~/hdall/scripts/lolliplot/lolliplot.pl
+	rm -f lolliplot/no-minaf/*.svg 
+	perl ~/hdall/scripts/lolliplot/lolliplot.pl \
+		--hugos CREBBP,KRAS,NRAS,PTPN11,FLT3 \
+		--filtered-variants filtered-variants.reseq.tsv \
+		--output-directory lolliplot/no-minaf/ \
 		2>&1 | $(LOG)
 		
-lolliplot/matched/lolliplot_CREBBP_NM_004380_both.svg: ../id-mappings.tsv ../lolliplot/pfam-regions.filtered.tsv filtered-variants.reseq.tsv ~/hdall/scripts/lolliplot/lolliplot.pl
-	mkdir -p lolliplot/matched
-	rm -f lolliplot/matched/*.svg 
+lolliplot/minaf10/matched/lolliplot_CREBBP_NM_004380_both.svg: ../id-mappings.tsv ../lolliplot/pfam-regions.filtered.tsv filtered-variants.reseq.tsv ~/hdall/scripts/lolliplot/lolliplot.pl
+	mkdir -p lolliplot/minaf10/matched
+	rm -f lolliplot/minaf10/matched/*.svg 
 	perl ~/hdall/scripts/lolliplot/lolliplot.pl \
 		--hugos CREBBP,KRAS,NRAS,PTPN11,FLT3 \
 		--patients $(subst $(space),$(comma),$(foreach P, $(PATIENTS),$P)) \
 		--filtered-variants filtered-variants.reseq.tsv \
 		--min-af 0.1 \
-		--output-directory lolliplot/matched \
+		--output-directory lolliplot/minaf10/matched \
 		2>&1 | $(LOG)
 
 #-------------

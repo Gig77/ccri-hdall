@@ -423,6 +423,12 @@ dev.off()
 
 
 #----------------------------------------------------------
+
+c$mkras.wtcrebbp.relapsing.rel <- c$kras.relapsing.rel & !c$crebbp.relapsing.rel
+c$wtkras.mcrebbp.relapsing.rel <- !c$kras.relapsing.rel & c$crebbp.relapsing.rel
+c$mkras.mcrebbp.relapsing.rel <- c$kras.relapsing.rel & c$crebbp.relapsing.rel
+c$wtkras.wtcrebbp.relapsing.rel <- !c$kras.relapsing.rel & !c$crebbp.relapsing.rel
+
 pdf("~/hdall/results/clinical/ras-crebbp-mrd.pdf")
 
 pair.table <- table(c[,c("mrd_risk_rel", "mkras.wtcrebbp.relapsing.rel")])
@@ -512,7 +518,7 @@ pair.table <- table(c[,c("mrd_risk_rel", "mkras_in_mcrebb_background.rel")])
 mosaic(pair.table, pop=F, main=sprintf("p=%.2g", fisher.test(pair.table)$p.value))
 labeling_cells(text=pair.table)(pair.table)
 
-pair.table <- table(c[,c("rel_timepoint", "mkras_in_mcrebb_background")])
+pair.table <- table(c[,c("rel_timepoint", "mkras_in_mcrebb_background.rel")])
 mosaic(pair.table, pop=F, main=sprintf("p=%.2g", fisher.test(pair.table)$p.value))
 labeling_cells(text=pair.table)(pair.table)
 

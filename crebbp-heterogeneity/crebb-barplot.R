@@ -33,7 +33,7 @@ m <- rbind(m, crebbp.rel)
 m$patient <- as.factor(m$patient)
 
 # add columns
-m$mut <- paste0(m$gene, ":", m$chr, ":", m$pos, ":", m$ref, ">", m$alt)
+m$mut <- as.factor(paste0(m$gene, ":", m$chr, ":", m$pos, ":", m$ref, ">", m$alt))
 m$mut.short <- paste0(m$ref, ">", m$alt)
 
 # normalize by blast counts
@@ -49,6 +49,11 @@ m$frequency.norm[m$sample=="relapse"] <- m$frequency[m$sample=="relapse"]/m$blas
 m$frequency.norm[is.na(m$frequency.norm)] <- m$frequency[is.na(m$frequency.norm)]
 m$frequency.norm[m$frequency.norm>1] <- m$frequency[m$frequency.norm>1]
 m$patient.label <- as.factor(ifelse(m$patient %in% patients.matched, paste0(m$patient,"*"), as.character(m$patient)))
+
+# manually add low AF conserved mutations identified by backtracking (= visual examination in GenomeBrowse)
+r <- m[m$patient=="A",]; r$sample="diagnosis"; r$frequency.norm=0.02; m <- rbind(m,r)
+r <- m[m$patient=="842",]; r$sample="diagnosis"; r$frequency.norm=0.02; m <- rbind(m,r)
+r <- m[m$patient=="G",]; r$sample="diagnosis"; r$frequency.norm=0.02; m <- rbind(m,r)
 
 # subset samples
 m.dia <- m[m$sample=="diagnosis",]

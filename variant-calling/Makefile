@@ -85,10 +85,10 @@ $(DATA)/varscan/%_rem_rel.merged.duplicate_marked.realigned.recalibrated.varscan
 # SNPEFF
 # -------
 
-$(DATA)/varscan/%.merged.duplicate_marked.realigned.recalibrated.varscan.somatic.dbsnp.vcf:  $(DATA)/varscan/%.merged.duplicate_marked.realigned.recalibrated.varscan.somatic.vcf ~/tools/snpEff-3.3h/common_no_known_medical_impact_20130930.chr.vcf
+$(DATA)/varscan/%.merged.duplicate_marked.realigned.recalibrated.varscan.somatic.dbsnp.vcf:  $(DATA)/varscan/%.merged.duplicate_marked.realigned.recalibrated.varscan.somatic.vcf ~/generic/data/ncbi/common_no_known_medical_impact_20130930.chr.vcf
 	PWD=$(pwd)
 	(cd ~/tools/snpEff-3.3h; java -jar SnpSift.jar annotate \
-		-v ~/tools/snpEff-3.3h/common_no_known_medical_impact_20130930.chr.vcf \
+		-v ~/generic/data/ncbi/common_no_known_medical_impact_20130930.chr.vcf \
 		<(cat $< | perl -ne 's/\trs\d+\t/\t.\t/; print $$_;' -) \
 		2>&1 1>$@.part | $(LOG))
 	test -s $@.part

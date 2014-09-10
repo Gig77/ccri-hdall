@@ -43,9 +43,9 @@ filtered_variants/%.snp.filtered.tsv: ~/hdall/data/mutect_vcf/%_calls_snpeff_snp
 	mv $@.part $@
 
 .PRECIOUS: ~/hdall/data/mutect_vcf/%_calls_snpeff_snpsift.dbsnp.vcf
-~/hdall/data/mutect_vcf/%_calls_snpeff_snpsift.dbsnp.vcf: ~/hdall/data/mutect_vcf/%_calls_snpeff_snpsift.vcf ~/tools/snpEff-3.3h/common_no_known_medical_impact_20130930.chr.vcf
+~/hdall/data/mutect_vcf/%_calls_snpeff_snpsift.dbsnp.vcf: ~/hdall/data/mutect_vcf/%_calls_snpeff_snpsift.vcf ~/generic/data/ncbi/common_no_known_medical_impact_20130930.chr.vcf
 	(cd ~/tools/snpEff-3.3h; java -jar SnpSift.jar annotate \
-		-v ~/tools/snpEff-3.3h/common_no_known_medical_impact_20130930.chr.vcf \
+		-v ~/generic/data/ncbi/common_no_known_medical_impact_20130930.chr.vcf \
 		<(cat $< | perl -ne 's/\trs\d+\t/\t.\t/; print $$_;' -) \
 		> $@.part)
 	test -s $@.part
@@ -79,8 +79,8 @@ filtered_variants/%.filtered.vcf.gz: filtered_variants/%.snp.filtered.vcf filter
 		
 
 .PRECIOUS: ~/hdall/data/somatic_indel_vcf/%_snpeff.dbsnp.vcf
-~/hdall/data/somatic_indel_vcf/%_snpeff.dbsnp.vcf: ~/hdall/data/somatic_indel_vcf/%_snpeff.vcf ~/tools/snpEff-3.3h/common_no_known_medical_impact_20130930.chr.vcf
-	(cd ~/tools/snpEff-3.3h; java -jar SnpSift.jar annotate -v ~/tools/snpEff-3.3h/common_no_known_medical_impact_20130930.chr.vcf $< > $@.part) 
+~/hdall/data/somatic_indel_vcf/%_snpeff.dbsnp.vcf: ~/hdall/data/somatic_indel_vcf/%_snpeff.vcf ~/generic/data/ncbi/common_no_known_medical_impact_20130930.chr.vcf
+	(cd ~/tools/snpEff-3.3h; java -jar SnpSift.jar annotate -v ~/generic/data/ncbi/common_no_known_medical_impact_20130930.chr.vcf $< > $@.part) 
 	test -s $@.part
 	mv $@.part $@
 

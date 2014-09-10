@@ -98,6 +98,42 @@ png("~/hdall/results/coverage/coverage-plots-exome-and-panel.png", h=2500, w=600
 do_plot(3)
 dev.off()
 
-pdf("~/hdall/results/coverage/coverage-plots-exome-and-panel.pdf", h=11, w=25)
-do_plot(1.3)
+pdf("~/hdall/results/coverage/coverage-plots-exome-and-panel.pdf", width=6.3, height=2.6)
+
+	# Create plot area, but do not plot anything. Add gridlines and axis labels.
+	layout(matrix(c(1,2,3,4), nrow = 1), widths = c(0.38, 0.07, 0.38, 0.17))
+	par(mar=c(5.1, 4.1, 4.1, 2.1), cex=0.3)
+	plot(cov.exome[[1]][2:(maxdepth.exome+1), 2], cov_cumul.exome[[1]][1:maxdepth.exome], type='n', xlab="Unique coverage", ylab="Percentage of target bases >= coverage", ylim=c(0,1.0), main="Exome sequencing", xaxt="n", yaxt="n", cex.lab=1.5, cex.main=1.5, bty="n")
+	box(lwd=0.5)
+	abline(v = c(0, 10, 25, 50, 100, 200), col = "gray60", lty=3, lwd=0.5)
+	abline(h = seq(0, 1, 0.1), col = "gray60", lty=3, lwd=0.5)
+	abline(h = 0.5, col = "gray60", lty=1, lwd=0.5)
+	axis(1, at=c(0, 10, 25, 50, 100, 200), cex.axis=1.3, lwd=0.5)
+	axis(2, at=seq(0, 1, 0.1), cex.axis=1.3, lwd=0.5)
+	
+	# Actually plot the data for each of the alignments (stored in the lists).
+	for (i in 1:length(cov.exome)) points(cov.exome[[i]][2:(maxdepth.exome+1), 2], cov_cumul.exome[[i]][1:maxdepth.exome], type='l', lwd=0.6, lty=ltypes.exome[i], col=cols.exome[i])
+	
+	# Add a legend using the nice sample labeles rather than the full filenames.
+	par(mar=c(0, 0, 9.3, 0), cex=0.13)
+	plot(0:1, 0:1, type="n", axes=F, ann=F, bty="n")
+	legend("topleft", legend=labs.exome[order(means.exome, decreasing=T)], col=cols.exome[order(means.exome, decreasing=T)], lwd=0.6, lty=ltypes.exome[order(means.exome, decreasing=T)], ncol=1, box.lwd=0.5)	
+	
+	par(mar=c(5.1, 4.1, 4.1, 2.1), cex=0.3)
+	plot(cov.panel[[1]][2:(maxdepth.panel+1), 2], cov_cumul.panel[[1]][1:maxdepth.panel], type='n', xlab="Unique coverage", ylab="Percentage of target bases >= coverage", ylim=c(0,1.0), main="Gene panel", xaxt="n", yaxt="n", cex.lab=1.5, cex.main=1.5, bty="n")
+	box(lwd=0.5)
+	abline(v = c(0, 100, 250, 500, 1000, 1500), col = "gray60", lty=3, lwd=0.5)
+	abline(h = seq(0, 1, 0.1), col = "gray60", lty=3, lwd=0.5)
+	abline(h = 0.5, col = "gray60", lty=1, lwd=0.5)
+	axis(1, at=c(0, 100, 250, 500, 1000, 1500), cex.axis=1.3, lwd=0.5)
+	axis(2, at=seq(0, 1, 0.1), cex.axis=1.3, lwd=0.5)
+	
+	# Actually plot the data for each of the alignments (stored in the lists).
+	for (i in 1:length(cov.panel)) points(cov.panel[[i]][2:(maxdepth.panel+1), 2], cov_cumul.panel[[i]][1:maxdepth.panel], type='l', lwd=0.6, lty=ltypes.panel[i], col=cols.panel[i])
+	
+	# Add a legend using the nice sample labeles rather than the full filenames.
+	par(mar=c(0, 0, 9.3, 0), cex=0.13)
+	plot(0:1, 0:1, type="n", axes=F, ann=F, bty="n")
+	legend("topleft", legend=labs.panel[order(means.panel, decreasing=T)], col=cols.panel[order(means.panel, decreasing=T)], lwd=0.6, lty=ltypes.panel[order(means.panel, decreasing=T)], ncol=4, box.lwd=0.5)
+
 dev.off()

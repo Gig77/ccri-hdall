@@ -8,14 +8,15 @@ d <- read.delim(files[1], stringsAsFactor=F)
 for (i in 2:length(files)) {
 	d <- rbind(d, read.delim(files[i], stringsAsFactor=F))
 }
-#d <- d[!d$sample.name %in% c("242C", "GI8R", "MA5R"),] # ignore crappy samples
+d <- d[!d$sample.name %in% c("Y_rel", "X_rel"),] # ignore crappy samples
 
 gr <- GRanges(seqnames=d$space, ranges=IRanges(start=d$start, end=d$end), sample.name=d$sample.name, copy.count=d$copy.count, log.odds=d$log.odds, nranges=d$nranges, targeted.bp=d$targeted.bp, genes=d$genes)
 
 # find overlaps
 o <- findOverlaps(gr, gr)
 o <- o[o@queryHits != o@subjectHits]
-o <- o[gr$copy.count[o@queryHits] != 2 & gr$copy.count[o@subjectHits] != 2] 
+o <- o[(gr$copy.count[o@queryHits] > 2 & gr$copy.count[o@subjectHits] > 2) | (gr$copy.count[o@queryHits] < 2 & gr$copy.count[o@subjectHits] < 2)] 
+o <- o[width(gr)[o@queryHits] >= 20 & width(gr)[o@subjectHits] >= 20] # remove overlaps with tiny single-exon segments
 
 # determine overlap in percent of shared exons
 ex <- read.delim("~/generic/data/illumina/truseq_exome_targeted_regions.hg19.bed.chr", header=F)

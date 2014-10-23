@@ -15,18 +15,28 @@ load("counts.RData")
 # only remission samples
 sample.names.bg <- sample.names[grep("rem$", sample.names)]
 
+# split by sex
+sex <- read.delim("~/hdall/results/patient_sex.tsv")
+sample.names.bg.male <- sample.names.bg[sample.names.bg %in% paste0(sex$patient[sex$sex=="m"], "_rem")] 
+sample.names.bg.female <- sample.names.bg[sample.names.bg %in% paste0(sex$patient[sex$sex=="f"], "_rem")] 
+
 # exclude problematic samples
-sample.names.bg <- sample.names.bg[!sample.names.bg %in% c("430_rem", "460_rem", "399_rem", "314_rem")]
+sample.names.bg <- sample.names.bg[!sample.names.bg %in% c("399_rem", "314_rem")]
 
 counts[["GC"]] <- getGCcontent(target, reference.file)
 counts[["GC.sq"]] <- counts$GC^2
 counts[["bg"]] <- generateBackground(sample.names.bg, counts, median)
 counts[["log.bg"]] <- log(counts[["bg"]] + 0.1)
 counts[["bg.var"]] <- generateBackground(sample.names.bg, counts, var) 
+counts[["bg.male"]] <- generateBackground(sample.names.bg.male, counts, median)
+counts[["log.bg.male"]] <- log(counts[["bg.male"]] + 0.1)
+counts[["bg.var.male"]] <- generateBackground(sample.names.bg.male, counts, var) 
+counts[["log.bg.var.male"]] <- log(counts[["bg.var.male"]] + 0.1) 
+counts[["bg.female"]] <- generateBackground(sample.names.bg.female, counts, median)
+counts[["log.bg.female"]] <- log(counts[["bg.female"]] + 0.1)
+counts[["bg.var.female"]] <- generateBackground(sample.names.bg.female, counts, var) 
+counts[["log.bg.var.female"]] <- log(counts[["bg.var.female"]] + 0.1) 
 counts[["width"]] <- width(counts)
-
-# remove outliers; gives more robust parameter optimization results
-counts <- counts[counts[["bg.var"]]>quantile(counts[["bg.var"]], 0.01) & counts[["bg.var"]]<quantile(counts[["bg.var"]], 0.99),]
 
 save(counts, file="counts.bg.RData")
 

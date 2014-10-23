@@ -15,7 +15,7 @@ PATIENTS_RESEQ_NONREL = 331 380 442 350 461 466 529 591 602 619 633 634 642 653 
 #PATIENTS_RESEQ_DIAONLY = 
 
 
-all: $(foreach P, $(PATIENTS_EXOME), $P_rem.coverage.exome.tsv $P_dia.coverage.exome.tsv $P_rel.coverage.exome.tsv $P_rem.coverage.panel.tsv $P_dia.coverage.panel.tsv $P_rel.coverage.panel.tsv ../reseq/cnv/$P_Diagnosis.coverage.reseq.panel.tsv ../reseq/cnv/$P_Relapse.coverage.reseq.panel.tsv cov-plot.$P.exome.pdf cov-plot.$P.panel.pdf gc/$P_rem.coverage.bed gc/$P_dia.coverage.bed gc/$P_rel.coverage.bed) \
+all: $(foreach P, $(PATIENTS_EXOME), $P_rem.coverage.exome.tsv $P_dia.coverage.exome.tsv $P_rel.coverage.exome.tsv $P_rem.coverage.panel.tsv $P_dia.coverage.panel.tsv $P_rel.coverage.panel.tsv ../reseq/cnv/$P_Diagnosis.coverage.reseq.panel.tsv ../reseq/cnv/$P_Relapse.coverage.reseq.panel.tsv cov-plot.$P.exome.pdf cov-plot.$P.panel.pdf gc/$P_rem.coverage.bed gc/$P_dia.coverage.bed gc/$P_rel.coverage.bed segmented_coverage/$P_Diagnosis.segmented-coverage.pdf segmented_coverage/$P_Relapse.segmented-coverage.pdf) \
 	 $(foreach P, $(PATIENTS_RESEQ_MATCHED), ../reseq/cnv/$P_Remission.coverage.reseq.panel.tsv ../reseq/cnv/$P_Diagnosis.coverage.reseq.panel.tsv ../reseq/cnv/$P_Relapse.coverage.reseq.panel.tsv ../reseq/cnv/cov-plot.$P.matched.reseq.panel.pdf ../reseq/cnv/segmented_coverage/$P_Diagnosis.segmented-coverage.tsv  ../reseq/cnv/segmented_coverage/$P_Remission.segmented-coverage.tsv  ../reseq/cnv/segmented_coverage/$P_Relapse.segmented-coverage.tsv ../reseq/cnv/segmented_coverage/$P_Diagnosis.segmented-coverage.pdf ../reseq/cnv/segmented_coverage/$P_Relapse.segmented-coverage.pdf) \
 	 $(foreach P, $(PATIENTS_RESEQ_RELONLY), ../reseq/cnv/$P_Remission.coverage.reseq.panel.tsv ../reseq/cnv/$P_Relapse.coverage.reseq.panel.tsv ../reseq/cnv/cov-plot.$P.rel.reseq.panel.pdf ../reseq/cnv/segmented_coverage/$P_Remission.segmented-coverage.tsv  ../reseq/cnv/segmented_coverage/$P_Relapse.segmented-coverage.tsv ../reseq/cnv/segmented_coverage/$P_Relapse.segmented-coverage.pdf) \
 	 $(foreach P, $(PATIENTS_RESEQ_DIAONLY), ../reseq/cnv/$P_Remission.coverage.reseq.panel.tsv ../reseq/cnv/$P_Diagnosis.coverage.reseq.panel.tsv ../reseq/cnv/cov-plot.$P.dia.reseq.panel.pdf ../reseq/cnv/segmented_coverage/$P_Diagnosis.segmented-coverage.tsv  ../reseq/cnv/segmented_coverage/$P_Remission.segmented-coverage.tsv ../reseq/cnv/segmented_coverage/$P_Diagnosis.segmented-coverage.pdf) \
@@ -106,6 +106,12 @@ cov-plot.%.panel.pdf: %_dia.coverage.panel.tsv %_rel.coverage.panel.tsv %_rem.co
 		> $@.part
 	mv $@.part $@
 
+segmented_coverage/%.segmented-coverage.tsv: ~/hdall/data/bam/%.merged.duplicate_marked.realigned.recalibrated.bam ~/hdall/scripts/cnv/get-segment-coverage.pl
+	~/tools/samtools-0.1.19/samtools depth -Q 1 $< \
+		| perl ~/hdall/scripts/cnv/get-segment-coverage.pl --sample $* --bin-size 250000 \
+		> $@.part
+	mv $@.part $@
+
 ../reseq/cnv/segmented_coverage/%_Diagnosis.segmented-coverage.pdf: ../reseq/cnv/segmented_coverage/%_Diagnosis.segmented-coverage.tsv ../reseq/cnv/segmented_coverage/%_Remission.segmented-coverage.tsv ~/hdall/scripts/cnv/plot-segment-coverage.R
 	Rscript ~/hdall/scripts/cnv/plot-segment-coverage.R \
 		--patient $*_dia \
@@ -130,6 +136,24 @@ cov-plot.%.panel.pdf: %_dia.coverage.panel.tsv %_rel.coverage.panel.tsv %_rem.co
 		--tumor $(word 1,$^) \
 		--normal $(word 2,$^) \
 		--circos ~/hdall/results/cnv/circos/$*_dia.nonrel.cnv.circos.tsv \
+		--output $@.part
+	mv $@.part $@
+
+segmented_coverage/%_Diagnosis.segmented-coverage.pdf: segmented_coverage/%_dia.segmented-coverage.tsv segmented_coverage/%_rem.segmented-coverage.tsv ~/hdall/scripts/cnv/plot-segment-coverage.R
+	Rscript ~/hdall/scripts/cnv/plot-segment-coverage.R \
+		--patient $*_dia \
+		--tumor $(word 1,$^) \
+		--normal $(word 2,$^) \
+		--circos ~/hdall/results/cnv/circos/$*_dia.cnv.circos.tsv \
+		--output $@.part
+	mv $@.part $@
+
+segmented_coverage/%_Relapse.segmented-coverage.pdf: segmented_coverage/%_rel.segmented-coverage.tsv segmented_coverage/%_rem.segmented-coverage.tsv ~/hdall/scripts/cnv/plot-segment-coverage.R
+	Rscript ~/hdall/scripts/cnv/plot-segment-coverage.R \
+		--patient $*_rel \
+		--tumor $(word 1,$^) \
+		--normal $(word 2,$^) \
+		--circos ~/hdall/results/cnv/circos/$*_rel.cnv.circos.tsv \
 		--output $@.part
 	mv $@.part $@
 	

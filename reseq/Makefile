@@ -244,6 +244,34 @@ filtered_variants/%_dia.reseq.varscan.filtered.tsv: snpeff/%_dia.reseq.varscan.d
 		--evs-file ~/generic/data/evs/ESP6500SI-V2-SSA137.updatedRsIds.chrAll.snps_indels.txt.gz \
 		2>&1 1> $@.part | $(LOG)
 	mv $@.part $@
+
+#-------------
+# PICARD hs_metrics
+#-------------
+
+.PHONY: picard
+picard: $(foreach P, $(PATIENTS_EXOME), picard/$P_Diagnosis.hs_metrics picard/$P_Relapse.hs_metrics) \
+		  $(foreach P, $(PATIENTS_RESEQ_MATCHED), picard/$P_Diagnosis.hs_metrics picard/$P_Relapse.hs_metrics picard/$P_Remission.hs_metrics) \
+		  $(foreach P, $(PATIENTS_DIA_ONLY), picard/$P_Diagnosis.hs_metrics picard/$P_Remission.hs_metrics) \
+		  $(foreach P, $(PATIENTS_REL_ONLY), picard/$P_Relapse.hs_metrics picard/$P_Remission.hs_metrics) \
+		  $(foreach P, $(PATIENTS_DIA_NON_REL), picard/$P_Diagnosis.hs_metrics)
+
+picard/%.hs_metrics: ~/hdall/data/reseq/bam/%.duplicate_marked.realigned.recalibrated.bam ~/hdall/data/reseq/enriched_regions.noheader.bed
+	mkdir -p picard
+	~/tools/samtools-0.1.19/samtools view -H $< 2>&1 1> picard/$*.intervallist-picard.bed | $(LOG)
+	gawk 'BEGIN { OFS="\t"} {print $$1,$$2,$$3,"+",$$4}' ~/hdall/data/reseq/enriched_regions.noheader.bed >> picard/$*.intervallist-picard.bed
+	java -XX:+UseParallelGC -XX:ParallelGCThreads=8 -Xmx2g -Djava.io.tmpdir=`pwd`/tmp -jar ~/tools/picard-tools-1.114/CalculateHsMetrics.jar \
+		BAIT_INTERVALS=picard/$*.intervallist-picard.bed \
+		TARGET_INTERVALS=picard/$*.intervallist-picard.bed \
+		INPUT=$< \
+		OUTPUT=$@.part \
+		REFERENCE_SEQUENCE=~/generic/data/hg19/ucsc.hg19.fasta \
+		PER_TARGET_COVERAGE=picard/$*.hs_metrics.per_target_coverage.part \
+		VALIDATION_STRINGENCY=LENIENT \
+		2>&1 | $(LOG)
+	mv picard/$*.hs_metrics.per_target_coverage.part picard/$*.hs_metrics.per_target_coverage
+	rm picard/$*.intervallist-picard.bed
+	mv $@.part $@
 	
 #--------
 # other
@@ -262,6 +290,6 @@ gene-patient-matrix.reseq.tsv: impacted-genes-list.reseq.tsv ~/hdall/scripts/get
 	#unzip ~/generic/data/dbNSFP-2.1/dbNSFPv2.1.zip
 	#(head -n 1 dbNSFP2.1_variant.chr1 ; cat dbNSFP2.1_variant.chr* | grep -v "^#" ) > dbNSFP2.1.txt
 	#rm dbNSFP2.1_variant.chr* dbNSFPv2.1.zip
-	
+
 #~/hdall/data/reseq/bam/331test_Diagnosis.duplicate_marked.realigned.recalibrated.bam: ~/hdall/data/reseq/bam/331_Diagnosis.duplicate_marked.realigned.recalibrated.bam
 #	 ~/tools/samtools-0.1.19/samtools view $< -bL ~/hdall/data/reseq/enriched_regions.20padding.bed > $@

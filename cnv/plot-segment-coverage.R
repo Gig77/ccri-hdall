@@ -22,6 +22,7 @@ if (is.na(opt$circos)) stop("circos output file not specified")
 
 # normalization factor (correct for different read count)
 normal.chrs <- list(
+		"Y_rel" = c("chr2", "chr3"),
 		"243_dia" = c("chr2", "chr3", "chr16"),
 		"243_rel" = c("chr1", "chr2", "chr3"),
 		"933_dia" = c("chr1", "chr2", "chr3"), 
@@ -186,7 +187,16 @@ normal.chrs <- list(
 		"NRD_1_dia" = c("chr3", "chr8"),
 		"NRD_2_dia" = c("chr2", "chr3"),
 		"NRD_3_dia" = c("chr2", "chr3"),
-		"NRD_4_dia" = c("chr2", "chr3"))
+		"NRD_4_dia" = c("chr2", "chr3"),
+		
+		"m1963-545-rel" = c("chr2"),
+		"m1964-545-rel" = c("chr2"),
+		"m1957-715-rel" = c("chr2"),
+		"m1977-G-dia" = c("chr2"),
+		"m1967-Y-rel" = c("chr2"),
+		"715R3" = c("chr2", "chr3"))
+
+print(normal.chrs[[opt$patient]])
 
 t <- read.delim(opt$tumor, header=F, colClasses=c("factor", "integer", "numeric"))
 n <- read.delim(opt$normal, header=F, colClasses=c("factor", "integer", "numeric"))

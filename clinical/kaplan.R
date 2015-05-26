@@ -3,11 +3,11 @@ library(survival)
 library(cmprsk)
 
 rm(list=ls())
-c <- read.delim("~/hdall/results/clinical/clinical_data.processed.tsv")
+c <- read.delim("/mnt/projects/hdall/results/clinical/clinical_data.processed.tsv")
 
 # ==========================================================================================================
 
-pdf("~/hdall/results/clinical/kaplan-figure-paper.pdf", width=10, height=13.3)
+pdf("/mnt/projects/hdall/results/clinical/kaplan-figure-paper.pdf", width=10, height=13.3)
 
 par(mfrow=c(4,3),mar=c(4,4,1,1),mgp=c(2.5, 1, 0))
 
@@ -255,7 +255,7 @@ dev.off()
 
 # ==========================================================================================================
 
-pdf("~/hdall/results/clinical/kaplan-ras-gene-vs-ras-wt-pairwise.pdf", width=10, height=13.3)
+pdf("/mnt/projects/hdall/results/clinical/kaplan-ras-gene-vs-ras-wt-pairwise.pdf", width=10, height=13.3)
 
 par(mfrow=c(4,3),mar=c(4,4,1,1))
 
@@ -359,7 +359,7 @@ stop("OK")
 
 # --- old stuff ----
 
-pdf("~/hdall/results/clinical/kaplan-mutations-at-relapse.pdf")
+pdf("/mnt/projects/hdall/results/clinical/kaplan-mutations-at-relapse.pdf")
 
 plot(survfit(Surv(time=c$second_rem_months, c$dead)~1), col=c("blue", "red"), xlab="months", ylab="pOS", conf.int=F)
 
@@ -438,7 +438,7 @@ dev.off()
 
 # --- RAS/CREBBP co-occurrence, split into all four combinations ---
 
-pdf("~/hdall/results/clinical/kaplan-kras-crebbp.pdf", width=10, height=6.65)
+pdf("/mnt/projects/hdall/results/clinical/kaplan-kras-crebbp.pdf", width=10, height=6.65)
 par(mfrow=c(2,3),mar=c(4,4,1,1),mgp=c(2.5, 1, 0))
 
 c$kras.crebbp.rel <- NA

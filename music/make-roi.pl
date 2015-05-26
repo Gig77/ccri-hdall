@@ -19,7 +19,7 @@ close(M);
 # read chromosome sizes
 my %chrsize;
 open(IN, 
-"/home/STANNANET/christian.frech/generic/data/hg19/ucsc.hg19.chrom.sizes") or die "could not open ucsc.hg19.chrom.sizes\n";
+"/mnt/projects/generic/data/hg19/ucsc.hg19.chrom.sizes") or die "could not open ucsc.hg19.chrom.sizes\n";
 while(<IN>)
 {
 	my ($chr, $size) = split("\t");
@@ -41,7 +41,7 @@ while(<>)
 	$start = $chrsize{$chr} if ($start > $chrsize{$chr}); # trim coordinate to chromosome size
 	$end = $chrsize{$chr} if ($end > $chrsize{$chr}); # trim coordinate to chromosome size
 	next if ($start >= $end);
-	next if ($chr eq "M" and $end == 16571); # gives music error: ERROR: Request for chrM:16572-16573 in /mnt/suse/home/STANNANET/christian.frech/generic/data/hg19/ucsc.hg19.fasta, but chrM has length 16571
+	next if ($chr eq "M" and $end == 16571); # gives music error: ERROR: Request for chrM:16572-16573 in /mnt/suse/mnt/projects/generic/data/hg19/ucsc.hg19.fasta, but chrM has length 16571
 
 	my @regions;
 	while($region =~ /(uc.*?)_exon/g) { push(@regions, $1) }

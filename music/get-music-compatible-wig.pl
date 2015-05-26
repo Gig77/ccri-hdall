@@ -3,7 +3,7 @@
 use strict;
 use warnings FATAL => qw( all );
 
-my $dir = "/home/STANNANET/christian.frech/hdall/data/wig";
+my $dir = "/mnt/projects/hdall/data/wig";
 
 chdir($dir);
 opendir(D, $dir) or die "ERROR: could not read directory\n";
@@ -15,7 +15,7 @@ while (my $f = readdir(D))
 	next if (-s $wigf);
 	
 	next if ($wigf !~ /_rel/);
-	my $cmd = "perl /home/STANNANET/christian.frech/hdall/scripts/bedgraph-to-wig.pl $f $wigf";
+	my $cmd = "perl /mnt/projects/hdall/scripts/bedgraph-to-wig.pl $f $wigf";
 	print "$cmd\n";
 	system("$cmd");
 }

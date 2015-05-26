@@ -1,5 +1,5 @@
 
-open(P, "/home/STANNANET/christian.frech/hdall/results/panel-genes.tsv") or die "could not read panel genes\n";
+open(P, "/mnt/projects/hdall/results/panel-genes.tsv") or die "could not read panel genes\n";
 my %genes;
 while(<P>)
 {
@@ -8,7 +8,7 @@ while(<P>)
 }
 close(P);
 
-open(I, "/home/STANNANET/christian.frech/hdall/results/kamilla/final-list-design-studio.tsv") or die "could not read design studio file\n";
+open(I, "/mnt/projects/hdall/results/kamilla/final-list-design-studio.tsv") or die "could not read design studio file\n";
 while(<I>)
 {
 	chomp;

@@ -5,11 +5,11 @@ patients <- c("314", "399", "430", "446", "460", "545", "592", "715", "786", "79
 #patients <- c("430")
 
 # per chromosome
-pdf("~/hdall/results/clonal-analysis/ploidy-lowres.pdf", width=12, paper='A4r')
+pdf("/mnt/projects/hdall/results/clonal-analysis/ploidy-lowres.pdf", width=12, paper='A4r')
 for(p in patients) {
 	for(s in c("dia", "rel")) {
 		par(mfrow=c(5,5), mar=c(2,2,1.5,0.5), oma=c(2.5,2.5,2.5,0))
-		t <- read.csv(paste("~/hdall/data/mutect_vcf/", p, "_rem_", s, "_call_stats.out", sep=""), sep="\t", skip=1)
+		t <- read.csv(paste("/mnt/projects/hdall/data/mutect_vcf/", p, "_rem_", s, "_call_stats.out", sep=""), sep="\t", skip=1)
 		tpass <- t[t$t_ref_count+t$t_alt_count >= 50 & t$n_ref_count+t$n_alt_count >= 50 & t$t_ins_count == 0 & t$t_del_count == 0 & t$t_ref_max_mapq >= 60 & t$t_alt_max_mapq >= 60 , c("contig", "t_ref_count", "t_alt_count", "n_ref_count", "n_alt_count")]
 		tot_norm = sum(tpass$n_ref_count+tpass$n_alt_count) 
 		tot_tum = sum(tpass$t_ref_count+tpass$t_alt_count)

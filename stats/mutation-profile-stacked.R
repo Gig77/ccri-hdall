@@ -13,7 +13,7 @@ min.dp.rem <- 10
 color <- "Set1"
 
 # TABLE: filtered-variants.tsv
-t <- read.delim("~/hdall/results/filtered-variants.tsv", stringsAsFactors=F)
+t <- read.delim("/mnt/projects/hdall/results/filtered-variants.tsv", stringsAsFactors=F)
 t <- t[t$status != "REJECT" & t$var_type == "snp",]
 
 t$class <- NA
@@ -156,13 +156,13 @@ do_plot <- function() {
 	legend("topleft", rev(colnames(m.dia)), fill=rev(brewer.pal(6, color)))
 }
 
-#pdf("~/hdall/results/stats/mutation-profile-stacked.pdf", width=8, height=10)
-pdf("~/hdall/results/stats/mutation-profile-stacked.pdf", width=8, height=8)
+#pdf("/mnt/projects/hdall/results/stats/mutation-profile-stacked.pdf", width=8, height=10)
+pdf("/mnt/projects/hdall/results/stats/mutation-profile-stacked.pdf", width=8, height=8)
 do_plot()
 dev.off()
 
-#png("~/hdall/results/stats/mutation-profile-stacked.png", width=2000, height=3000, res=200)
-png("~/hdall/results/stats/mutation-profile-stacked.png", width=2000, height=2000, res=200)
+#png("/mnt/projects/hdall/results/stats/mutation-profile-stacked.png", width=2000, height=3000, res=200)
+png("/mnt/projects/hdall/results/stats/mutation-profile-stacked.png", width=2000, height=2000, res=200)
 do_plot()
 dev.off()
 
@@ -172,7 +172,7 @@ print(sprintf("Average ratio Ts/Tv at diagnosis: %.3f", mean(d)))
 print(sprintf("Average ratio Ts/Tv at relapse: %.3f", mean(r)))
 print(sprintf("Paired one-sided t-test: %.3g", t.test(d,r,paired=T,alternative="greater")$p.value))
 
-write.table(df, file="~/hdall/results/stats/mutation-profile.data.af10.tsv", col.names=T, row.names=F, sep="\t", quote=F)
+write.table(df, file="/mnt/projects/hdall/results/stats/mutation-profile.data.af10.tsv", col.names=T, row.names=F, sep="\t", quote=F)
 
 # run statistical tests on different mutation profiles in diagnosis vs. relapse
 t.filtered <- t.dia
@@ -183,7 +183,7 @@ names(tmp)[8:10] <- c("freq_leu", "dp_rem_tot", "dp_leu_tot")
 tmp$sample <- "relapse"
 t.filtered <- rbind(t.filtered, tmp)
 
-pdf("~/hdall/results/stats/mutation-profile-stats-dia-vs-rel.pdf")
+pdf("/mnt/projects/hdall/results/stats/mutation-profile-stats-dia-vs-rel.pdf")
 set.seed(22)
 p <- fisher.test(table(t.filtered$sample, t.filtered$class), simulate.p.value=T,B=1000000)$p.value
 tab <- mosaic(class ~ sample, data=t.filtered, pop=F, main=sprintf("mutations from all patients (n=%d, p=%.2g)", nrow(t.filtered), p))

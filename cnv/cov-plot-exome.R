@@ -18,9 +18,9 @@ dia <- read.delim(opt$diagnosis, check.names=F, stringsAsFactor=F, header=F)
 rel <- read.delim(opt$relapse, check.names=F, stringsAsFactor=F, header=F)
 rem <- read.delim(opt$remission, check.names=F, stringsAsFactor=F, header=F)
 
-#dia.mito <- read.delim("~/hdall/results/cnv/592_dia.coverage.mito.tsv", check.names=F, stringsAsFactor=F, header=F)
-#rel.mito <- read.delim("~/hdall/results/cnv/592_rel.coverage.mito.tsv", check.names=F, stringsAsFactor=F, header=F)
-#rem.mito <- read.delim("~/hdall/results/cnv/592_rem.coverage.mito.tsv", check.names=F, stringsAsFactor=F, header=F)
+#dia.mito <- read.delim("/mnt/projects/hdall/results/cnv/592_dia.coverage.mito.tsv", check.names=F, stringsAsFactor=F, header=F)
+#rel.mito <- read.delim("/mnt/projects/hdall/results/cnv/592_rel.coverage.mito.tsv", check.names=F, stringsAsFactor=F, header=F)
+#rem.mito <- read.delim("/mnt/projects/hdall/results/cnv/592_rem.coverage.mito.tsv", check.names=F, stringsAsFactor=F, header=F)
 
 # normalization factors
 #nf.dia = sum(dia.mito$V3)/sum(rem.mito$V3) 
@@ -43,7 +43,7 @@ mn$avg.rel <- mn$avg.rel / median(mn[mn$chr=="chr19", "avg.rel"]) * median(mn[mn
 
 chr <- c("chr1", "chr2", "chr3", "chr4", "chr5", "chr6", "chr7", "chr8", "chr9", "chr10", "chr11", "chr12", "chr13", "chr14", "chr15", "chr16", "chr17", "chr18", "chr19", "chr20", "chr21", "chr22", "chrX", "chrY")
 
-pdf(paste("~/hdall/results/cnv/cov-plot.", opt$patient, ".pdf.part", sep=""))
+pdf(paste("/mnt/projects/hdall/results/cnv/cov-plot.", opt$patient, ".pdf.part", sep=""))
 for (c in chr)
 {
 	par(mfrow=c(2,1))

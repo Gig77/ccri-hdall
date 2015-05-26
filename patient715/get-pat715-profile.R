@@ -8,13 +8,13 @@ min.dp.leu <- 10
 min.dp.rem <- 10
 
 # diagnosis, relapse 1
-kamilla <- read.delim("~/hdall/results/filtered-variants.cosmic.normaf.tsv", stringsAsFactors=F, na.strings=c("NA", "n/d"))
-maria <- read.delim("~/p2ry8-crlf2/results/filtered-variants.cosmic.normaf.tsv", stringsAsFactor=F, na.strings=c("NA", "n/d"))
+kamilla <- read.delim("/mnt/projects/hdall/results/filtered-variants.cosmic.normaf.tsv", stringsAsFactors=F, na.strings=c("NA", "n/d"))
+maria <- read.delim("/mnt/projects/p2ry8-crlf2/results/filtered-variants.cosmic.normaf.tsv", stringsAsFactor=F, na.strings=c("NA", "n/d"))
 
 m <- kamilla[kamilla$patient=="715" & kamilla$status != "REJECT" & kamilla$freq_leu >= min.af,]
 m <- rbind(m, maria[maria$patient=="715" & maria$status != "REJECT" & maria$freq_leu >= min.af,])
 
-pdf("~/hdall/results/patient715/patient715.pdf")
+pdf("/mnt/projects/hdall/results/patient715/patient715.pdf")
 
 # number of variants per sample
 barplot(table(m$sample), ylim=c(0,200))

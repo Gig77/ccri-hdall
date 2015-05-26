@@ -9,57 +9,57 @@ PATIENTS_DIA_ONLY=1004564 1010661 1010781 1019964 1020076 1021087 1023338 102361
 
 all: mutation-relation-dia mutation-relation-rel dia/proximity.reseq.tsv rel/proximity.reseq.tsv 
 
-panel-genes.roi: ../../panel-genes.tsv ../../kamilla/final-list-design-studio.tsv ~/hdall/scripts/reseq/music/get-roi-file.pl
-	perl ~/hdall/scripts/reseq/music/get-roi-file.pl | sort -t '	' -k 1,1 -k 2,2g > $@.part
+panel-genes.roi: ../../panel-genes.tsv ../../kamilla/final-list-design-studio.tsv /mnt/projects/hdall/scripts/reseq/music/get-roi-file.pl
+	perl /mnt/projects/hdall/scripts/reseq/music/get-roi-file.pl | sort -t '	' -k 1,1 -k 2,2g > $@.part
 	mv $@.part $@
 
 panel-genes.roi.gz.tbi: panel-genes.roi
 	bgzip -c $^ > panel-genes.roi.gz
 	~/tools/tabix-0.2.6/tabix panel-genes.roi.gz -s 1 -b 2 -e 3
 	
-rel/maf/%.reseq.maf: ../filtered_variants/%.reseq.dbsnp.snpeff.dbNSFP.filtered.vcf ../filtered_variants/%.reseq.indel.dbsnp.snpeff.dbNSFP.filtered.vcf panel-genes.roi.gz.tbi ~/generic/data/ensembl/gene-id-mapping.biomart-0.7.tsv ~/hdall/scripts/vcf2maf.pl
+rel/maf/%.reseq.maf: ../filtered_variants/%.reseq.dbsnp.snpeff.dbNSFP.filtered.vcf ../filtered_variants/%.reseq.indel.dbsnp.snpeff.dbNSFP.filtered.vcf panel-genes.roi.gz.tbi /mnt/projects/generic/data/ensembl/gene-id-mapping.biomart-0.7.tsv /mnt/projects/hdall/scripts/vcf2maf.pl
 	mkdir -p rel/maf
-	cat $(word 1,$^) | perl ~/hdall/scripts/vcf2maf.pl \
+	cat $(word 1,$^) | perl /mnt/projects/hdall/scripts/vcf2maf.pl \
 		--sample $* \
 		--music-roi panel-genes.roi.gz \
-		--mapping-entrez ~/generic/data/ensembl/gene-id-mapping.biomart-0.7.tsv \
+		--mapping-entrez /mnt/projects/generic/data/ensembl/gene-id-mapping.biomart-0.7.tsv \
 		--min-af 0.10 \
 		2>&1 1>$@.part | $(LOG)
-	cat $(word 2,$^) | perl ~/hdall/scripts/vcf2maf.pl \
+	cat $(word 2,$^) | perl /mnt/projects/hdall/scripts/vcf2maf.pl \
 		--sample $* \
 		--music-roi panel-genes.roi.gz \
-		--mapping-entrez ~/generic/data/ensembl/gene-id-mapping.biomart-0.7.tsv \
+		--mapping-entrez /mnt/projects/generic/data/ensembl/gene-id-mapping.biomart-0.7.tsv \
 		--min-af 0.10 \
 		2>&1 1>>$@.part | $(LOG)
 	mv $@.part $@
 
 rel/maf/rem_rel.reseq.maf: $(foreach P, $(PATIENTS), rel/maf/$P_rem_rel.reseq.maf) $(foreach P, $(PATIENTS_REL_ONLY), rel/maf/$P_rem_rel.reseq.maf)
-	perl ~/hdall/scripts/vcf2maf.pl --header 2>&1 1>$@.part | $(LOG)
+	perl /mnt/projects/hdall/scripts/vcf2maf.pl --header 2>&1 1>$@.part | $(LOG)
 	cat $^ >> $@.part
 	mv $@.part $@
 
 rel/maf/rem_rel.reseq.matched.maf: $(foreach P, $(PATIENTS), rel/maf/$P_rem_rel.reseq.maf)
-	perl ~/hdall/scripts/vcf2maf.pl --header 2>&1 1>$@.part | $(LOG)
+	perl /mnt/projects/hdall/scripts/vcf2maf.pl --header 2>&1 1>$@.part | $(LOG)
 	cat $^ >> $@.part
 	mv $@.part $@
 
 dia/maf/rem_dia.reseq.maf: $(foreach P, $(PATIENTS), dia/maf/$P_rem_dia.reseq.maf) $(foreach P, $(PATIENTS_DIA_ONLY), dia/maf/$P_rem_dia.reseq.maf)
-	perl ~/hdall/scripts/vcf2maf.pl --header 2>&1 1>$@.part | $(LOG)
+	perl /mnt/projects/hdall/scripts/vcf2maf.pl --header 2>&1 1>$@.part | $(LOG)
 	cat $^ >> $@.part
 	mv $@.part $@
 
-dia/maf/%.reseq.maf: ../filtered_variants/%.reseq.dbsnp.snpeff.dbNSFP.filtered.vcf ../filtered_variants/%.reseq.indel.dbsnp.snpeff.dbNSFP.filtered.vcf panel-genes.roi.gz.tbi ~/generic/data/ensembl/gene-id-mapping.biomart-0.7.tsv ~/hdall/scripts/vcf2maf.pl
+dia/maf/%.reseq.maf: ../filtered_variants/%.reseq.dbsnp.snpeff.dbNSFP.filtered.vcf ../filtered_variants/%.reseq.indel.dbsnp.snpeff.dbNSFP.filtered.vcf panel-genes.roi.gz.tbi /mnt/projects/generic/data/ensembl/gene-id-mapping.biomart-0.7.tsv /mnt/projects/hdall/scripts/vcf2maf.pl
 	mkdir -p dia/maf
-	cat $(word 1,$^) | perl ~/hdall/scripts/vcf2maf.pl \
+	cat $(word 1,$^) | perl /mnt/projects/hdall/scripts/vcf2maf.pl \
 		--sample $* \
 		--music-roi panel-genes.roi.gz \
-		--mapping-entrez ~/generic/data/ensembl/gene-id-mapping.biomart-0.7.tsv \
+		--mapping-entrez /mnt/projects/generic/data/ensembl/gene-id-mapping.biomart-0.7.tsv \
 		--min-af 0.10 \
 		2>&1 1>$@.part | $(LOG)
-	cat $(word 2,$^) | perl ~/hdall/scripts/vcf2maf.pl \
+	cat $(word 2,$^) | perl /mnt/projects/hdall/scripts/vcf2maf.pl \
 		--sample $* \
 		--music-roi panel-genes.roi.gz \
-		--mapping-entrez ~/generic/data/ensembl/gene-id-mapping.biomart-0.7.tsv \
+		--mapping-entrez /mnt/projects/generic/data/ensembl/gene-id-mapping.biomart-0.7.tsv \
 		--min-af 0.10 \
 		2>&1 1>>$@.part | $(LOG)
 	mv $@.part $@
@@ -72,19 +72,19 @@ mutation-relation-rel: rel/mutation-relation.rel.af10.pathway.fine.reseq.tsv rel
 rel/wig-list.tsv:
 	rm -f $@.part
 	for P in $(PATIENTS) $(PATIENTS_REL_ONLY) ; do \
-		echo "$$P""_rel	~/hdall/data/reseq/wig/$$P""_rel.merged.duplicate_marked.realigned.recalibrated.music.wig" >> $@.part; \
+		echo "$$P""_rel	/mnt/projects/hdall/data/reseq/wig/$$P""_rel.merged.duplicate_marked.realigned.recalibrated.music.wig" >> $@.part; \
 	done
 	mv $@.part $@
 
 rel/wig-list.matched.tsv:
 	rm -f $@.part
 	for P in $(PATIENTS) ; do \
-		echo "$$P""_rel	~/hdall/data/reseq/wig/$$P""_rel.merged.duplicate_marked.realigned.recalibrated.music.wig" >> $@.part; \
+		echo "$$P""_rel	/mnt/projects/hdall/data/reseq/wig/$$P""_rel.merged.duplicate_marked.realigned.recalibrated.music.wig" >> $@.part; \
 	done
 	mv $@.part $@
 
-rel/maf/rem_rel.pathway.fine.reseq.maf: rel/maf/rem_rel.reseq.maf ~/hdall/scripts/reseq/aggregate-genes-to-pathways.pl
-	cat $(word 1,$^) | perl ~/hdall/scripts/reseq/aggregate-genes-to-pathways.pl --level fine > $@.part
+rel/maf/rem_rel.pathway.fine.reseq.maf: rel/maf/rem_rel.reseq.maf /mnt/projects/hdall/scripts/reseq/aggregate-genes-to-pathways.pl
+	cat $(word 1,$^) | perl /mnt/projects/hdall/scripts/reseq/aggregate-genes-to-pathways.pl --level fine > $@.part
 	mv $@.part $@
 rel/mutation-relation.rel.af10.pathway.fine.reseq.gene-list.txt: rel/maf/rem_rel.pathway.fine.reseq.maf
 	grep -vP "^(#|Hugo_Symbol)" $^ | cut -f 1 | sort | uniq > $@.part
@@ -99,8 +99,8 @@ rel/mutation-relation.rel.af10.pathway.fine.reseq.tsv: rel/mutation-relation.rel
 		2>&1 | $(LOG)
 	mv $@.part $@
 
-rel/maf/rem_rel.pathway.coarse.reseq.maf: rel/maf/rem_rel.reseq.maf ~/hdall/scripts/reseq/aggregate-genes-to-pathways.pl
-	cat $(word 1,$^) | perl ~/hdall/scripts/reseq/aggregate-genes-to-pathways.pl --level coarse > $@.part
+rel/maf/rem_rel.pathway.coarse.reseq.maf: rel/maf/rem_rel.reseq.maf /mnt/projects/hdall/scripts/reseq/aggregate-genes-to-pathways.pl
+	cat $(word 1,$^) | perl /mnt/projects/hdall/scripts/reseq/aggregate-genes-to-pathways.pl --level coarse > $@.part
 	mv $@.part $@
 rel/mutation-relation.rel.af10.pathway.coarse.reseq.gene-list.txt: rel/maf/rem_rel.pathway.coarse.reseq.maf
 	grep -vP "^(#|Hugo_Symbol)" $^ | cut -f 1 | sort | uniq > $@.part
@@ -116,7 +116,7 @@ rel/mutation-relation.rel.af10.pathway.coarse.reseq.tsv: rel/mutation-relation.r
 	mv $@.part $@
 
 rel/mutation-relation.recrel2.af10.gene-list.txt: ../gene-patient-matrix.reseq.tsv
-	python ~/hdall/scripts/query-text.py \
+	python /mnt/projects/hdall/scripts/query-text.py \
 		--file ../gene-patient-matrix.reseq.tsv \
 		--sql "select gene,data.'max-af-rel-ns' AS m,data.'freq-rel-ns' AS f from data where m >= 10 and m <> '' and f >= 2" \
 		> $@.part
@@ -196,8 +196,8 @@ rel/mutation-relation.recrel2.combined-CREBBP-TRRAP-KRAS-PTPN11.reseq.tsv: rel/m
 #---------------------------
 mutation-relation-dia: dia/mutation-relation.dia.af10.pathway.fine.reseq.tsv dia/mutation-relation.dia.af10.pathway.coarse.reseq.tsv dia/mutation-relation.recdia2.af10.reseq.tsv dia/mutation-relation.recdia2.combined-KRAS-PTPN11-NRAS.reseq.tsv dia/mutation-relation.recdia2.combined-KRAS-PTPN11.reseq.tsv dia/mutation-relation.recdia2.combined-CREBBP-TRRAP-KRAS-PTPN11.reseq.tsv
 
-dia/maf/rem_dia.pathway.fine.reseq.maf: dia/maf/rem_dia.reseq.maf ~/hdall/scripts/reseq/aggregate-genes-to-pathways.pl
-	cat $(word 1,$^) | perl ~/hdall/scripts/reseq/aggregate-genes-to-pathways.pl --level fine > $@.part
+dia/maf/rem_dia.pathway.fine.reseq.maf: dia/maf/rem_dia.reseq.maf /mnt/projects/hdall/scripts/reseq/aggregate-genes-to-pathways.pl
+	cat $(word 1,$^) | perl /mnt/projects/hdall/scripts/reseq/aggregate-genes-to-pathways.pl --level fine > $@.part
 	mv $@.part $@
 dia/mutation-relation.dia.af10.pathway.fine.reseq.gene-list.txt: dia/maf/rem_dia.pathway.fine.reseq.maf
 	grep -vP "^(#|Hugo_Symbol)" $^ | cut -f 1 | sort | uniq > $@.part
@@ -212,8 +212,8 @@ dia/mutation-relation.dia.af10.pathway.fine.reseq.tsv: dia/mutation-relation.dia
 		2>&1 | $(LOG)
 	mv $@.part $@
 
-dia/maf/rem_dia.pathway.coarse.reseq.maf: dia/maf/rem_dia.reseq.maf ~/hdall/scripts/reseq/aggregate-genes-to-pathways.pl
-	cat $(word 1,$^) | perl ~/hdall/scripts/reseq/aggregate-genes-to-pathways.pl --level coarse > $@.part
+dia/maf/rem_dia.pathway.coarse.reseq.maf: dia/maf/rem_dia.reseq.maf /mnt/projects/hdall/scripts/reseq/aggregate-genes-to-pathways.pl
+	cat $(word 1,$^) | perl /mnt/projects/hdall/scripts/reseq/aggregate-genes-to-pathways.pl --level coarse > $@.part
 	mv $@.part $@
 dia/mutation-relation.dia.af10.pathway.coarse.reseq.gene-list.txt: dia/maf/rem_dia.pathway.coarse.reseq.maf
 	grep -vP "^(#|Hugo_Symbol)" $^ | cut -f 1 | sort | uniq > $@.part
@@ -229,7 +229,7 @@ dia/mutation-relation.dia.af10.pathway.coarse.reseq.tsv: dia/mutation-relation.d
 	mv $@.part $@
 
 dia/mutation-relation.recdia2.af10.gene-list.txt: ../gene-patient-matrix.reseq.tsv
-	python ~/hdall/scripts/query-text.py \
+	python /mnt/projects/hdall/scripts/query-text.py \
 		--file ../gene-patient-matrix.reseq.tsv \
 		--sql "select gene,data.'max-af-dia-ns' AS m,data.'freq-dia-ns' AS f from data where m >= 10 and m <> '' and f >= 2" \
 		> $@.part

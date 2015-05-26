@@ -13,7 +13,7 @@ blast.count <- list(
 		"446.dia" = 85, "446.rel" = 94)
 
 # exome seq variants
-data <- read.csv("~/hdall/results/filtered-variants.cosmic.normaf.tsv", sep="\t")
+data <- read.csv("/mnt/projects/hdall/results/filtered-variants.cosmic.normaf.tsv", sep="\t")
 data <- data[data$status!="REJECT",]
 data.filtered <- data[data$dp_leu_tot >= min_cov & data$dp_rem_tot >= min_cov & data$var_type == "snp" & data$'repeat'=="" & data$segdup=="",]
 dia <- data.filtered[data.filtered$sample=="rem_dia", c("patient", "chr", "pos", "ref", "alt", "gene", "freq_leu_norm")]
@@ -22,7 +22,7 @@ rel <- data.filtered[data.filtered$sample=="rem_rel", c("patient", "chr", "pos",
 names(rel)[7] <- "rel"
 
 # reseq variants
-data.reseq <- read.csv("~/hdall/results/reseq/filtered-variants.reseq.cosmic.normaf.tsv", sep="\t")
+data.reseq <- read.csv("/mnt/projects/hdall/results/reseq/filtered-variants.reseq.cosmic.normaf.tsv", sep="\t")
 data.reseq <- data.reseq[data.reseq$status!="REJECT",]
 dia.reseq <- data.reseq[data.reseq$sample=="rem_dia", c("patient", "chr", "pos", "ref", "alt", "gene", "freq_leu_norm")]
 names(dia.reseq)[7] <- "dia.reseq"
@@ -50,7 +50,7 @@ m <- m[m$dia>=0.1 | m$rel>=0.1,]
 # remove variants with AF > 70% (likely inaccurate measurement)
 m <- m[m$dia<=0.7 & m$rel<=0.7,]
 
-pdf("~/hdall/results/figures/supp-fig-kinetics.pdf")
+pdf("/mnt/projects/hdall/results/figures/supp-fig-kinetics.pdf")
 par(mfrow = c(3, 2), mar=c(3,4,2,1))
 
 for(p in patients)

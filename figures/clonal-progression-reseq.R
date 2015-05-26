@@ -14,7 +14,7 @@ exclude.chr <- c("chrX", "chrY")
 blast.count <- list("715.dia" = 92, "715.rel" = 92, "715.rel3" = "92", "545.dia" = 97, "545.rel" = 86, "Y.dia" = 98, "Y.rel" = 95, "592.dia" = 94, "592.rel" = 98, "430.dia" = 81, "430.rel" = 72)
 
 # exome seq variants
-data <- read.csv("~/hdall/results/filtered-variants.cosmic.normaf.tsv", sep="\t")
+data <- read.csv("/mnt/projects/hdall/results/filtered-variants.cosmic.normaf.tsv", sep="\t")
 data <- data[data$patient == p & data$status!="REJECT",]
 #data <- data[data$var_type=="snp",]  # variant type filter
 #data <- data[data$non_silent==1,]  # only non-silent for patient 715, all for other patients
@@ -39,7 +39,7 @@ rel3 <- rel3[rel3$sample=="rem_rel3", c("chr", "pos", "ref", "alt", "gene", "fre
 names(rel3)[6] <- "rel3"
 
 # reseq variants
-data.reseq <- read.csv("~/hdall/results/reseq/filtered-variants.reseq.cosmic.normaf.tsv", sep="\t")
+data.reseq <- read.csv("/mnt/projects/hdall/results/reseq/filtered-variants.reseq.cosmic.normaf.tsv", sep="\t")
 data.reseq <- data.reseq[data.reseq$patient == p & data.reseq$status!="REJECT",]
 dia.reseq <- data.reseq[data.reseq$sample=="rem_dia", c("chr", "pos", "ref", "alt", "gene", "freq_leu_norm")]
 names(dia.reseq)[6] <- "dia.reseq"
@@ -98,8 +98,8 @@ if (p != "715")
 	m$col[m$dia > 0 & m$dia<=0.25 & m$rel > 0.25] <- "#F58E7D"
 	m$col[m$dia > 0 & m$dia<=0.25 & m$rel==0] <- "#000000" # black
 	
-	#png(paste0("~/hdall/results/figures/clonal-progression-", p, ".png"))
-	pdf(paste0("~/hdall/results/figures/clonal-progression-", p, ".pdf"))
+	#png(paste0("/mnt/projects/hdall/results/figures/clonal-progression-", p, ".png"))
+	pdf(paste0("/mnt/projects/hdall/results/figures/clonal-progression-", p, ".pdf"))
 	plot(0, 0, xlim=c(1, 3.1), ylim=c(0, 0.7), type="n", xaxt="n", yaxt="n", xlab="", ylab="allelic frequency", main=paste(p, " (n=", nrow(m), ")", sep=""))
 	axis(1, at=c(1.3, 2.8), labels=c(paste0("diagnosis\n(", blast.count[[paste0(p, ".dia")]], "% blasts)"), paste0("relapse\n(", blast.count[[paste0(p, ".rel")]], "% blasts)")), padj=0.5)
 	axis(2, at = seq(0, 1, 0.1), las = 1) 
@@ -127,8 +127,8 @@ if (p != "715")
 	m$col[m$dia==0 & m$rel==0 & m$rel3 > 0.25] <- "#BCAFD6"
 	m$col[m$dia==0 & m$rel==0 & m$rel3 <= 0.25] <- "#FFF57C"
 	
-	#png(paste0("~/hdall/results/figures/clonal-progression-", p, ".png"), width=1024)
-	pdf(paste0("~/hdall/results/figures/clonal-progression-", p, ".pdf"), width=12)
+	#png(paste0("/mnt/projects/hdall/results/figures/clonal-progression-", p, ".png"), width=1024)
+	pdf(paste0("/mnt/projects/hdall/results/figures/clonal-progression-", p, ".pdf"), width=12)
 	plot(0, 0, xlim=c(1, 4.6), ylim=c(0, 0.7), type="n", xaxt="n", yaxt="n", xlab="", ylab="allelic frequency", main=paste(p, " (n=", nrow(m), ")", sep=""))
 	axis(1, at=c(1.3, 2.8, 4.3), labels=c(paste0("diagnosis\n(", blast.count[[paste0(p, ".dia")]], "% blasts)"), paste0("relapse 1\n(", blast.count[[paste0(p, ".rel")]], "% blasts)"), paste0("relapse 3\n(", blast.count[[paste0(p, ".rel3")]], "% blasts)")), padj=0.5)
 	axis(2, at = seq(0, 1, 0.1), las = 1) 
@@ -145,7 +145,7 @@ if (p != "715")
 		}
 	}	
 	
-	write.table(m, file="~/hdall/results/figures/clonal-progression-715.data.tsv", col.names=T, row.names=F, sep="\t", quote=F)
+	write.table(m, file="/mnt/projects/hdall/results/figures/clonal-progression-715.data.tsv", col.names=T, row.names=F, sep="\t", quote=F)
 }
 
 dev.off()

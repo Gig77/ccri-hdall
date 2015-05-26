@@ -1,16 +1,16 @@
 options(warn=1)
 #library(vioplot)
 
-gs <- read.delim("~/hdall/results/gene-size.txt", stringsAsFactors=F)
-mm <- read.delim("~/hdall/results/gene-patient-matrix.annotated.tsv", check.names=F, stringsAsFactors=F)
-il <- read.delim("~/generic/data/illumina/truseq_exome_targeted_regions.hg19.bed.chr", check.names=F, stringsAsFactors=F)
+gs <- read.delim("/mnt/projects/hdall/results/gene-size.txt", stringsAsFactors=F)
+mm <- read.delim("/mnt/projects/hdall/results/gene-patient-matrix.annotated.tsv", check.names=F, stringsAsFactors=F)
+il <- read.delim("/mnt/projects/generic/data/illumina/truseq_exome_targeted_regions.hg19.bed.chr", check.names=F, stringsAsFactors=F)
 
 il.genes <- data.frame(HGNC=unique(matrix(unlist(strsplit(il[,4], ":", fixed=T)), ncol=3, byrow=T)[,3]), kit="yes", stringsAsFactors=F)
 names(mm)[1] <- "HGNC"
 
 gs.kit <- merge(gs[gs$cds_len!="NA",], il.genes)
 
-pdf("~/hdall/results/stats/gene-length-bias.pdf", width=10)
+pdf("/mnt/projects/hdall/results/stats/gene-length-bias.pdf", width=10)
 par(mfrow=c(1, 2), oma=c(1.5,0,1.5,0))
 
 # check for significant difference between mutated and not-mutated genes

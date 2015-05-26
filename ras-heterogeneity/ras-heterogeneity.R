@@ -1,9 +1,9 @@
 rm(list=ls())
 
 hotspots <- data.frame(gene=c("KRAS", "KRAS", "KRAS", "KRAS", "KRAS", "KRAS", "KRAS", "NRAS", "NRAS", "NRAS", "NRAS", "NRAS", "NRAS", "NRAS", "PTPN11", "PTPN11", "PTPN11", "PTPN11", "PTPN11", "PTPN11", "PTPN11", "PTPN11", "PTPN11", "PTPN11", "PTPN11", "PTPN11", "PTPN11", "PTPN11", "PTPN11", "PTPN11", "PTPN11", "FLT3", "FLT3", "FLT3", "FLT3"), 
-		  			   chr=c("chr12", "chr12", "chr12", "chr12", "chr12", "chr12", "chr12", "chr1", "chr1", "chr1", "chr1", "chr1", "chr1", "chr1", "chr12", "chr12", "chr12", "chr12", "chr12", "chr12", "chr12", "chr12", "chr12", "chr12", "chr12", "chr12", "chr12", "chr12", "chr12", "chr12", "chr12", "chr13", "chr13", "chr13", "chr13"),
-					   pos=c(25398281, 25398282, 25398284, 25398285, 25378561, 25378562, 25380275, 115256528, 115256529, 115256530, 115258744, 115258745, 115258747, 115258748, 112888162, 112888163, 112888165, 112888166, 112888189, 112888197, 112888198, 112888199, 112888210, 112888211, 112915523, 112915524, 112926884, 112926885, 112926888, 112926908, 112926909, 28592640, 28592641, 28592642, 28592621),
-					   stringsAsFactors=F)
+		chr=c("chr12", "chr12", "chr12", "chr12", "chr12", "chr12", "chr12", "chr1", "chr1", "chr1", "chr1", "chr1", "chr1", "chr1", "chr12", "chr12", "chr12", "chr12", "chr12", "chr12", "chr12", "chr12", "chr12", "chr12", "chr12", "chr12", "chr12", "chr12", "chr12", "chr12", "chr12", "chr13", "chr13", "chr13", "chr13"),
+		pos=c(25398281, 25398282, 25398284, 25398285, 25378561, 25378562, 25380275, 115256528, 115256529, 115256530, 115258744, 115258745, 115258747, 115258748, 112888162, 112888163, 112888165, 112888166, 112888189, 112888197, 112888198, 112888199, 112888210, 112888211, 112915523, 112915524, 112926884, 112926885, 112926888, 112926908, 112926909, 28592640, 28592641, 28592642, 28592621),
+		stringsAsFactors=F)
 #hotspots <- data.frame(gene=c("PTPN11"), chr=c("chr12"), pos=c(112888189), stringsAsFactors=F)			   
 mutations <- data.frame(patient=character(0), cohort=character(0), sample=character(0), gene=character(0), chr=character(0), pos=numeric(0), ref=character(0), alt=character(0), alt.reads=numeric(0), tot.reads=numeric(0), frequency=numeric(0), stringsAsFactors=F)
 mutations.rem <- mutations
@@ -53,28 +53,27 @@ process_bam <- function(p, cohort, sample, bam, gene, chr, pos, mutations) {
 
 for (i in 1:nrow(hotspots)) {
 	for (p in patients.dianonrel) {
-		mutations <- process_bam(p, "non-relapsing", "diagnosis", paste0("~/hdall/data/reseq/bam/", p, "_Diagnosis.duplicate_marked.realigned.recalibrated.bam"), hotspots[i, "gene"], hotspots[i, "chr"], hotspots[i, "pos"], mutations)
+		mutations <- process_bam(p, "non-relapsing", "diagnosis", paste0("/mnt/projects/hdall/data/reseq/bam/", p, "_Diagnosis.duplicate_marked.realigned.recalibrated.bam"), hotspots[i, "gene"], hotspots[i, "chr"], hotspots[i, "pos"], mutations)
 	}
 	for (p in c(patients.matched, patients.diaonly)) {
-		mutations <- process_bam(p, "relapsing", "diagnosis", paste0("~/hdall/data/reseq/bam/", p, "_Diagnosis.duplicate_marked.realigned.recalibrated.bam"), hotspots[i, "gene"], hotspots[i, "chr"], hotspots[i, "pos"], mutations)
+		mutations <- process_bam(p, "relapsing", "diagnosis", paste0("/mnt/projects/hdall/data/reseq/bam/", p, "_Diagnosis.duplicate_marked.realigned.recalibrated.bam"), hotspots[i, "gene"], hotspots[i, "chr"], hotspots[i, "pos"], mutations)
 	}
 	for (p in c(patients.matched, patients.relonly)) {
-		mutations <- process_bam(p, "relapsing", "relapse", paste0("~/hdall/data/reseq/bam/", p, "_Relapse.duplicate_marked.realigned.recalibrated.bam"), hotspots[i, "gene"], hotspots[i, "chr"], hotspots[i, "pos"], mutations)
+		mutations <- process_bam(p, "relapsing", "relapse", paste0("/mnt/projects/hdall/data/reseq/bam/", p, "_Relapse.duplicate_marked.realigned.recalibrated.bam"), hotspots[i, "gene"], hotspots[i, "chr"], hotspots[i, "pos"], mutations)
 	}
 	#	for (p in c("ZE13")) {
-#		mutations <- process_bam(p, "relapsing", "relapse", paste0("~/hdall/data/reseq/bam/", p, "_Relapse.duplicate_marked.realigned.recalibrated.bam"), hotspots[i, "gene"], hotspots[i, "chr"], hotspots[i, "pos"], mutations)
+#		mutations <- process_bam(p, "relapsing", "relapse", paste0("/mnt/projects/hdall/data/reseq/bam/", p, "_Relapse.duplicate_marked.realigned.recalibrated.bam"), hotspots[i, "gene"], hotspots[i, "chr"], hotspots[i, "pos"], mutations)
 #	}
 }
 
-write.table(mutations, file="~/hdall/results/ras-heterogeneity/ras.hotspots.tsv", col.names=T, row.names=F, sep="\t", quote=F)
+write.table(mutations, file="/mnt/projects/hdall/results/ras-heterogeneity/ras.hotspots.tsv", col.names=T, row.names=F, sep="\t", quote=F)
 
 # CONTROL: check remission samples
 
 for (i in 1:nrow(hotspots)) {
 	for (p in setdiff(c(patients.matched, patients.relonly, patients.diaonly), patients.exome)) {
-		mutations.rem <- process_bam(p, "relapsing", "remission", paste0("~/hdall/data/reseq/bam/", p, "_Remission.duplicate_marked.realigned.recalibrated.bam"), hotspots[i, "gene"], hotspots[i, "chr"], hotspots[i, "pos"], mutations.rem)
+		mutations.rem <- process_bam(p, "relapsing", "remission", paste0("/mnt/projects/hdall/data/reseq/bam/", p, "_Remission.duplicate_marked.realigned.recalibrated.bam"), hotspots[i, "gene"], hotspots[i, "chr"], hotspots[i, "pos"], mutations.rem)
 	}
 }
 
-write.table(mutations.rem, file="~/hdall/results/ras-heterogeneity/ras.hotspots.remission.tsv", col.names=T, row.names=F, sep="\t", quote=F)
-
+write.table(mutations.rem, file="/mnt/projects/hdall/results/ras-heterogeneity/ras.hotspots.remission.tsv", col.names=T, row.names=F, sep="\t", quote=F)

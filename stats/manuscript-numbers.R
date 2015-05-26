@@ -7,10 +7,10 @@ effect.splice <- c("SPLICE_SITE_ACCEPTOR", "SPLICE_SITE_DONOR")
 min.af <- 0.1
 
 # exome seq variants
-exome <- read.delim("~/hdall/results/filtered-variants.cosmic.normaf.tsv", stringsAsFactor=F)
+exome <- read.delim("/mnt/projects/hdall/results/filtered-variants.cosmic.normaf.tsv", stringsAsFactor=F)
 exome <- exome[exome$patient != "E",]
 exome$patient <- as.factor(exome$patient)
-reseq <- read.delim("~/hdall/results/reseq/filtered-variants.reseq.cosmic.normaf.tsv", stringsAsFactor=F)
+reseq <- read.delim("/mnt/projects/hdall/results/reseq/filtered-variants.reseq.cosmic.normaf.tsv", stringsAsFactor=F)
 reseq <- reseq[reseq$patient != "E",]
 reseq$patient <- as.factor(reseq$patient)
 
@@ -75,7 +75,7 @@ print(sprintf("exome -- AF>=%.1f -- combined -- CDS -- non-silent -- deleterious
 print(sprintf("exome -- AF>=%.1f -- combined -- CDS -- non-silent -- deleterious -- indels -- No. (mean, median, min-max): %d (%.2f, %d, %d-%d)", min.af, nrow(exome.pass.minaf.combined.cds.ns.del.indel), mean(table(factor(exome.pass.minaf.combined.cds.ns.del.indel[,"patient"], levels=levels(exome$patient)))), median(table(factor(exome.pass.minaf.combined.cds.ns.del.indel[,"patient"], levels=levels(exome$patient)))), min(table(exome.pass.minaf.combined.cds.ns.del.indel[,"patient"])), max(table(exome.pass.minaf.combined.cds.ns.del.indel[,"patient"]))))
 
 # mutation profile
-mp <- read.delim("~/hdall/results/stats/mutation-profile.data.af10.tsv", stringsAsFactor=F)
+mp <- read.delim("/mnt/projects/hdall/results/stats/mutation-profile.data.af10.tsv", stringsAsFactor=F)
 mp[,"transition"] <- mp$mutation == "A>G" | mp$mutation == "C>T"
 agg <- aggregate(cbind(freq.dia, freq.rel)~patient+transition, sum, data=mp)
 tstv <- data.frame(patient=agg[agg$transition==T, "patient"], tstv.dia=agg[agg$transition==T,"freq.dia"]/agg[agg$transition==F,"freq.dia"], tstv.rel=agg[agg$transition==T,"freq.rel"]/agg[agg$transition==F,"freq.rel"])

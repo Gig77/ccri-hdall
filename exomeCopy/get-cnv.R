@@ -45,11 +45,11 @@ split_fit <- function(fit, chr, size) {
 	list(fit_first, fit_second)
 }
 
-sex.list <- read.delim("~/hdall/results/patient_sex.tsv")
+sex.list <- read.delim("/mnt/projects/hdall/results/patient_sex.tsv")
 patient <- gsub("(_rem|_dia|_rel|_rel2|_rel3)$", "", opt$sample, perl=T)
 sex <- sex.list$sex[sex.list$patient==patient]
 
-if (invalid(sex)) stop(sprintf("ERROR: could not determine sex of patient %s (sample %s). Check if there is an entry in sex file ~/hdall/results/patient_sex.tsv", patient, opt$sample))
+if (invalid(sex)) stop(sprintf("ERROR: could not determine sex of patient %s (sample %s). Check if there is an entry in sex file /mnt/projects/hdall/results/patient_sex.tsv", patient, opt$sample))
 
 # load counts and background estimates
 load("counts.bg.RData")
@@ -130,7 +130,7 @@ if(file.exists("genes.GRCh37v75.biomart.RData")) {
 	load("genes.GRCh37v75.biomart.RData")
 } else {
 	library("biomaRt")
-	mart <- useMart(biomart="ensembl", dataset="hsapiens_gene_ensembl") # GRCh37, v75
+	mart <- useMart(biomart="ENSEMBL_MART_ENSEMBL", host="grch37.ensembl.org", path="/biomart/martservice" ,dataset="hsapiens_gene_ensembl") # GRCh37, v75
 	genes <- getBM(c("hgnc_symbol", "ensembl_gene_id", "chromosome_name", "start_position", "end_position"), mart=mart)
 	save(genes, file="genes.GRCh37v75.biomart.RData")
 }

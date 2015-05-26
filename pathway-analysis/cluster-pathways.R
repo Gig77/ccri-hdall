@@ -12,7 +12,7 @@ if (is.na(args[1])) stop("input file not specified")
 if (is.na(args[2])) stop("output file not specified")
 
 t <- read.csv(args[1], sep="\t", as.is=TRUE, check.names=F)
-#t <- read.csv("~/hdall/results/music/sm_pathways.tsv.part", sep="\t", as.is=TRUE)
+#t <- read.csv("/mnt/projects/hdall/results/music/sm_pathways.tsv.part", sep="\t", as.is=TRUE)
 #t2 <- t
 
 pval <- as.numeric(args[3]) # maximum p-value
@@ -54,12 +54,12 @@ for (i in 1:nrow(pairs))
 }
 
 # write distance matrix
-#write.csv(m, file="~/hdall/results/music/rel/sm_pathways.distance-matrix.tsv")
+#write.csv(m, file="/mnt/projects/hdall/results/music/rel/sm_pathways.distance-matrix.tsv")
 
 # hierarchical clustering
 d <- as.dist(1-m)
 hc <- hclust(d, method="average")
-#pdf("~/hdall/results/music/rel/sm_pathways.hclust.pdf", width=20)
+#pdf("/mnt/projects/hdall/results/music/rel/sm_pathways.hclust.pdf", width=20)
 #plot(hc, hang=-1, cex=0.05, xlab="Pathways", main="Pathways clustered by shared genes")
 #dev.off()
 

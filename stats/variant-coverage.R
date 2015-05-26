@@ -1,12 +1,12 @@
 # TABLE: filtered-variants.cosmic.normaf.tsv
-v <- read.delim("~/hdall/results/filtered-variants.cosmic.normaf.tsv")
+v <- read.delim("/mnt/projects/hdall/results/filtered-variants.cosmic.normaf.tsv")
 v <- v[v$status != "REJECT",]
 
 dp.dia <- v[v$sample=="rem_dia", c("patient", "dp_leu_tot")]
 dp.rel <- v[v$sample=="rem_rel", c("patient", "dp_leu_tot")]
 dp.rem <- unique(v[,c("patient", "chr", "pos", "dp_rem_tot")])[,c("patient", "dp_rem_tot")]
 
-pdf("~/hdall/results/stats/variant-coverage.pdf")
+pdf("/mnt/projects/hdall/results/stats/variant-coverage.pdf")
 par(mfrow=c(3,1), mar=(c(2, 3, 2, 0.5)))
 
 plot(dp.dia$patient, dp.dia$dp_leu_tot, ylim=c(0,300), yaxt="n", main=paste("dia (n=", nrow(dp.dia), ")", sep=""), cex.axis=0.8)

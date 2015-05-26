@@ -5,7 +5,7 @@ patients <- c("1021247", "446", "818", "A", "592", "430", "792", "786", "B", "46
 
 # TABLE: filtered-variants.tsv
 # read and filter input data
-t <- read.delim("~/hdall/results/filtered-variants.tsv", stringsAsFactors=F)
+t <- read.delim("/mnt/projects/hdall/results/filtered-variants.tsv", stringsAsFactors=F)
 t <- t[t$status != "REJECT" & t$freq_leu >= 0.1 & t$non_silent==1,]
 
 # join diagnosis and relapse variants
@@ -53,11 +53,11 @@ make_plot <- function() {
 }
 
 # plot PNG
-png("~/hdall/results/figures/supp-fig-1.png", width=2800, height=1300, pointsize=40)
+png("/mnt/projects/hdall/results/figures/supp-fig-1.png", width=2800, height=1300, pointsize=40)
 make_plot()
 dev.off()
 
 # plot PDF
-pdf("~/hdall/results/figures/supp-fig-1.pdf", width=13, height=6)
+pdf("/mnt/projects/hdall/results/figures/supp-fig-1.pdf", width=13, height=6)
 make_plot()
 dev.off()

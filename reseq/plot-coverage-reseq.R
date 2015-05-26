@@ -4,9 +4,9 @@
 maxdepth <- 1500
 
 # Get a list of the bedtools output files you'd like to read in
-files.relapsing <- list.files(path="~/hdall/results/reseq/coverage", pattern=".coverage.bedtools.txt$")
+files.relapsing <- list.files(path="/mnt/projects/hdall/results/reseq/coverage", pattern=".coverage.bedtools.txt$")
 labs <- sapply(strsplit(files.relapsing, ".", fixed=T), "[[", 1) # extract sample name from file name
-files.nonrelapsing <- list.files(path="~/hdall/results/reseq/coverage/nonrelapsing", pattern=".coverage.bedtools.txt$")
+files.nonrelapsing <- list.files(path="/mnt/projects/hdall/results/reseq/coverage/nonrelapsing", pattern=".coverage.bedtools.txt$")
 labs <- c(labs, sapply(strsplit(files.relapsing, ".", fixed=T), "[[", 1)) # extract sample name from file name
 
 labs <- gsub("Diagnosis", "dia", labs)
@@ -20,14 +20,14 @@ cov_cumul <- list()
 means <- numeric(0)
 
 for (i in 1:length(files.relapsing)) {
-	cov[[i]] <- read.table(paste0("~/hdall/results/reseq/coverage/", files.relapsing[i]))
+	cov[[i]] <- read.table(paste0("/mnt/projects/hdall/results/reseq/coverage/", files.relapsing[i]))
 	cov_cumul[[i]] <- 1-cumsum(cov[[i]][,5])
 	means[i] <- cov_cumul[[i]][250]
 }
 
 for (i in 1:length(files.nonrelapsing)) {
 	idx <- i + length(files.relapsing)
-	cov[[idx]] <- read.table(paste0("~/hdall/results/reseq/coverage/nonrelapsing/", files.nonrelapsing[i]))
+	cov[[idx]] <- read.table(paste0("/mnt/projects/hdall/results/reseq/coverage/nonrelapsing/", files.nonrelapsing[i]))
 	cov_cumul[[idx]] <- 1-cumsum(cov[[idx]][,5])
 	means[idx] <- cov_cumul[[idx]][250]
 }
@@ -65,10 +65,10 @@ do_plot <- function(lwidth) {
 }
 
 # Save the graph to a file
-png("~/hdall/results/reseq/coverage/coverage-plots.reseq.png", h=2000, w=2900, pointsize=40)
+png("/mnt/projects/hdall/results/reseq/coverage/coverage-plots.reseq.png", h=2000, w=2900, pointsize=40)
 do_plot(3)
 dev.off()
 
-pdf("~/hdall/results/reseq/coverage/coverage-plots.reseq.pdf", h=10, w=13)
+pdf("/mnt/projects/hdall/results/reseq/coverage/coverage-plots.reseq.pdf", h=10, w=13)
 do_plot(1.3)
 dev.off()

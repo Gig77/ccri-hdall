@@ -2,10 +2,10 @@ options(warn=1)
 library(GenomicRanges)
 library(reshape)
 
-files <- list.files(path="~/hdall/results/exomeCopy", pattern="*.compiled-segments.tsv$", full.names=T)
+files <- list.files(path="/mnt/projects/hdall/results/exomeCopy", pattern="*.compiled-segments.tsv$", full.names=T)
 
 # add HD ALL xenograft samples sequenced with the P2RY8-CRLF2 cohort
-files <- c(files, list.files(path="~/p2ry8-crlf2/results/exomeCopy", pattern="m.*.compiled-segments.tsv$", full.names=T))
+files <- c(files, list.files(path="/mnt/projects/p2ry8-crlf2/results/exomeCopy", pattern="m.*.compiled-segments.tsv$", full.names=T))
 
 d <- read.delim(files[1], stringsAsFactor=F)
 for (i in 2:length(files)) {
@@ -23,7 +23,7 @@ o <- o[(gr$copy.count[o@queryHits] > 2 & gr$copy.count[o@subjectHits] > 2) | (gr
 o <- o[width(gr)[o@queryHits] >= 20 & width(gr)[o@subjectHits] >= 20] # remove overlaps with tiny single-exon segments
 
 # determine overlap in percent of shared exons
-ex <- read.delim("~/generic/data/illumina/truseq_exome_targeted_regions.hg19.bed.chr", header=F)
+ex <- read.delim("/mnt/projects/generic/data/illumina/truseq_exome_targeted_regions.hg19.bed.chr", header=F)
 er <- GRanges(seqnames=ex$V1, ranges=IRanges(start=ex$V2, end=ex$V3))
 oex <- findOverlaps(gr, er)
 segex <- cast(as.data.frame(oex), formula=queryHits~., value="subjectHits", fun.aggregate=function(x) { paste(x, collapse=",") })
@@ -49,5 +49,5 @@ gr$overlap.count[o.aggregated$queryHits] <- o.aggregated$overlap.count
 gr$overlap.count.tumor[o.aggregated$queryHits] <- o.aggregated$overlap.count.tumor
 
 # write table
-write.table(as.data.frame(gr), file="~/hdall/results/exomeCopy/allpatients.compiled-segments.exomeCopy.tsv.part", quote=FALSE, sep="\t", row.names=FALSE, col.names=TRUE)
+write.table(as.data.frame(gr), file="/mnt/projects/hdall/results/exomeCopy/allpatients.compiled-segments.exomeCopy.tsv.part", quote=FALSE, sep="\t", row.names=FALSE, col.names=TRUE)
 

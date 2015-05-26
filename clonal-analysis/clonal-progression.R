@@ -1,6 +1,6 @@
 #library("RColorBrewer")
 
-data <- read.csv("~/hdall/results/filtered-variants.cosmic.normaf.tsv", sep="\t")
+data <- read.csv("/mnt/projects/hdall/results/filtered-variants.cosmic.normaf.tsv", sep="\t")
 data <- data[data$status!="REJECT",]
 
 #patients <- c("A")
@@ -8,7 +8,7 @@ patients <- levels(data$patient)
 #palette <- colorRampPalette(brewer.pal(8, "Dark2"))(110)
 min_cov = 30
 
-pdf("~/hdall/results/clonal-analysis/clonal-progression.pdf", width=12)
+pdf("/mnt/projects/hdall/results/clonal-analysis/clonal-progression.pdf", width=12)
 par(mfrow = c(4, 5), mar=c(2,3,2,1))
 
 for(p in patients)

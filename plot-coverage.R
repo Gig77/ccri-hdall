@@ -4,7 +4,7 @@
 maxdepth <- 200
 
 # Get a list of the bedtools output files you'd like to read in
-files <- list.files(path="~/hdall/results/coverage", pattern=".coverage.bedtools.txt$")
+files <- list.files(path="/mnt/projects/hdall/results/coverage", pattern=".coverage.bedtools.txt$")
 files <- files[! files %in% c("E_rem.coverage.bedtools.txt", "E_dia.coverage.bedtools.txt", "E_rel.coverage.bedtools.txt")] # remove patient E
 labs <- sapply(strsplit(files, ".", fixed=T), "[[", 1) # extract sample name from file name
 
@@ -14,7 +14,7 @@ cov <- list()
 cov_cumul <- list()
 means <- numeric(0)
 for (i in 1:length(files)) {
-	cov[[i]] <- read.table(paste0("~/hdall/results/coverage/", files[i]))
+	cov[[i]] <- read.table(paste0("/mnt/projects/hdall/results/coverage/", files[i]))
 	cov_cumul[[i]] <- 1-cumsum(cov[[i]][,5])
 	means[i] <- cov_cumul[[i]][50]
 }
@@ -51,10 +51,10 @@ do_plot <- function(lwidth) {
 }
 
 # Save the graph to a file
-png("~/hdall/results/coverage/coverage-plots-exome.png", h=2000, w=2500, pointsize=40)
+png("/mnt/projects/hdall/results/coverage/coverage-plots-exome.png", h=2000, w=2500, pointsize=40)
 do_plot(3)
 dev.off()
 
-pdf("~/hdall/results/coverage/coverage-plots-exome.pdf", h=8, w=10)
+pdf("/mnt/projects/hdall/results/coverage/coverage-plots-exome.pdf", h=8, w=10)
 do_plot(1.3)
 dev.off()

@@ -57,14 +57,14 @@ ploidy[nrow(ploidy)+1,] <- c("446", "triploid", "chr11")
 ploidy[nrow(ploidy)+1,] <- c("446", "triploid", "chr12")
 ploidy[nrow(ploidy)+1,] <- c("446", "triploid", "chr14")
 
-pdf("~/hdall/results/clonal-analysis/allelic-freq-prob.distributions.pdf")
+pdf("/mnt/projects/hdall/results/clonal-analysis/allelic-freq-prob.distributions.pdf")
 
 iteration <- 1
 for (patient in unique(ploidy$patient))
 {
 	for (sample in c("dia", "rel")) 
 	{
-		v <- read.csv(paste("~/hdall/data/mutect_vcf/", patient, "_rem_", sample, "_call_stats.out", sep=""), sep="\t", skip=1)
+		v <- read.csv(paste("/mnt/projects/hdall/data/mutect_vcf/", patient, "_rem_", sample, "_call_stats.out", sep=""), sep="\t", skip=1)
 		vpass <- v[v$t_ref_count+v$t_alt_count >= 30 & v$n_ref_count+v$n_alt_count >= 30 & v$t_ins_count == 0 & v$t_del_count == 0 & v$t_ref_max_mapq >= 60 & v$t_alt_max_mapq >= 60 , c("contig", "t_ref_count", "t_alt_count", "n_ref_count", "n_alt_count")]
 		vgerm <- vpass[vpass$t_alt_count > 1 & vpass$n_alt_count > 1,]
 		vsom <- vpass[vpass$t_alt_count > 1 & vpass$n_alt_count == 0,]
@@ -103,7 +103,7 @@ for (patient in unique(ploidy$patient))
 		# output probabilities for mean-shifted germline distribution
 		freqtable <- cbind(rep(patient, 100), rep(sample, 100), rep("diploid", 100), seq(0.01,1,0.01), pnorm(seq(0.01,1,0.01), f.som.dip$estimate["mean"], f.germ.dip$estimate["sd"]))
 		colnames(freqtable) <- c("patient", "sample", "ploidy", "af", "probability")
-		write.table(freqtable, file=paste("~/hdall/results/clonal-analysis/allelic-freq-prob.tsv", sep=""), col.names=(iteration==1), row.names=F, sep="\t", quote=F, append=(iteration>1))
+		write.table(freqtable, file=paste("/mnt/projects/hdall/results/clonal-analysis/allelic-freq-prob.tsv", sep=""), col.names=(iteration==1), row.names=F, sep="\t", quote=F, append=(iteration>1))
 		
 		# triploid chromosomes
 		#----------------------
@@ -134,7 +134,7 @@ for (patient in unique(ploidy$patient))
 		
 		freqtable <- cbind(rep(patient, 100), rep(sample, 100), rep("triploid", 100), seq(0.01,1,0.01), pnorm(seq(0.01,1,0.01), f.germ.trip$estimate["mean"]-meanshift, f.germ.trip$estimate["sd"]))
 		colnames(freqtable) <- c("patient", "sample", "ploidy", "af", "probability")
-		write.table(freqtable, file=paste("~/hdall/results/clonal-analysis/allelic-freq-prob.tsv", sep=""), col.names=F, row.names=F, sep="\t", quote=F, append=T)
+		write.table(freqtable, file=paste("/mnt/projects/hdall/results/clonal-analysis/allelic-freq-prob.tsv", sep=""), col.names=F, row.names=F, sep="\t", quote=F, append=T)
 		
 		iteration <- iteration + 1
 	}

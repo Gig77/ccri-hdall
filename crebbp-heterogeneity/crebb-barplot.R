@@ -10,7 +10,7 @@ patients.matched = c("314", "1021247", "399", "430", "446", "460", "545", "592",
 
 # get mutations
 m <- data.frame(patient=character(), cohort=character(), sample=character(), gene=character(), chr=character(), pos=numeric(),	ref=character(), alt=character(), alt.reads=numeric(), tot.reads=numeric(), frequency=numeric())
-reseq.relapsing <- read.delim("~/hdall/results/reseq/filtered-variants.reseq.cosmic.normaf.tsv", stringsAsFactors=F)
+reseq.relapsing <- read.delim("/mnt/projects/hdall/results/reseq/filtered-variants.reseq.cosmic.normaf.tsv", stringsAsFactors=F)
 
 crebbp.dia <- reseq.relapsing[reseq.relapsing$status!="REJECT" & reseq.relapsing$non_silent==T & reseq.relapsing$sample=="rem_dia" & reseq.relapsing$gene=="CREBBP", c("patient", "sample", "gene", "chr", "pos", "ref", "alt", "dp_leu_var", "dp_leu_tot", "freq_leu")]
 crebbp.dia$sample <- "diagnosis"
@@ -37,7 +37,7 @@ m$mut <- as.factor(paste0(m$gene, ":", m$chr, ":", m$pos, ":", m$ref, ">", m$alt
 m$mut.short <- paste0(m$ref, ">", m$alt)
 
 # normalize by blast counts
-c <- read.delim("~/hdall/results/clinical/clinical_data.tsv", , na.strings=c("", "NA", "n/a", "n/d", " ", "early (CNS)"), stringsAsFactors=F)
+c <- read.delim("/mnt/projects/hdall/results/clinical/clinical_data.tsv", , na.strings=c("", "NA", "n/a", "n/d", " ", "early (CNS)"), stringsAsFactors=F)
 c <- data.frame(patient=factor(c$patient_id[c$patient_id %in% m$patient], levels=levels(m$patient)), 
 		        blasts.dia = suppressWarnings(as.numeric(c$blasts_dia[c$patient_id %in% m$patient])), 
 				blasts.rel = suppressWarnings(as.numeric(c$blasts_rel[c$patient_id %in% m$patient])))
@@ -63,7 +63,7 @@ m.rel <- ddply(m.rel[order(m.rel$frequency.norm, decreasing=T),], .(patient), tr
 m.cons <- merge(m.dia, m.rel, by=c("patient", "mut"))[,c("patient", "mut", "frequency.norm.x", "frequency.norm.y")]
 m.cons <- paste0(m.cons$patient, ":", m.cons$mut)
 
-pdf("~/hdall/results/crebbp-heterogeneity/crebbp-barplot.pdf", width=18, height=13)
+pdf("/mnt/projects/hdall/results/crebbp-heterogeneity/crebbp-barplot.pdf", width=18, height=13)
 
 #---
 # RELAPSING, DIA
@@ -159,7 +159,7 @@ sorted$group[sorted$group=="homogeneous"] <- "0homogeneous"
 sorted <- sorted[order(sorted$sample, sorted$group, sorted$frequency.norm, decreasing=T),]
 m.combined$patient <- factor(m.combined$patient, unique(as.character(sorted$patient)))
 
-pdf("~/hdall/results/crebbp-heterogeneity/crebbp-barplot-matched.pdf", width=14, height=9)
+pdf("/mnt/projects/hdall/results/crebbp-heterogeneity/crebbp-barplot-matched.pdf", width=14, height=9)
 plot.dia <- ggplot(data=m.combined, aes(x=patient, y=frequency.norm, fill=mut, order=-frequency.norm)) + 
 		facet_grid(sample~.) +
 		geom_bar(stat="identity", width=0.9, colour="white") +

@@ -1,10 +1,10 @@
 library(exomeCopy)
 
-target.file <- "~/generic/data/illumina/truseq_exome_targeted_regions.hg19.bed.chr"
-bam.files <- list.files(path="~/hdall/data/bam", pattern="*.bam$", full.names=T)
+target.file <- "/mnt/projects/generic/data/illumina/truseq_exome_targeted_regions.hg19.bed.chr"
+bam.files <- list.files(path="/mnt/projects/hdall/data/bam", pattern="*.bam$", full.names=T)
 bam.files <- bam.files[!grepl("test", bam.files)]
-sample.names <- paste0(sub("/home/STANNANET/christian.frech/hdall/data/bam/(.+).merged.duplicate_marked.realigned.recalibrated.bam", "\\1", bam.files))
-reference.file <- "~/generic/data/hg19/ucsc.hg19.fasta"
+sample.names <- paste0(sub("/mnt/projects/hdall/data/bam/(.+).merged.duplicate_marked.realigned.recalibrated.bam", "\\1", bam.files))
+reference.file <- "/mnt/projects/generic/data/hg19/ucsc.hg19.fasta"
 
 target.df <- read.delim(target.file, header = FALSE)
 target <- GRanges(seqname = target.df[, 1], IRanges(start = target.df[,2] + 1, end = target.df[, 3]))
@@ -16,7 +16,7 @@ load("counts.RData")
 sample.names.bg <- sample.names[grep("rem$", sample.names)]
 
 # split by sex
-sex <- read.delim("~/hdall/results/patient_sex.tsv")
+sex <- read.delim("/mnt/projects/hdall/results/patient_sex.tsv")
 sample.names.bg.male <- sample.names.bg[sample.names.bg %in% paste0(sex$patient[sex$sex=="m"], "_rem")] 
 sample.names.bg.female <- sample.names.bg[sample.names.bg %in% paste0(sex$patient[sex$sex=="f"], "_rem")] 
 

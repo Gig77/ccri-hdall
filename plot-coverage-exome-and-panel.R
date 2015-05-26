@@ -5,13 +5,13 @@ maxdepth.exome <- 200
 maxdepth.panel <- 1500
 
 # Get a list of the bedtools output files you'd like to read in
-files.exome <- list.files(path="~/hdall/results/coverage", pattern=".coverage.bedtools.txt$")
+files.exome <- list.files(path="/mnt/projects/hdall/results/coverage", pattern=".coverage.bedtools.txt$")
 files.exome <- files.exome[! files.exome %in% c("E_rem.coverage.bedtools.txt", "E_dia.coverage.bedtools.txt", "E_rel.coverage.bedtools.txt")] # remove patient E
 labs.exome <- sapply(strsplit(files.exome, ".", fixed=T), "[[", 1) # extract sample name from file name
 
-files.panel.relapsing <- list.files(path="~/hdall/results/reseq/coverage", pattern=".coverage.bedtools.txt$")
+files.panel.relapsing <- list.files(path="/mnt/projects/hdall/results/reseq/coverage", pattern=".coverage.bedtools.txt$")
 labs.panel <- sapply(strsplit(files.panel.relapsing, ".", fixed=T), "[[", 1) # extract sample name from file name
-files.panel.nonrelapsing <- list.files(path="~/hdall/results/reseq/coverage/nonrelapsing", pattern=".coverage.bedtools.txt$")
+files.panel.nonrelapsing <- list.files(path="/mnt/projects/hdall/results/reseq/coverage/nonrelapsing", pattern=".coverage.bedtools.txt$")
 labs.panel <- c(labs.panel, sapply(strsplit(files.panel.relapsing, ".", fixed=T), "[[", 1)) # extract sample name from file name
 labs.panel <- gsub("Diagnosis", "dia", labs.panel)
 labs.panel <- gsub("Relapse", "rel", labs.panel)
@@ -23,7 +23,7 @@ cov.exome <- list()
 cov_cumul.exome <- list()
 means.exome <- numeric(0)
 for (i in 1:length(files.exome)) {
-	cov.exome[[i]] <- read.table(paste0("~/hdall/results/coverage/", files.exome[i]))
+	cov.exome[[i]] <- read.table(paste0("/mnt/projects/hdall/results/coverage/", files.exome[i]))
 	cov_cumul.exome[[i]] <- 1-cumsum(cov.exome[[i]][,5])
 	means.exome[i] <- cov_cumul.exome[[i]][50]
 }
@@ -32,13 +32,13 @@ cov.panel <- list()
 cov_cumul.panel <- list()
 means.panel <- numeric(0)
 for (i in 1:length(files.panel.relapsing)) {
-	cov.panel[[i]] <- read.table(paste0("~/hdall/results/reseq/coverage/", files.panel.relapsing[i]))
+	cov.panel[[i]] <- read.table(paste0("/mnt/projects/hdall/results/reseq/coverage/", files.panel.relapsing[i]))
 	cov_cumul.panel[[i]] <- 1-cumsum(cov.panel[[i]][,5])
 	means.panel[i] <- cov_cumul.panel[[i]][250]
 }
 for (i in 1:length(files.panel.nonrelapsing)) {
 	idx <- i + length(files.panel.relapsing)
-	cov.panel[[idx]] <- read.table(paste0("~/hdall/results/reseq/coverage/nonrelapsing/", files.panel.nonrelapsing[i]))
+	cov.panel[[idx]] <- read.table(paste0("/mnt/projects/hdall/results/reseq/coverage/nonrelapsing/", files.panel.nonrelapsing[i]))
 	cov_cumul.panel[[idx]] <- 1-cumsum(cov.panel[[idx]][,5])
 	means.panel[idx] <- cov_cumul.panel[[idx]][250]
 }
@@ -94,11 +94,11 @@ do_plot <- function(lwidth) {
 }
 
 # Save the graph to a file
-png("~/hdall/results/coverage/coverage-plots-exome-and-panel.png", h=2500, w=6000, pointsize=40)
+png("/mnt/projects/hdall/results/coverage/coverage-plots-exome-and-panel.png", h=2500, w=6000, pointsize=40)
 do_plot(3)
 dev.off()
 
-pdf("~/hdall/results/coverage/coverage-plots-exome-and-panel.pdf", width=6.3, height=2.6)
+pdf("/mnt/projects/hdall/results/coverage/coverage-plots-exome-and-panel.pdf", width=6.3, height=2.6)
 
 	# Create plot area, but do not plot anything. Add gridlines and axis labels.
 	layout(matrix(c(1,2,3,4), nrow = 1), widths = c(0.38, 0.07, 0.38, 0.17))

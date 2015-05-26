@@ -20,7 +20,7 @@ print STDERR "Diploid chromosome for sample $sample: ".$diploid_chr{$sample}."\n
 
 # read chromosome sizes
 my %chr_size;
-open(IN, "/home/STANNANET/christian.frech/generic/data/hg19/ucsc.hg19.chrom.sizes") or die "could not open ucsc.hg19.chrom.sizes\n";
+open(IN, "/mnt/projects/generic/data/hg19/ucsc.hg19.chrom.sizes") or die "could not open ucsc.hg19.chrom.sizes\n";
 while(<IN>)
 {
 	my ($chr, $size) = split("\t");

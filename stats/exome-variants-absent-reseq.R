@@ -1,8 +1,8 @@
 options(warn=1)
 
-m <- read.delim("~/hdall/results/reseq/filtered-variants.merged.tsv", check.names=F, stringsAsFactor=F)
+m <- read.delim("/mnt/projects/hdall/results/reseq/filtered-variants.merged.tsv", check.names=F, stringsAsFactor=F)
 m <- m[m$sample != "rem_rel2" & m$patient != "E" & m$chr != "chr6_mcf_hap5",] 
-g <- read.delim("~/hdall/results/panel-genes-paper.tsv", stringsAsFactor=F, header=F)
+g <- read.delim("/mnt/projects/hdall/results/panel-genes-paper.tsv", stringsAsFactor=F, header=F)
 
 e <- m[!is.na(m$status.dis) & m$status.dis=="PASS" & m$non_silent.dis==1 & m$freq_leu.dis>=0.1 & m$gene %in% g$V1,]
 r <- m[!is.na(m$status.val) & m$status.val=="PASS" & m$non_silent.val==1 & m$patient %in% e$patient,]

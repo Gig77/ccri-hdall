@@ -1,12 +1,12 @@
 options(warn=1)
 
-m <- read.delim("~/hdall/results/reseq/filtered-variants.reseq.cosmic.normaf.tsv", stringsAsFactor=F)
+m <- read.delim("/mnt/projects/hdall/results/reseq/filtered-variants.reseq.cosmic.normaf.tsv", stringsAsFactor=F)
 m <- m[m$status != "REJECT" & m$non_silent==1 & m$sample != "rem_rel2" & m$var_type == "snp" & m$patient != "E",]
 m <- m[m$gene %in% c("KRAS", "NRAS", "PTPN11", "FLT3"),]
 m$sample[m$sample=="rem_dia"] <- "diagnosis"
 m$sample[m$sample=="rem_rel"] <- "relapse"
 
-h <- read.delim("~/hdall/results/ras-heterogeneity/ras.hotspots.tsv", stringsAsFactor=F)
+h <- read.delim("/mnt/projects/hdall/results/ras-heterogeneity/ras.hotspots.tsv", stringsAsFactor=F)
 h <- h[h$cohort != "non-relapsing",]
 
 merged <- merge(m, h, by=c("patient", "sample", "gene", "chr", "pos", "ref", "alt"), all.x=T, all.y=T)

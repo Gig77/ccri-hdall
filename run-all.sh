@@ -1,16 +1,16 @@
 # download required tables from UCSC genome browser:
-# mysql -h genome-mysql.cse.ucsc.edu -u genome -D hg19 -N -A -e 'select * from knownGene' > ~/generic/data/hg19/hg19.knownGene.txt
-# mysql -h genome-mysql.cse.ucsc.edu -u genome -D hg19 -N -A -e 'select * from knownCanonical' > ~/generic/data/hg19/hg19.knownCanonical.txt
-# mysql -h genome-mysql.cse.ucsc.edu -u genome -D hg19 -N -A -e 'select * from kgXref' > ~/generic/data/hg19/hg19.kgXref.txt
-# perl ~/hdall/scripts/get-id-mapping.pl > ~/hdall/results/id-mappings.tsv
+# mysql -h genome-mysql.cse.ucsc.edu -u genome -D hg19 -N -A -e 'select * from knownGene' > /mnt/projects/generic/data/hg19/hg19.knownGene.txt
+# mysql -h genome-mysql.cse.ucsc.edu -u genome -D hg19 -N -A -e 'select * from knownCanonical' > /mnt/projects/generic/data/hg19/hg19.knownCanonical.txt
+# mysql -h genome-mysql.cse.ucsc.edu -u genome -D hg19 -N -A -e 'select * from kgXref' > /mnt/projects/generic/data/hg19/hg19.kgXref.txt
+# perl /mnt/projects/hdall/scripts/get-id-mapping.pl > /mnt/projects/hdall/results/id-mappings.tsv
 
 SCRIPT=~/git/hdall/filter-variants.pl
-VCF_DIR=/home/STANNANET/christian.frech/hdall/data/mutect_vcf
-VCF_DIR_INDEL=/home/STANNANET/christian.frech/hdall/data/somatic_indel_vcf
-VCF_OUT_FILTERED=/home/STANNANET/christian.frech/hdall/results/filtered_variants
-VCF_OUT_MERGED=/home/STANNANET/christian.frech/hdall/results/merged_vcf
-RESULT_FILE=/home/STANNANET/christian.frech/hdall/results/filtered-variants.tsv
-LOG_FILE=/home/STANNANET/christian.frech/hdall/results/filtered-variants.log
+VCF_DIR=/mnt/projects/hdall/data/mutect_vcf
+VCF_DIR_INDEL=/mnt/projects/hdall/data/somatic_indel_vcf
+VCF_OUT_FILTERED=/mnt/projects/hdall/results/filtered_variants
+VCF_OUT_MERGED=/mnt/projects/hdall/results/merged_vcf
+RESULT_FILE=/mnt/projects/hdall/results/filtered-variants.tsv
+LOG_FILE=/mnt/projects/hdall/results/filtered-variants.log
 
 perl $SCRIPT 314 rem_dia $VCF_DIR/314_rem_dia_calls_snpeff.vcf 314_rem 314_dia snp --header --vcf-out $VCF_OUT_FILTERED/314_rem_dia.snp.filtered.vcf >$RESULT_FILE 2>$LOG_FILE
 perl $SCRIPT 314 rem_dia $VCF_DIR_INDEL/314_rem_dia_snpeff.vcf 314_rem 314_dia indel --vcf-out $VCF_OUT_FILTERED/314_rem_dia.indel.filtered.vcf >>$RESULT_FILE 2>>$LOG_FILE
@@ -126,15 +126,15 @@ perl $SCRIPT Y rem_rel $VCF_DIR_INDEL/Y_rem_rel_snpeff.vcf Y3767_rem Y10284_rel 
 exit
 
 # DAVID pathway enrichment analysis
-cat ~/hdall/results/gene-patient-matrix.tsv | perl ~/git/hdall/get-smg.pl dia 1 | perl ~/git/hdall/pathway-analysis/pathway-enrichment-david.pl > ~/hdall/results/enriched-pathways-dia-minfreq1.david.tsv 2>~/hdall/results/enriched-pathways-dia-minfreq1.david.log
-cat ~/hdall/results/gene-patient-matrix.tsv | perl ~/git/hdall/get-smg.pl dia 2 | perl ~/git/hdall/pathway-analysis/pathway-enrichment-david.pl > ~/hdall/results/enriched-pathways-dia-minfreq2.david.tsv 2>~/hdall/results/enriched-pathways-dia-minfreq2.david.log
+cat /mnt/projects/hdall/results/gene-patient-matrix.tsv | perl ~/git/hdall/get-smg.pl dia 1 | perl ~/git/hdall/pathway-analysis/pathway-enrichment-david.pl > /mnt/projects/hdall/results/enriched-pathways-dia-minfreq1.david.tsv 2>/mnt/projects/hdall/results/enriched-pathways-dia-minfreq1.david.log
+cat /mnt/projects/hdall/results/gene-patient-matrix.tsv | perl ~/git/hdall/get-smg.pl dia 2 | perl ~/git/hdall/pathway-analysis/pathway-enrichment-david.pl > /mnt/projects/hdall/results/enriched-pathways-dia-minfreq2.david.tsv 2>/mnt/projects/hdall/results/enriched-pathways-dia-minfreq2.david.log
 
-cat ~/hdall/results/gene-patient-matrix.tsv | perl ~/git/hdall/get-smg.pl rel 1 | perl ~/git/hdall/pathway-analysis/pathway-enrichment-david.pl > ~/hdall/results/enriched-pathways-rel-minfreq1.david.tsv 2>~/hdall/results/enriched-pathways-rel-minfreq1.david.log
-cat ~/hdall/results/gene-patient-matrix.tsv | perl ~/git/hdall/get-smg.pl rel 2 | perl ~/git/hdall/pathway-analysis/pathway-enrichment-david.pl > ~/hdall/results/enriched-pathways-rel-minfreq2.david.tsv 2>~/hdall/results/enriched-pathways-rel-minfreq2.david.log
+cat /mnt/projects/hdall/results/gene-patient-matrix.tsv | perl ~/git/hdall/get-smg.pl rel 1 | perl ~/git/hdall/pathway-analysis/pathway-enrichment-david.pl > /mnt/projects/hdall/results/enriched-pathways-rel-minfreq1.david.tsv 2>/mnt/projects/hdall/results/enriched-pathways-rel-minfreq1.david.log
+cat /mnt/projects/hdall/results/gene-patient-matrix.tsv | perl ~/git/hdall/get-smg.pl rel 2 | perl ~/git/hdall/pathway-analysis/pathway-enrichment-david.pl > /mnt/projects/hdall/results/enriched-pathways-rel-minfreq2.david.tsv 2>/mnt/projects/hdall/results/enriched-pathways-rel-minfreq2.david.log
 
-cat ~/hdall/results/gene-patient-matrix.tier1.tsv | perl ~/git/hdall/get-smg.pl dia 1 | perl ~/git/hdall/pathway-analysis/pathway-enrichment-david.pl > ~/hdall/results/enriched-pathways-dia-tier1.david.tsv 2>~/hdall/results/enriched-pathways-dia-tier1.david.log
-cat ~/hdall/results/gene-patient-matrix.tier1.tsv | perl ~/git/hdall/get-smg.pl rel 1 | perl ~/git/hdall/pathway-analysis/pathway-enrichment-david.pl > ~/hdall/results/enriched-pathways-rel-tier1.david.tsv 2>~/hdall/results/enriched-pathways-rel-tier1.david.log
+cat /mnt/projects/hdall/results/gene-patient-matrix.tier1.tsv | perl ~/git/hdall/get-smg.pl dia 1 | perl ~/git/hdall/pathway-analysis/pathway-enrichment-david.pl > /mnt/projects/hdall/results/enriched-pathways-dia-tier1.david.tsv 2>/mnt/projects/hdall/results/enriched-pathways-dia-tier1.david.log
+cat /mnt/projects/hdall/results/gene-patient-matrix.tier1.tsv | perl ~/git/hdall/get-smg.pl rel 1 | perl ~/git/hdall/pathway-analysis/pathway-enrichment-david.pl > /mnt/projects/hdall/results/enriched-pathways-rel-tier1.david.tsv 2>/mnt/projects/hdall/results/enriched-pathways-rel-tier1.david.log
 
 # pathway-patient matrix
 
-perl ~/hdall/scripts/get-pathway-patient-matrix.pl --enriched-pathways-dia ~/hdall/results/enriched-pathways-dia-minfreq1.david.tsv --enriched-pathways-rel ~/hdall/results/enriched-pathways-rel-minfreq1.david.tsv --gene-patient-matrix ~/hdall/results/gene-patient-matrix.tsv > ~/hdall/results/pathway-patient-matrix.tsv
+perl /mnt/projects/hdall/scripts/get-pathway-patient-matrix.pl --enriched-pathways-dia /mnt/projects/hdall/results/enriched-pathways-dia-minfreq1.david.tsv --enriched-pathways-rel /mnt/projects/hdall/results/enriched-pathways-rel-minfreq1.david.tsv --gene-patient-matrix /mnt/projects/hdall/results/gene-patient-matrix.tsv > /mnt/projects/hdall/results/pathway-patient-matrix.tsv

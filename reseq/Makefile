@@ -22,11 +22,11 @@ varscan: $(foreach P, $(PATIENTS_DIA_NON_REL), snpeff/$P_dia.reseq.varscan.dbsnp
 #-------------
 # mutation calling non-relapsing diagnosis samples
 #-------------
-varscan/%_dia.reseq.varscan.vcf: ~/hdall/data/reseq/bam/%_Diagnosis.duplicate_marked.realigned.recalibrated.bam ~/hdall/data/reseq/enriched_regions.20padding.bed
+varscan/%_dia.reseq.varscan.vcf: /mnt/projects/hdall/data/reseq/bam/%_Diagnosis.duplicate_marked.realigned.recalibrated.bam /mnt/projects/hdall/data/reseq/enriched_regions.20padding.bed
 	~/tools/samtools-0.1.19/samtools mpileup \
 		-q 40 \
-		-f ~/generic/data/hg19/ucsc.hg19.fasta \
-		-l ~/hdall/data/reseq/enriched_regions.20padding.bed \
+		-f /mnt/projects/generic/data/hg19/ucsc.hg19.fasta \
+		-l /mnt/projects/hdall/data/reseq/enriched_regions.20padding.bed \
 		$< \
 		| java -jar ~/tools/varscan-2.3.6/VarScan.v2.3.6.jar mpileup2cns \
 			--variants \
@@ -53,7 +53,7 @@ snpeff/%.reseq.varscan.dbsnp.vcf: varscan/%.reseq.varscan.vcf ~/tools/snpEff-3.3
 #-----------	
 # SNPEFF
 #-----------	
-snpeff/%.reseq.dbsnp.vcf: ~/hdall/data/reseq/somatic_mutations_20bp_padding/reseq_%_calls.vcf ~/tools/snpEff-3.3h/common_no_known_medical_impact_20130930.chr.vcf
+snpeff/%.reseq.dbsnp.vcf: /mnt/projects/hdall/data/reseq/somatic_mutations_20bp_padding/reseq_%_calls.vcf ~/tools/snpEff-3.3h/common_no_known_medical_impact_20130930.chr.vcf
 	PWD=$(pwd)
 	(cd ~/tools/snpEff-3.3h; java -jar SnpSift.jar annotate \
 		-v ~/tools/snpEff-3.3h/common_no_known_medical_impact_20130930.chr.vcf \
@@ -62,7 +62,7 @@ snpeff/%.reseq.dbsnp.vcf: ~/hdall/data/reseq/somatic_mutations_20bp_padding/rese
 	test -s $@.part
 	mv $@.part $@
 
-snpeff/%.reseq.indel.dbsnp.vcf: ~/hdall/data/reseq/somatic_indels_20bp_padding/reseq_%_indel.vcf ~/tools/snpEff-3.3h/common_no_known_medical_impact_20130930.chr.vcf
+snpeff/%.reseq.indel.dbsnp.vcf: /mnt/projects/hdall/data/reseq/somatic_indels_20bp_padding/reseq_%_indel.vcf ~/tools/snpEff-3.3h/common_no_known_medical_impact_20130930.chr.vcf
 	PWD=$(pwd)
 	(cd ~/tools/snpEff-3.3h; java -jar SnpSift.jar annotate \
 		-v ~/tools/snpEff-3.3h/common_no_known_medical_impact_20130930.chr.vcf \
@@ -78,34 +78,34 @@ snpeff/%.dbsnp.snpeff.vcf: snpeff/%.dbsnp.vcf
 
 snpeff/%.dbsnp.snpeff.dbNSFP.vcf: snpeff/%.dbsnp.snpeff.vcf
 	PWD=$(pwd)
-	(cd ~/tools/snpEff-3.3h; java -jar SnpSift.jar dbnsfp -v ~/generic/data/dbNSFP-2.1/dbNSFP2.1.txt $(PWD)/$< 2>&1 1>$(PWD)/$@.part) | $(LOG)
+	(cd ~/tools/snpEff-3.3h; java -jar SnpSift.jar dbnsfp -v /mnt/projects/generic/data/dbNSFP-2.1/dbNSFP2.1.txt $(PWD)/$< 2>&1 1>$(PWD)/$@.part) | $(LOG)
 	mv $@.part $@
 
 #-------------
 # lolliplots
 #-------------
 
-lolliplot/minaf10/lolliplot_CREBBP_NM_004380_both.svg: ../id-mappings.tsv ../lolliplot/pfam-regions.filtered.tsv filtered-variants.reseq.tsv ~/hdall/scripts/lolliplot/lolliplot.pl
+lolliplot/minaf10/lolliplot_CREBBP_NM_004380_both.svg: ../id-mappings.tsv ../lolliplot/pfam-regions.filtered.tsv filtered-variants.reseq.tsv /mnt/projects/hdall/scripts/lolliplot/lolliplot.pl
 	rm -f lolliplot/minaf10/*.svg 
-	perl ~/hdall/scripts/lolliplot/lolliplot.pl \
+	perl /mnt/projects/hdall/scripts/lolliplot/lolliplot.pl \
 		--hugos CREBBP,KRAS,NRAS,PTPN11,FLT3 \
 		--filtered-variants filtered-variants.reseq.tsv \
 		--min-af 0.1 \
 		--output-directory lolliplot/minaf10/ \
 		2>&1 | $(LOG)
 
-lolliplot/no-minaf/lolliplot_CREBBP_NM_004380_both.svg: ../id-mappings.tsv ../lolliplot/pfam-regions.filtered.tsv filtered-variants.reseq.tsv ~/hdall/scripts/lolliplot/lolliplot.pl
+lolliplot/no-minaf/lolliplot_CREBBP_NM_004380_both.svg: ../id-mappings.tsv ../lolliplot/pfam-regions.filtered.tsv filtered-variants.reseq.tsv /mnt/projects/hdall/scripts/lolliplot/lolliplot.pl
 	rm -f lolliplot/no-minaf/*.svg 
-	perl ~/hdall/scripts/lolliplot/lolliplot.pl \
+	perl /mnt/projects/hdall/scripts/lolliplot/lolliplot.pl \
 		--hugos CREBBP,KRAS,NRAS,PTPN11,FLT3 \
 		--filtered-variants filtered-variants.reseq.tsv \
 		--output-directory lolliplot/no-minaf/ \
 		2>&1 | $(LOG)
 		
-lolliplot/minaf10/matched/lolliplot_CREBBP_NM_004380_both.svg: ../id-mappings.tsv ../lolliplot/pfam-regions.filtered.tsv filtered-variants.reseq.tsv ~/hdall/scripts/lolliplot/lolliplot.pl
+lolliplot/minaf10/matched/lolliplot_CREBBP_NM_004380_both.svg: ../id-mappings.tsv ../lolliplot/pfam-regions.filtered.tsv filtered-variants.reseq.tsv /mnt/projects/hdall/scripts/lolliplot/lolliplot.pl
 	mkdir -p lolliplot/minaf10/matched
 	rm -f lolliplot/minaf10/matched/*.svg 
-	perl ~/hdall/scripts/lolliplot/lolliplot.pl \
+	perl /mnt/projects/hdall/scripts/lolliplot/lolliplot.pl \
 		--hugos CREBBP,KRAS,NRAS,PTPN11,FLT3 \
 		--patients $(subst $(space),$(comma),$(foreach P, $(PATIENTS),$P)) \
 		--filtered-variants filtered-variants.reseq.tsv \
@@ -124,12 +124,12 @@ coverage: $(foreach P, $(PATIENTS_EXOME), coverage/$P_Diagnosis.coverage.bedtool
 		  $(foreach P, $(PATIENTS_REL_ONLY), coverage/$P_Relapse.coverage.bedtools.txt coverage/$P_Remission.coverage.bedtools.txt) \
 		  $(foreach P, $(PATIENTS_DIA_NON_REL), coverage/nonrelapsing/$P_Diagnosis.coverage.bedtools.txt)
 		  
-coverage/%.coverage.bedtools.txt: ~/hdall/data/reseq/bam/%.duplicate_marked.realigned.recalibrated.bam ~/hdall/data/reseq/enriched_regions.bed
-	samtools view -bq 1 -F 0x400 $< | bedtools coverage -hist -abam - -b ~/hdall/data/reseq/enriched_regions.bed | grep ^all > $@.part
+coverage/%.coverage.bedtools.txt: /mnt/projects/hdall/data/reseq/bam/%.duplicate_marked.realigned.recalibrated.bam /mnt/projects/hdall/data/reseq/enriched_regions.bed
+	samtools view -bq 1 -F 0x400 $< | bedtools coverage -hist -abam - -b /mnt/projects/hdall/data/reseq/enriched_regions.bed | grep ^all > $@.part
 	mv $@.part $@
 
-coverage/nonrelapsing/%.coverage.bedtools.txt: ~/hdall/data/reseq/bam/%.duplicate_marked.realigned.recalibrated.bam ~/hdall/data/reseq/enriched_regions.bed
-	samtools view -bq 1 -F 0x400 $< | bedtools coverage -hist -abam - -b ~/hdall/data/reseq/enriched_regions.bed | grep ^all > $@.part
+coverage/nonrelapsing/%.coverage.bedtools.txt: /mnt/projects/hdall/data/reseq/bam/%.duplicate_marked.realigned.recalibrated.bam /mnt/projects/hdall/data/reseq/enriched_regions.bed
+	samtools view -bq 1 -F 0x400 $< | bedtools coverage -hist -abam - -b /mnt/projects/hdall/data/reseq/enriched_regions.bed | grep ^all > $@.part
 	mv $@.part $@
 
 #-------------
@@ -145,103 +145,103 @@ filtered-variants.reseq.tsv: $(foreach P, $(PATIENTS), filtered_variants/$P_rem_
 							 $(foreach P, $(PATIENTS_REL_ONLY), filtered_variants/$P_rem_rel.reseq.indel.filtered.tsv) \
 							 filtered_variants/715_rem_rel2.reseq.snp.filtered.tsv \
 							 filtered_variants/715_rem_rel2.reseq.indel.filtered.tsv \
-							 ~/hdall/scripts/filter-variants.pl 
-	perl  ~/hdall/scripts/filter-variants.pl --header >$@.part
+							 /mnt/projects/hdall/scripts/filter-variants.pl 
+	perl  /mnt/projects/hdall/scripts/filter-variants.pl --header >$@.part
 	cat filtered_variants/*.indel.filtered.tsv >> $@.part
 	cat filtered_variants/*.snp.filtered.tsv >> $@.part
 	mv $@.part $@
 
 filtered-variants.reseq.nonrel.tsv: $(foreach P, $(PATIENTS_DIA_NON_REL), filtered_variants/$P_dia.reseq.varscan.filtered.tsv) \
-							 		~/hdall/scripts/reseq/filter-variants-nonrel.pl 
-	perl  ~/hdall/scripts/reseq/filter-variants-nonrel.pl --header >$@.part
+							 		/mnt/projects/hdall/scripts/reseq/filter-variants-nonrel.pl 
+	perl  /mnt/projects/hdall/scripts/reseq/filter-variants-nonrel.pl --header >$@.part
 	cat filtered_variants/*.varscan.filtered.tsv >> $@.part
 	mv $@.part $@
 
-filtered-variants.reseq.nonrel.paper.tsv: filtered-variants.reseq.nonrel.tsv ~/hdall/results/panel-genes-paper.tsv
-	cat <(head -1 $<) <(grep -wf ~/hdall/results/panel-genes-paper.tsv $<) > $@.part
+filtered-variants.reseq.nonrel.paper.tsv: filtered-variants.reseq.nonrel.tsv /mnt/projects/hdall/results/panel-genes-paper.tsv
+	cat <(head -1 $<) <(grep -wf /mnt/projects/hdall/results/panel-genes-paper.tsv $<) > $@.part
 	mv $@.part $@
 
-impacted-genes-list.reseq.nonrel.tsv: filtered-variants.reseq.nonrel.tsv ~/hdall/scripts/reseq/impacted-genes-nonrel.pl
-	cat $< | perl ~/hdall/scripts/reseq/impacted-genes-nonrel.pl \
+impacted-genes-list.reseq.nonrel.tsv: filtered-variants.reseq.nonrel.tsv /mnt/projects/hdall/scripts/reseq/impacted-genes-nonrel.pl
+	cat $< | perl /mnt/projects/hdall/scripts/reseq/impacted-genes-nonrel.pl \
 		2>&1 1>$@.part | tee -a make.log
 	mv $@.part $@
 
-gene-patient-matrix.reseq.nonrel.tsv: impacted-genes-list.reseq.nonrel.tsv ~/hdall/scripts/reseq/get-gene-patient-matrix-nonrel.pl
-	cat $< | perl ~/hdall/scripts/reseq/get-gene-patient-matrix-nonrel.pl --mut-details \
+gene-patient-matrix.reseq.nonrel.tsv: impacted-genes-list.reseq.nonrel.tsv /mnt/projects/hdall/scripts/reseq/get-gene-patient-matrix-nonrel.pl
+	cat $< | perl /mnt/projects/hdall/scripts/reseq/get-gene-patient-matrix-nonrel.pl --mut-details \
 		2>&1 1>$@.part | tee -a make.log
 	mv $@.part $@
 
-filtered-variants.merged.tsv: filtered-variants.reseq.tsv ../filtered-variants.tsv ~/hdall/scripts/reseq/merge_discovery_validation.R
-	R --no-save --quiet --slave -f ~/hdall/scripts/reseq/merge_discovery_validation.R --args $@.part \
+filtered-variants.merged.tsv: filtered-variants.reseq.tsv ../filtered-variants.tsv /mnt/projects/hdall/scripts/reseq/merge_discovery_validation.R
+	R --no-save --quiet --slave -f /mnt/projects/hdall/scripts/reseq/merge_discovery_validation.R --args $@.part \
 		2>&1 | $(LOG)
 	mv $@.part $@
 	
-filtered-variants.reseq.cosmic.tsv: filtered-variants.reseq.tsv ~/generic/data/cosmic/v67/CosmicMutantExport_v67_241013.tsv ~/hdall/scripts/annotate-cosmic.pl
-	cat $(word 1,$^) | perl ~/hdall/scripts/annotate-cosmic.pl \
+filtered-variants.reseq.cosmic.tsv: filtered-variants.reseq.tsv /mnt/projects/generic/data/cosmic/v67/CosmicMutantExport_v67_241013.tsv /mnt/projects/hdall/scripts/annotate-cosmic.pl
+	cat $(word 1,$^) | perl /mnt/projects/hdall/scripts/annotate-cosmic.pl \
 		--cosmic-mutation-file $(word 2,$^) \
 		--only-confirmed \
 		2>&1 1>$@.part | $(LOG)
 	mv $@.part $@ 
 
-filtered-variants.reseq.cosmic.normaf.tsv: filtered-variants.reseq.cosmic.tsv ../cnv/hdall.cnv.tsv ~/hdall/scripts/normalize-af.pl
-	cat $< | perl ~/hdall/scripts/normalize-af.pl \
+filtered-variants.reseq.cosmic.normaf.tsv: filtered-variants.reseq.cosmic.tsv ../cnv/hdall.cnv.tsv /mnt/projects/hdall/scripts/normalize-af.pl
+	cat $< | perl /mnt/projects/hdall/scripts/normalize-af.pl \
 		--cnv-file ../cnv/hdall.cnv.tsv \
 		2>&1 1>$@.part | tee -a make.log
 	mv $@.part $@ 
 
-filtered-variants.reseq.cosmic.normaf.paper.tsv: filtered-variants.reseq.cosmic.normaf.tsv ~/hdall/results/panel-genes-paper.tsv
-	cat <(head -1 $<) <(grep -wf ~/hdall/results/panel-genes-paper.tsv $<) > $@.part
+filtered-variants.reseq.cosmic.normaf.paper.tsv: filtered-variants.reseq.cosmic.normaf.tsv /mnt/projects/hdall/results/panel-genes-paper.tsv
+	cat <(head -1 $<) <(grep -wf /mnt/projects/hdall/results/panel-genes-paper.tsv $<) > $@.part
 	mv $@.part $@
 	
-filtered_variants/%.reseq.snp.filtered.tsv: snpeff/%.reseq.dbsnp.snpeff.dbNSFP.vcf ../curated-recected-variants.tsv ~/hdall/scripts/filter-variants.pl ../remission-variants.tsv.gz.tbi
-	perl ~/hdall/scripts/filter-variants.pl \
+filtered_variants/%.reseq.snp.filtered.tsv: snpeff/%.reseq.dbsnp.snpeff.dbNSFP.vcf ../curated-recected-variants.tsv /mnt/projects/hdall/scripts/filter-variants.pl ../remission-variants.tsv.gz.tbi
+	perl /mnt/projects/hdall/scripts/filter-variants.pl \
 		--sample $* \
 		--vcf-in $< \
 		--variant-type snp \
 		--vcf-out filtered_variants/$*.reseq.dbsnp.snpeff.dbNSFP.filtered.vcf \
-		--rmsk-file ~/generic/data/hg19/hg19.rmsk.txt.gz \
-		--simpleRepeat-file ~/generic/data/hg19/hg19.simpleRepeat.txt.gz \
-		--segdup-file ~/generic/data/hg19/hg19.genomicSuperDups.txt.gz \
-		--blacklist-file ~/generic/data/hg19/hg19.wgEncodeDacMapabilityConsensusExcludable.txt.gz \
-		--g1k-accessible ~/generic/data/hg19/paired.end.mapping.1000G..pilot.bed.gz \
-		--ucscRetro ~/generic/data/hg19/hg19.ucscRetroAli5.txt.gz \
+		--rmsk-file /mnt/projects/generic/data/hg19/hg19.rmsk.txt.gz \
+		--simpleRepeat-file /mnt/projects/generic/data/hg19/hg19.simpleRepeat.txt.gz \
+		--segdup-file /mnt/projects/generic/data/hg19/hg19.genomicSuperDups.txt.gz \
+		--blacklist-file /mnt/projects/generic/data/hg19/hg19.wgEncodeDacMapabilityConsensusExcludable.txt.gz \
+		--g1k-accessible /mnt/projects/generic/data/hg19/paired.end.mapping.1000G..pilot.bed.gz \
+		--ucscRetro /mnt/projects/generic/data/hg19/hg19.ucscRetroAli5.txt.gz \
 		--rejected-variants-file ../curated-recected-variants.tsv \
 		--remission-variants-file ../remission-variants.tsv.gz \
-		--evs-file ~/generic/data/evs/ESP6500SI-V2-SSA137.updatedRsIds.chrAll.snps_indels.txt.gz \
+		--evs-file /mnt/projects/generic/data/evs/ESP6500SI-V2-SSA137.updatedRsIds.chrAll.snps_indels.txt.gz \
 		>$@.part | $(LOG)
 	mv $@.part $@
 
-filtered_variants/%.reseq.indel.filtered.tsv: snpeff/%.reseq.indel.dbsnp.snpeff.dbNSFP.vcf ../curated-recected-variants.tsv ~/hdall/scripts/filter-variants.pl ../remission-variants.tsv.gz.tbi
-	perl ~/hdall/scripts/filter-variants.pl \
+filtered_variants/%.reseq.indel.filtered.tsv: snpeff/%.reseq.indel.dbsnp.snpeff.dbNSFP.vcf ../curated-recected-variants.tsv /mnt/projects/hdall/scripts/filter-variants.pl ../remission-variants.tsv.gz.tbi
+	perl /mnt/projects/hdall/scripts/filter-variants.pl \
 		--sample $* \
 		--vcf-in $< \
 		--variant-type indel \
 		--vcf-out filtered_variants/$*.reseq.indel.dbsnp.snpeff.dbNSFP.filtered.vcf \
-		--rmsk-file ~/generic/data/hg19/hg19.rmsk.txt.gz \
-		--simpleRepeat-file ~/generic/data/hg19/hg19.simpleRepeat.txt.gz \
-		--segdup-file ~/generic/data/hg19/hg19.genomicSuperDups.txt.gz \
-		--blacklist-file ~/generic/data/hg19/hg19.wgEncodeDacMapabilityConsensusExcludable.txt.gz \
-		--g1k-accessible ~/generic/data/hg19/paired.end.mapping.1000G..pilot.bed.gz \
-		--ucscRetro ~/generic/data/hg19/hg19.ucscRetroAli5.txt.gz \
+		--rmsk-file /mnt/projects/generic/data/hg19/hg19.rmsk.txt.gz \
+		--simpleRepeat-file /mnt/projects/generic/data/hg19/hg19.simpleRepeat.txt.gz \
+		--segdup-file /mnt/projects/generic/data/hg19/hg19.genomicSuperDups.txt.gz \
+		--blacklist-file /mnt/projects/generic/data/hg19/hg19.wgEncodeDacMapabilityConsensusExcludable.txt.gz \
+		--g1k-accessible /mnt/projects/generic/data/hg19/paired.end.mapping.1000G..pilot.bed.gz \
+		--ucscRetro /mnt/projects/generic/data/hg19/hg19.ucscRetroAli5.txt.gz \
 		--rejected-variants-file ../curated-recected-variants.tsv \
 		--remission-variants-file ../remission-variants.tsv.gz \
-		--evs-file ~/generic/data/evs/ESP6500SI-V2-SSA137.updatedRsIds.chrAll.snps_indels.txt.gz \
+		--evs-file /mnt/projects/generic/data/evs/ESP6500SI-V2-SSA137.updatedRsIds.chrAll.snps_indels.txt.gz \
 		>$@.part | $(LOG)
 	mv $@.part $@	
 
-filtered_variants/%_dia.reseq.varscan.filtered.tsv: snpeff/%_dia.reseq.varscan.dbsnp.snpeff.dbNSFP.vcf ~/hdall/scripts/reseq/filter-variants-nonrel.pl
-	perl ~/hdall/scripts/reseq/filter-variants-nonrel.pl \
+filtered_variants/%_dia.reseq.varscan.filtered.tsv: snpeff/%_dia.reseq.varscan.dbsnp.snpeff.dbNSFP.vcf /mnt/projects/hdall/scripts/reseq/filter-variants-nonrel.pl
+	perl /mnt/projects/hdall/scripts/reseq/filter-variants-nonrel.pl \
 		$< \
 		--patient $* \
-		--rmsk-file ~/generic/data/hg19/hg19.rmsk.txt.gz \
-		--simpleRepeat-file ~/generic/data/hg19/hg19.simpleRepeat.txt.gz \
-		--segdup-file ~/generic/data/hg19/hg19.genomicSuperDups.txt.gz \
-		--blacklist-file ~/generic/data/hg19/hg19.wgEncodeDacMapabilityConsensusExcludable.txt.gz \
-		--g1k-accessible ~/generic/data/hg19/paired.end.mapping.1000G..pilot.bed.gz \
-		--ucscRetro ~/generic/data/hg19/hg19.ucscRetroAli5.txt.gz \
-		--remission-variants-file ~/hdall/results/remission-variants.tsv.gz \
-		--cosmic-mutation-file ~/generic/data/cosmic/v67/CosmicMutantExport_v67_241013.tsv \
-		--evs-file ~/generic/data/evs/ESP6500SI-V2-SSA137.updatedRsIds.chrAll.snps_indels.txt.gz \
+		--rmsk-file /mnt/projects/generic/data/hg19/hg19.rmsk.txt.gz \
+		--simpleRepeat-file /mnt/projects/generic/data/hg19/hg19.simpleRepeat.txt.gz \
+		--segdup-file /mnt/projects/generic/data/hg19/hg19.genomicSuperDups.txt.gz \
+		--blacklist-file /mnt/projects/generic/data/hg19/hg19.wgEncodeDacMapabilityConsensusExcludable.txt.gz \
+		--g1k-accessible /mnt/projects/generic/data/hg19/paired.end.mapping.1000G..pilot.bed.gz \
+		--ucscRetro /mnt/projects/generic/data/hg19/hg19.ucscRetroAli5.txt.gz \
+		--remission-variants-file /mnt/projects/hdall/results/remission-variants.tsv.gz \
+		--cosmic-mutation-file /mnt/projects/generic/data/cosmic/v67/CosmicMutantExport_v67_241013.tsv \
+		--evs-file /mnt/projects/generic/data/evs/ESP6500SI-V2-SSA137.updatedRsIds.chrAll.snps_indels.txt.gz \
 		2>&1 1> $@.part | $(LOG)
 	mv $@.part $@
 
@@ -256,16 +256,16 @@ picard: $(foreach P, $(PATIENTS_EXOME), picard/$P_Diagnosis.hs_metrics picard/$P
 		  $(foreach P, $(PATIENTS_REL_ONLY), picard/$P_Relapse.hs_metrics picard/$P_Remission.hs_metrics) \
 		  $(foreach P, $(PATIENTS_DIA_NON_REL), picard/$P_Diagnosis.hs_metrics)
 
-picard/%.hs_metrics: ~/hdall/data/reseq/bam/%.duplicate_marked.realigned.recalibrated.bam ~/hdall/data/reseq/enriched_regions.noheader.bed
+picard/%.hs_metrics: /mnt/projects/hdall/data/reseq/bam/%.duplicate_marked.realigned.recalibrated.bam /mnt/projects/hdall/data/reseq/enriched_regions.noheader.bed
 	mkdir -p picard
 	~/tools/samtools-0.1.19/samtools view -H $< 2>&1 1> picard/$*.intervallist-picard.bed | $(LOG)
-	gawk 'BEGIN { OFS="\t"} {print $$1,$$2,$$3,"+",$$4}' ~/hdall/data/reseq/enriched_regions.noheader.bed >> picard/$*.intervallist-picard.bed
+	gawk 'BEGIN { OFS="\t"} {print $$1,$$2,$$3,"+",$$4}' /mnt/projects/hdall/data/reseq/enriched_regions.noheader.bed >> picard/$*.intervallist-picard.bed
 	java -XX:+UseParallelGC -XX:ParallelGCThreads=8 -Xmx2g -Djava.io.tmpdir=`pwd`/tmp -jar ~/tools/picard-tools-1.114/CalculateHsMetrics.jar \
 		BAIT_INTERVALS=picard/$*.intervallist-picard.bed \
 		TARGET_INTERVALS=picard/$*.intervallist-picard.bed \
 		INPUT=$< \
 		OUTPUT=$@.part \
-		REFERENCE_SEQUENCE=~/generic/data/hg19/ucsc.hg19.fasta \
+		REFERENCE_SEQUENCE=/mnt/projects/generic/data/hg19/ucsc.hg19.fasta \
 		PER_TARGET_COVERAGE=picard/$*.hs_metrics.per_target_coverage.part \
 		VALIDATION_STRINGENCY=LENIENT \
 		2>&1 | $(LOG)
@@ -277,19 +277,19 @@ picard/%.hs_metrics: ~/hdall/data/reseq/bam/%.duplicate_marked.realigned.recalib
 # other
 #--------
 
-impacted-genes-list.reseq.tsv: filtered-variants.reseq.tsv ~/hdall/scripts/impacted-genes.pl
-	cat $(word 1,$^) | perl ~/hdall/scripts/impacted-genes.pl > $@.part
+impacted-genes-list.reseq.tsv: filtered-variants.reseq.tsv /mnt/projects/hdall/scripts/impacted-genes.pl
+	cat $(word 1,$^) | perl /mnt/projects/hdall/scripts/impacted-genes.pl > $@.part
 	mv $@.part $@
 
-gene-patient-matrix.reseq.tsv: impacted-genes-list.reseq.tsv ~/hdall/scripts/get-gene-patient-matrix.pl
-	cat $(word 1,$^) | perl ~/hdall/scripts/get-gene-patient-matrix.pl --mut-details >$@.part
+gene-patient-matrix.reseq.tsv: impacted-genes-list.reseq.tsv /mnt/projects/hdall/scripts/get-gene-patient-matrix.pl
+	cat $(word 1,$^) | perl /mnt/projects/hdall/scripts/get-gene-patient-matrix.pl --mut-details >$@.part
 	mv $@.part $@
 
-~/generic/data/dbNSFP-2.1/dbNSFP2.1.txt: 
-	#curl http://dbnsfp.houstonbioinformatics.org/dbNSFPzip/dbNSFPv2.1.zip -o ~/generic/data/dbNSFP-2.1/dbNSFPv2.1.zip
-	#unzip ~/generic/data/dbNSFP-2.1/dbNSFPv2.1.zip
+/mnt/projects/generic/data/dbNSFP-2.1/dbNSFP2.1.txt: 
+	#curl http://dbnsfp.houstonbioinformatics.org/dbNSFPzip/dbNSFPv2.1.zip -o /mnt/projects/generic/data/dbNSFP-2.1/dbNSFPv2.1.zip
+	#unzip /mnt/projects/generic/data/dbNSFP-2.1/dbNSFPv2.1.zip
 	#(head -n 1 dbNSFP2.1_variant.chr1 ; cat dbNSFP2.1_variant.chr* | grep -v "^#" ) > dbNSFP2.1.txt
 	#rm dbNSFP2.1_variant.chr* dbNSFPv2.1.zip
 
-#~/hdall/data/reseq/bam/331test_Diagnosis.duplicate_marked.realigned.recalibrated.bam: ~/hdall/data/reseq/bam/331_Diagnosis.duplicate_marked.realigned.recalibrated.bam
-#	 ~/tools/samtools-0.1.19/samtools view $< -bL ~/hdall/data/reseq/enriched_regions.20padding.bed > $@
+#/mnt/projects/hdall/data/reseq/bam/331test_Diagnosis.duplicate_marked.realigned.recalibrated.bam: /mnt/projects/hdall/data/reseq/bam/331_Diagnosis.duplicate_marked.realigned.recalibrated.bam
+#	 ~/tools/samtools-0.1.19/samtools view $< -bL /mnt/projects/hdall/data/reseq/enriched_regions.20padding.bed > $@

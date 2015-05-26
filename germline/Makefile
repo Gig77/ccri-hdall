@@ -16,14 +16,14 @@ all: filtered-variants.germline.nonsilent.tsv
 # FINAL LIST
 #-----------
 
-filtered-variants.germline.nonsilent.tsv: filtered-variants.germline.tsv ~/hdall/scripts/query-text.py
+filtered-variants.germline.nonsilent.tsv: filtered-variants.germline.tsv /mnt/projects/hdall/scripts/query-text.py
 	head -1 $< > $@.part
-	python ~/hdall/scripts/query-text.py --file $< --sql "select * from data where non_silent = 1" >> $@.part
+	python /mnt/projects/hdall/scripts/query-text.py --file $< --sql "select * from data where non_silent = 1" >> $@.part
 	mv $@.part $@
 
 filtered-variants.reseq.nonrel.tsv: $(foreach P, $(PATIENTS_DIA_NON_REL), filtered_variants/$P_dia.reseq.varscan.filtered.tsv) \
-							 		~/hdall/scripts/reseq/filter-variants-nonrel.pl 
-	perl  ~/hdall/scripts/reseq/filter-variants-nonrel.pl --header >$@.part
+							 		/mnt/projects/hdall/scripts/reseq/filter-variants-nonrel.pl 
+	perl  /mnt/projects/hdall/scripts/reseq/filter-variants-nonrel.pl --header >$@.part
 	cat filtered_variants/*.varscan.filtered.tsv >> $@.part
 	mv $@.part $@
 
@@ -31,25 +31,25 @@ filtered-variants.germline.tsv: $(foreach P, $(PATIENTS_EXOME), filtered_variant
 								$(foreach P, $(PATIENTS_RESEQ_MATCHED), filtered_variants/$P.dia.reseq.filtered_variants.germline.tsv) \
 								$(foreach P, $(PATIENTS_RESEQ_DIAONLY), filtered_variants/$P.dia.reseq.filtered_variants.germline.tsv) \
 								$(foreach P, $(PATIENTS_RESEQ_RELONLY), filtered_variants/$P.rel.reseq.filtered_variants.germline.tsv) \
-								~/hdall/scripts/germline/filter-variants.pl 
-	perl  ~/hdall/scripts/germline/filter-variants.pl --header >$@.part
+								/mnt/projects/hdall/scripts/germline/filter-variants.pl 
+	perl  /mnt/projects/hdall/scripts/germline/filter-variants.pl --header >$@.part
 	cat filtered_variants/*.germline.tsv >> $@.part
 	mv $@.part $@
 
-filtered_variants/%.filtered_variants.germline.tsv: snpeff/%.varscan2.somatic.dbsnp.snpeff.dbNSFP.vcf ~/hdall/scripts/germline/filter-variants.pl
-	perl ~/hdall/scripts/germline/filter-variants.pl \
+filtered_variants/%.filtered_variants.germline.tsv: snpeff/%.varscan2.somatic.dbsnp.snpeff.dbNSFP.vcf /mnt/projects/hdall/scripts/germline/filter-variants.pl
+	perl /mnt/projects/hdall/scripts/germline/filter-variants.pl \
 		$< \
 		--patient $* \
-		--rmsk-file ~/generic/data/hg19/hg19.rmsk.txt.gz \
-		--simpleRepeat-file ~/generic/data/hg19/hg19.simpleRepeat.txt.gz \
-		--segdup-file ~/generic/data/hg19/hg19.genomicSuperDups.txt.gz \
-		--blacklist-file ~/generic/data/hg19/hg19.wgEncodeDacMapabilityConsensusExcludable.txt.gz \
-		--g1k-accessible ~/generic/data/hg19/paired.end.mapping.1000G..pilot.bed.gz \
-		--ucscRetro ~/generic/data/hg19/hg19.ucscRetroAli5.txt.gz \
-		--remission-variants-file ~/hdall/results/remission-variants.tsv.gz \
-		--cosmic-mutation-file ~/generic/data/cosmic/v67/CosmicMutantExport_v67_241013.tsv \
-		--evs-file ~/generic/data/evs/ESP6500SI-V2-SSA137.updatedRsIds.chrAll.snps_indels.txt.gz \
-		--clinvar-file ~/generic/data/clinvar/clinvar_20140211.vcf.gz \
+		--rmsk-file /mnt/projects/generic/data/hg19/hg19.rmsk.txt.gz \
+		--simpleRepeat-file /mnt/projects/generic/data/hg19/hg19.simpleRepeat.txt.gz \
+		--segdup-file /mnt/projects/generic/data/hg19/hg19.genomicSuperDups.txt.gz \
+		--blacklist-file /mnt/projects/generic/data/hg19/hg19.wgEncodeDacMapabilityConsensusExcludable.txt.gz \
+		--g1k-accessible /mnt/projects/generic/data/hg19/paired.end.mapping.1000G..pilot.bed.gz \
+		--ucscRetro /mnt/projects/generic/data/hg19/hg19.ucscRetroAli5.txt.gz \
+		--remission-variants-file /mnt/projects/hdall/results/remission-variants.tsv.gz \
+		--cosmic-mutation-file /mnt/projects/generic/data/cosmic/v67/CosmicMutantExport_v67_241013.tsv \
+		--evs-file /mnt/projects/generic/data/evs/ESP6500SI-V2-SSA137.updatedRsIds.chrAll.snps_indels.txt.gz \
+		--clinvar-file /mnt/projects/generic/data/clinvar/clinvar_20140211.vcf.gz \
 		2>&1 1> $@.part | $(LOG)
 	mv $@.part $@	
 
@@ -73,7 +73,7 @@ snpeff/%.dbsnp.snpeff.vcf: snpeff/%.dbsnp.vcf
 
 snpeff/%.dbsnp.snpeff.dbNSFP.vcf: snpeff/%.dbsnp.snpeff.vcf
 	PWD=$(pwd)
-	(cd ~/tools/snpEff-3.3h; java -jar SnpSift.jar dbnsfp -v ~/generic/data/dbNSFP-2.1/dbNSFP2.1.txt $(PWD)/$< 2>&1 1>$(PWD)/$@.part) | $(LOG)
+	(cd ~/tools/snpEff-3.3h; java -jar SnpSift.jar dbnsfp -v /mnt/projects/generic/data/dbNSFP-2.1/dbNSFP2.1.txt $(PWD)/$< 2>&1 1>$(PWD)/$@.part) | $(LOG)
 	mv $@.part $@
 
 # ------
@@ -101,7 +101,7 @@ vcf/%.reseq.varscan2.somatic.vcf: varscan/%.reseq.varscan2.somatic.snp.vcf varsc
 # VARSCAN
 # -------
 
-varscan/%.dia.reseq.varscan2.somatic.snp.vcf varscan/%.dia.reseq.varscan2.somatic.indel.vcf: ~/hdall/data/reseq/bam/%_Remission.duplicate_marked.realigned.recalibrated.bam ~/hdall/data/reseq/bam/%_Diagnosis.duplicate_marked.realigned.recalibrated.bam
+varscan/%.dia.reseq.varscan2.somatic.snp.vcf varscan/%.dia.reseq.varscan2.somatic.indel.vcf: /mnt/projects/hdall/data/reseq/bam/%_Remission.duplicate_marked.realigned.recalibrated.bam /mnt/projects/hdall/data/reseq/bam/%_Diagnosis.duplicate_marked.realigned.recalibrated.bam
 	(~/tools/samtools-0.1.19/samtools mpileup -q 1 -f /data/christian/generic/data/current/hg19/ucsc.hg19.fasta $^ \
 		| awk '{if($$4 != 0 && $$7 != 0) print $$0}' \
 		| java -jar /home/STANNANET/christian.knoll/bin/VarScan2/varscan2-3-6.jar somatic \
@@ -121,7 +121,7 @@ varscan/%.dia.reseq.varscan2.somatic.snp.vcf varscan/%.dia.reseq.varscan2.somati
 	mv varscan/$*.dia.reseq.varscan2.somatic.snp.part.vcf varscan/$*.dia.reseq.varscan2.somatic.snp.vcf
 	mv varscan/$*.dia.reseq.varscan2.somatic.indel.part.vcf varscan/$*.dia.reseq.varscan2.somatic.indel.vcf
 	
-varscan/%.rel.reseq.varscan2.somatic.snp.vcf varscan/%.rel.reseq.varscan2.somatic.indel.vcf: ~/hdall/data/reseq/bam/%_Remission.duplicate_marked.realigned.recalibrated.bam ~/hdall/data/reseq/bam/%_Relapse.duplicate_marked.realigned.recalibrated.bam
+varscan/%.rel.reseq.varscan2.somatic.snp.vcf varscan/%.rel.reseq.varscan2.somatic.indel.vcf: /mnt/projects/hdall/data/reseq/bam/%_Remission.duplicate_marked.realigned.recalibrated.bam /mnt/projects/hdall/data/reseq/bam/%_Relapse.duplicate_marked.realigned.recalibrated.bam
 	(~/tools/samtools-0.1.19/samtools mpileup -q 1 -f /data/christian/generic/data/current/hg19/ucsc.hg19.fasta $^ \
 		| awk '{if($$4 != 0 && $$7 != 0) print $$0}' \
 		| java -jar /home/STANNANET/christian.knoll/bin/VarScan2/varscan2-3-6.jar somatic \

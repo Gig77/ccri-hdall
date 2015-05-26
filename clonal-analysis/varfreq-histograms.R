@@ -1,4 +1,4 @@
-data <- read.csv("~/hdall/results/filtered-variants.cosmic.normaf.tsv", sep="\t", check.names=F)
+data <- read.csv("/mnt/projects/hdall/results/filtered-variants.cosmic.normaf.tsv", sep="\t", check.names=F)
 data <- data[data$status != "REJECT",]
 
 patients <- levels(data$patient)
@@ -6,7 +6,7 @@ samples <- levels(data$sample)
 
 min_cov = 30
 
-pdf("~/hdall/results/clonal-analysis/kernel-densities.allpatients.dia.pdf", height=12, paper='A4')
+pdf("/mnt/projects/hdall/results/clonal-analysis/kernel-densities.allpatients.dia.pdf", height=12, paper='A4')
 par(mfrow = c(6, 4), mar=c(2,0.5,2,0.5))
 for(p in patients)
 {
@@ -15,7 +15,7 @@ for(p in patients)
 }
 dev.off()
 
-pdf("~/hdall/results/clonal-analysis/kernel-densities.allpatients.rel.pdf", height=12, paper='A4')
+pdf("/mnt/projects/hdall/results/clonal-analysis/kernel-densities.allpatients.rel.pdf", height=12, paper='A4')
 par(mfrow = c(6, 4), mar=c(2,0.5,2,0.5))
 for(p in patients)
 {
@@ -24,13 +24,13 @@ for(p in patients)
 }
 dev.off()
 
-pdf("~/hdall/results/clonal-analysis/patient715-kernel-density.pdf", width=12, paper='A4r')
+pdf("/mnt/projects/hdall/results/clonal-analysis/patient715-kernel-density.pdf", width=12, paper='A4r')
 par(mfrow = c(1, 2))
 plot(density(data$freq_leu_norm[data$patient==715 & data$sample == "rem_dia" & data$dp_leu_tot >= min_cov & data$var_type == "snp"]), main="715_dia")
 plot(density(data$freq_leu_norm[data$patient==715 & data$sample == "rem_rel" & data$dp_leu_tot >= min_cov & data$var_type == "snp"]), main="715_rel")
 dev.off()
 
-pdf("~/hdall/results/clonal-analysis/patient545-kernel-density.pdf", width=12, paper='A4r')
+pdf("/mnt/projects/hdall/results/clonal-analysis/patient545-kernel-density.pdf", width=12, paper='A4r')
 par(mfrow = c(1, 2))
 plot(density(data$freq_leu_norm[data$patient==545 & data$sample == "rem_dia" & data$dp_leu_tot >= min_cov & data$var_type == "snp"]), xlim=c(0,1), main="545_dia")
 plot(density(data$freq_leu_norm[data$patient==545 & data$sample == "rem_rel" & data$dp_leu_tot >= min_cov & data$var_type == "snp"]), xlim=c(0,1), main="545_rel")

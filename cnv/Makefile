@@ -23,17 +23,17 @@ all: $(foreach P, $(PATIENTS_EXOME), $P_rem.coverage.exome.tsv $P_dia.coverage.e
 	 relapsing.rel.circos.png
 
 # get GC content for each exon
-gc/truseq_exome_targeted_regions.hg19.gc.bed: ~/generic/data/hg19/ucsc.hg19.fasta ~/generic/data/illumina/truseq_exome_targeted_regions.hg19.bed.chr
+gc/truseq_exome_targeted_regions.hg19.gc.bed: /mnt/projects/generic/data/hg19/ucsc.hg19.fasta /mnt/projects/generic/data/illumina/truseq_exome_targeted_regions.hg19.bed.chr
 	bedtools nuc \
-		-fi ~/generic/data/hg19/ucsc.hg19.fasta \
-		-bed ~/generic/data/illumina/truseq_exome_targeted_regions.hg19.bed.chr \
+		-fi /mnt/projects/generic/data/hg19/ucsc.hg19.fasta \
+		-bed /mnt/projects/generic/data/illumina/truseq_exome_targeted_regions.hg19.bed.chr \
 		| cut -f 1-4,8 > $@.part
 	mv $@.part $@
 
 # append read depth
-gc/%.coverage.bed: ~/hdall/data/bam/%.merged.duplicate_marked.realigned.recalibrated.bam gc/truseq_exome_targeted_regions.hg19.gc.bed
+gc/%.coverage.bed: /mnt/projects/hdall/data/bam/%.merged.duplicate_marked.realigned.recalibrated.bam gc/truseq_exome_targeted_regions.hg19.gc.bed
 	bedtools coverage \
-		-abam ~/hdall/data/bam/$*.merged.duplicate_marked.realigned.recalibrated.bam \
+		-abam /mnt/projects/hdall/data/bam/$*.merged.duplicate_marked.realigned.recalibrated.bam \
 		-b gc/truseq_exome_targeted_regions.hg19.gc.bed \
 		> $@.part
 	mv $@.part $@
@@ -41,10 +41,10 @@ gc/%.coverage.bed: ~/hdall/data/bam/%.merged.duplicate_marked.realigned.recalibr
 %.coverage.panel.tsv: /data/christian/hdall/data/current/bam/%.merged.duplicate_marked.realigned.recalibrated.bam /data/christian/generic/data/current/illumina/truseq_exome_targeted_regions.hg19.bed.chr 
 	~/tools/samtools-0.1.19/samtools depth \
 		-Q 1 \
-		-b ~/hdall/data/reseq/enriched_regions.bed \
+		-b /mnt/projects/hdall/data/reseq/enriched_regions.bed \
 		$< \
 	| perl ~/git/hdall/cnv/get-exon-coverage.pl \
-		--exon-bed ~/hdall/data/reseq/enriched_regions.bed \
+		--exon-bed /mnt/projects/hdall/data/reseq/enriched_regions.bed \
 		> $@.part
 	mv $@.part $@
 
@@ -58,13 +58,13 @@ gc/%.coverage.bed: ~/hdall/data/bam/%.merged.duplicate_marked.realigned.recalibr
 		> $@.part
 	mv $@.part $@
 
-../reseq/cnv/%.coverage.reseq.panel.tsv: ~/hdall/data/reseq/bam/%.duplicate_marked.realigned.recalibrated.bam ~/hdall/data/reseq/enriched_regions.bed
+../reseq/cnv/%.coverage.reseq.panel.tsv: /mnt/projects/hdall/data/reseq/bam/%.duplicate_marked.realigned.recalibrated.bam /mnt/projects/hdall/data/reseq/enriched_regions.bed
 	~/tools/samtools-0.1.19/samtools depth \
 		-Q 1 \
-		-b ~/hdall/data/reseq/enriched_regions.bed \
+		-b /mnt/projects/hdall/data/reseq/enriched_regions.bed \
 		$< \
 	| perl ~/git/hdall/cnv/get-exon-coverage.pl \
-		--exon-bed ~/hdall/data/reseq/enriched_regions.bed \
+		--exon-bed /mnt/projects/hdall/data/reseq/enriched_regions.bed \
 		> $@.part
 	mv $@.part $@
 
@@ -76,89 +76,89 @@ gc/%.coverage.bed: ~/hdall/data/bam/%.merged.duplicate_marked.realigned.recalibr
 	> $@.part
 	mv $@.part $@
 
-cov-plot.%.exome.pdf: %_dia.coverage.exome.tsv %_rel.coverage.exome.tsv %_rem.coverage.exome.tsv ~/hdall/scripts/cnv/cov-plot-exome.R
-	Rscript ~/hdall/scripts/cnv/cov-plot-exome.R --patient $* --diagnosis $(word 1,$^) --relapse $(word 2,$^) --remission $(word 3,$^) 2>&1
+cov-plot.%.exome.pdf: %_dia.coverage.exome.tsv %_rel.coverage.exome.tsv %_rem.coverage.exome.tsv /mnt/projects/hdall/scripts/cnv/cov-plot-exome.R
+	Rscript /mnt/projects/hdall/scripts/cnv/cov-plot-exome.R --patient $* --diagnosis $(word 1,$^) --relapse $(word 2,$^) --remission $(word 3,$^) 2>&1
 	mv cov-plot.$*.pdf.part $@
 
-cov-plot.%.panel.pdf: %_dia.coverage.panel.tsv %_rel.coverage.panel.tsv %_rem.coverage.panel.tsv ~/hdall/scripts/cnv/cov-plot-panel.R
-	Rscript ~/hdall/scripts/cnv/cov-plot-panel.R --patient $* --diagnosis $(word 1,$^) --relapse $(word 2,$^) --remission $(word 3,$^) 2>&1
+cov-plot.%.panel.pdf: %_dia.coverage.panel.tsv %_rel.coverage.panel.tsv %_rem.coverage.panel.tsv /mnt/projects/hdall/scripts/cnv/cov-plot-panel.R
+	Rscript /mnt/projects/hdall/scripts/cnv/cov-plot-panel.R --patient $* --diagnosis $(word 1,$^) --relapse $(word 2,$^) --remission $(word 3,$^) 2>&1
 	mv cov-plot.$*.reseq.pdf.part $@
 
-../reseq/cnv/cov-plot.%.matched.reseq.panel.pdf: ../reseq/cnv/%_Diagnosis.coverage.reseq.panel.tsv ../reseq/cnv/%_Relapse.coverage.reseq.panel.tsv ../reseq/cnv/%_Remission.coverage.reseq.panel.tsv ~/hdall/scripts/cnv/cov-plot-panel.R
-	Rscript ~/hdall/scripts/cnv/cov-plot-panel.R --patient $* --diagnosis $(word 1,$^) --relapse $(word 2,$^) --remission $(word 3,$^) 2>&1
+../reseq/cnv/cov-plot.%.matched.reseq.panel.pdf: ../reseq/cnv/%_Diagnosis.coverage.reseq.panel.tsv ../reseq/cnv/%_Relapse.coverage.reseq.panel.tsv ../reseq/cnv/%_Remission.coverage.reseq.panel.tsv /mnt/projects/hdall/scripts/cnv/cov-plot-panel.R
+	Rscript /mnt/projects/hdall/scripts/cnv/cov-plot-panel.R --patient $* --diagnosis $(word 1,$^) --relapse $(word 2,$^) --remission $(word 3,$^) 2>&1
 	mv cov-plot.$*.reseq.pdf.part $@
 	
-../reseq/cnv/cov-plot.%.dia.reseq.panel.pdf: ../reseq/cnv/%_Diagnosis.coverage.reseq.panel.tsv ../reseq/cnv/%_Remission.coverage.reseq.panel.tsv ~/hdall/scripts/cnv/cov-plot-panel.R
-	Rscript ~/hdall/scripts/cnv/cov-plot-panel.R --patient $* --diagnosis $(word 1,$^) --remission $(word 2,$^) 2>&1
+../reseq/cnv/cov-plot.%.dia.reseq.panel.pdf: ../reseq/cnv/%_Diagnosis.coverage.reseq.panel.tsv ../reseq/cnv/%_Remission.coverage.reseq.panel.tsv /mnt/projects/hdall/scripts/cnv/cov-plot-panel.R
+	Rscript /mnt/projects/hdall/scripts/cnv/cov-plot-panel.R --patient $* --diagnosis $(word 1,$^) --remission $(word 2,$^) 2>&1
 	mv cov-plot.$*.reseq.pdf.part $@
 
-../reseq/cnv/cov-plot.%.dia.nonrel.reseq.panel.pdf: ../reseq/cnv/%_Diagnosis.coverage.reseq.panel.tsv ../reseq/cnv/1009302_Remission.coverage.reseq.panel.tsv ~/hdall/scripts/cnv/cov-plot-panel.R
-	Rscript ~/hdall/scripts/cnv/cov-plot-panel.R --patient $* --diagnosis $(word 1,$^) --remission $(word 2,$^) 2>&1
+../reseq/cnv/cov-plot.%.dia.nonrel.reseq.panel.pdf: ../reseq/cnv/%_Diagnosis.coverage.reseq.panel.tsv ../reseq/cnv/1009302_Remission.coverage.reseq.panel.tsv /mnt/projects/hdall/scripts/cnv/cov-plot-panel.R
+	Rscript /mnt/projects/hdall/scripts/cnv/cov-plot-panel.R --patient $* --diagnosis $(word 1,$^) --remission $(word 2,$^) 2>&1
 	mv cov-plot.$*.reseq.pdf.part $@
 
-../reseq/cnv/cov-plot.%.rel.reseq.panel.pdf: ../reseq/cnv/%_Relapse.coverage.reseq.panel.tsv ../reseq/cnv/%_Remission.coverage.reseq.panel.tsv ~/hdall/scripts/cnv/cov-plot-panel.R
-	Rscript ~/hdall/scripts/cnv/cov-plot-panel.R --patient $* --relapse $(word 1,$^) --remission $(word 2,$^) 2>&1
+../reseq/cnv/cov-plot.%.rel.reseq.panel.pdf: ../reseq/cnv/%_Relapse.coverage.reseq.panel.tsv ../reseq/cnv/%_Remission.coverage.reseq.panel.tsv /mnt/projects/hdall/scripts/cnv/cov-plot-panel.R
+	Rscript /mnt/projects/hdall/scripts/cnv/cov-plot-panel.R --patient $* --relapse $(word 1,$^) --remission $(word 2,$^) 2>&1
 	mv cov-plot.$*.reseq.pdf.part $@
 	
-../reseq/cnv/segmented_coverage/%.segmented-coverage.tsv: ~/hdall/data/reseq/bam/%.duplicate_marked.realigned.recalibrated.bam ~/hdall/scripts/cnv/get-segment-coverage.pl
+../reseq/cnv/segmented_coverage/%.segmented-coverage.tsv: /mnt/projects/hdall/data/reseq/bam/%.duplicate_marked.realigned.recalibrated.bam /mnt/projects/hdall/scripts/cnv/get-segment-coverage.pl
 	~/tools/samtools-0.1.19/samtools depth -Q 1 $< \
-		| perl ~/hdall/scripts/cnv/get-segment-coverage.pl --sample $* --bin-size 250000 \
+		| perl /mnt/projects/hdall/scripts/cnv/get-segment-coverage.pl --sample $* --bin-size 250000 \
 		> $@.part
 	mv $@.part $@
 
-segmented_coverage/%.segmented-coverage.tsv: ~/hdall/data/bam/%.merged.duplicate_marked.realigned.recalibrated.bam ~/hdall/scripts/cnv/get-segment-coverage.pl
+segmented_coverage/%.segmented-coverage.tsv: /mnt/projects/hdall/data/bam/%.merged.duplicate_marked.realigned.recalibrated.bam /mnt/projects/hdall/scripts/cnv/get-segment-coverage.pl
 	~/tools/samtools-0.1.19/samtools depth -Q 1 $< \
-		| perl ~/hdall/scripts/cnv/get-segment-coverage.pl --sample $* --bin-size 250000 \
+		| perl /mnt/projects/hdall/scripts/cnv/get-segment-coverage.pl --sample $* --bin-size 250000 \
 		> $@.part
 	mv $@.part $@
 
-../reseq/cnv/segmented_coverage/%_Diagnosis.segmented-coverage.pdf: ../reseq/cnv/segmented_coverage/%_Diagnosis.segmented-coverage.tsv ../reseq/cnv/segmented_coverage/%_Remission.segmented-coverage.tsv ~/hdall/scripts/cnv/plot-segment-coverage.R
-	Rscript ~/hdall/scripts/cnv/plot-segment-coverage.R \
+../reseq/cnv/segmented_coverage/%_Diagnosis.segmented-coverage.pdf: ../reseq/cnv/segmented_coverage/%_Diagnosis.segmented-coverage.tsv ../reseq/cnv/segmented_coverage/%_Remission.segmented-coverage.tsv /mnt/projects/hdall/scripts/cnv/plot-segment-coverage.R
+	Rscript /mnt/projects/hdall/scripts/cnv/plot-segment-coverage.R \
 		--patient $*_dia \
 		--tumor $(word 1,$^) \
 		--normal $(word 2,$^) \
-		--circos ~/hdall/results/cnv/circos/$*_dia.cnv.circos.tsv \
+		--circos /mnt/projects/hdall/results/cnv/circos/$*_dia.cnv.circos.tsv \
 		--output $@.part
 	mv $@.part $@
 
-../reseq/cnv/segmented_coverage/%_Relapse.segmented-coverage.pdf: ../reseq/cnv/segmented_coverage/%_Relapse.segmented-coverage.tsv ../reseq/cnv/segmented_coverage/%_Remission.segmented-coverage.tsv ~/hdall/scripts/cnv/plot-segment-coverage.R
-	Rscript ~/hdall/scripts/cnv/plot-segment-coverage.R \
+../reseq/cnv/segmented_coverage/%_Relapse.segmented-coverage.pdf: ../reseq/cnv/segmented_coverage/%_Relapse.segmented-coverage.tsv ../reseq/cnv/segmented_coverage/%_Remission.segmented-coverage.tsv /mnt/projects/hdall/scripts/cnv/plot-segment-coverage.R
+	Rscript /mnt/projects/hdall/scripts/cnv/plot-segment-coverage.R \
 		--patient $*_rel \
 		--tumor $(word 1,$^) \
 		--normal $(word 2,$^) \
-		--circos ~/hdall/results/cnv/circos/$*_rel.cnv.circos.tsv \
+		--circos /mnt/projects/hdall/results/cnv/circos/$*_rel.cnv.circos.tsv \
 		--output $@.part
 	mv $@.part $@
 	
-../reseq/cnv/segmented_coverage/%_Diagnosis.nonrel.segmented-coverage.pdf: ../reseq/cnv/segmented_coverage/%_Diagnosis.segmented-coverage.tsv ../reseq/cnv/segmented_coverage/1009302_Remission.segmented-coverage.tsv ~/hdall/scripts/cnv/plot-segment-coverage.R
-	Rscript ~/hdall/scripts/cnv/plot-segment-coverage.R \
+../reseq/cnv/segmented_coverage/%_Diagnosis.nonrel.segmented-coverage.pdf: ../reseq/cnv/segmented_coverage/%_Diagnosis.segmented-coverage.tsv ../reseq/cnv/segmented_coverage/1009302_Remission.segmented-coverage.tsv /mnt/projects/hdall/scripts/cnv/plot-segment-coverage.R
+	Rscript /mnt/projects/hdall/scripts/cnv/plot-segment-coverage.R \
 		--patient $*_dia \
 		--tumor $(word 1,$^) \
 		--normal $(word 2,$^) \
-		--circos ~/hdall/results/cnv/circos/$*_dia.nonrel.cnv.circos.tsv \
+		--circos /mnt/projects/hdall/results/cnv/circos/$*_dia.nonrel.cnv.circos.tsv \
 		--output $@.part
 	mv $@.part $@
 
-segmented_coverage/%_Diagnosis.segmented-coverage.pdf: segmented_coverage/%_dia.segmented-coverage.tsv segmented_coverage/%_rem.segmented-coverage.tsv ~/hdall/scripts/cnv/plot-segment-coverage.R
-	Rscript ~/hdall/scripts/cnv/plot-segment-coverage.R \
+segmented_coverage/%_Diagnosis.segmented-coverage.pdf: segmented_coverage/%_dia.segmented-coverage.tsv segmented_coverage/%_rem.segmented-coverage.tsv /mnt/projects/hdall/scripts/cnv/plot-segment-coverage.R
+	Rscript /mnt/projects/hdall/scripts/cnv/plot-segment-coverage.R \
 		--patient $*_dia \
 		--tumor $(word 1,$^) \
 		--normal $(word 2,$^) \
-		--circos ~/hdall/results/cnv/circos/$*_dia.cnv.circos.tsv \
+		--circos /mnt/projects/hdall/results/cnv/circos/$*_dia.cnv.circos.tsv \
 		--output $@.part
 	mv $@.part $@
 
-segmented_coverage/%_Relapse.segmented-coverage.pdf: segmented_coverage/%_rel.segmented-coverage.tsv segmented_coverage/%_rem.segmented-coverage.tsv ~/hdall/scripts/cnv/plot-segment-coverage.R
-	Rscript ~/hdall/scripts/cnv/plot-segment-coverage.R \
+segmented_coverage/%_Relapse.segmented-coverage.pdf: segmented_coverage/%_rel.segmented-coverage.tsv segmented_coverage/%_rem.segmented-coverage.tsv /mnt/projects/hdall/scripts/cnv/plot-segment-coverage.R
+	Rscript /mnt/projects/hdall/scripts/cnv/plot-segment-coverage.R \
 		--patient $*_rel \
 		--tumor $(word 1,$^) \
 		--normal $(word 2,$^) \
-		--circos ~/hdall/results/cnv/circos/$*_rel.cnv.circos.tsv \
+		--circos /mnt/projects/hdall/results/cnv/circos/$*_rel.cnv.circos.tsv \
 		--output $@.part
 	mv $@.part $@
 	
-relapsing.rel.circos.png: $(foreach P, $(PATIENTS_RESEQ_MATCHED) $(PATIENTS_RESEQ_RELONLY), ~/hdall/results/cnv/circos/$P_rel.cnv.circos.tsv)
-	 ~/tools/circos-0.64/bin/circos --conf ~/hdall/scripts/cnv/circos.conf
+relapsing.rel.circos.png: $(foreach P, $(PATIENTS_RESEQ_MATCHED) $(PATIENTS_RESEQ_RELONLY), /mnt/projects/hdall/results/cnv/circos/$P_rel.cnv.circos.tsv)
+	 ~/tools/circos-0.64/bin/circos --conf /mnt/projects/hdall/scripts/cnv/circos.conf
 	 mv relapsing.rel.circos.part.png $@ 
 
 #-----------------------------------------------------
@@ -183,7 +183,7 @@ reseq-region-coverage: ../reseq/region-coverage/allpatients.IKZF2-chr2-211852462
 
 .SECONDEXPANSION: 
 ../region-coverage/patient%.pdf: $$(word 1, $$(subst ., , %))_dia.coverage.exome.tsv $$(word 1, $$(subst ., , %))_rel.coverage.exome.tsv $$(word 1, $$(subst ., , %))_rem.coverage.exome.tsv
-	Rscript ~/p2ry8-crlf2/scripts/cov-plot-region.R \
+	Rscript /mnt/projects/p2ry8-crlf2/scripts/cov-plot-region.R \
 		--patient $(word 1, $(subst ., , $*)) \
 		--diagnosis $(word 1,$^) \
 		--relapse $(word 2,$^) \
@@ -197,7 +197,7 @@ reseq-region-coverage: ../reseq/region-coverage/allpatients.IKZF2-chr2-211852462
 	mv $@.part $@
 
 ../reseq/region-coverage/patient%.exome.pdf: ../reseq/cnv/$$(word 1, $$(subst ., , %))_Diagnosis.coverage.reseq.panel.tsv ../reseq/cnv/$$(word 1, $$(subst ., , %))_Relapse.coverage.reseq.panel.tsv $$(word 1, $$(subst ., , %))_rem.coverage.panel.tsv
-	Rscript ~/p2ry8-crlf2/scripts/cov-plot-region.R \
+	Rscript /mnt/projects/p2ry8-crlf2/scripts/cov-plot-region.R \
 		--patient $(word 1, $(subst ., , $*)) \
 		--diagnosis $(word 1,$^) \
 		--relapse $(word 2,$^) \
@@ -211,7 +211,7 @@ reseq-region-coverage: ../reseq/region-coverage/allpatients.IKZF2-chr2-211852462
 	mv $@.part $@
 
 ../reseq/region-coverage/patient%.reseq.pdf: ../reseq/cnv/$$(word 1, $$(subst ., , %))_Diagnosis.coverage.reseq.panel.tsv ../reseq/cnv/$$(word 1, $$(subst ., , %))_Relapse.coverage.reseq.panel.tsv ../reseq/cnv/$$(word 1, $$(subst ., , %))_Remission.coverage.reseq.panel.tsv
-	Rscript ~/p2ry8-crlf2/scripts/cov-plot-region.R \
+	Rscript /mnt/projects/p2ry8-crlf2/scripts/cov-plot-region.R \
 		--patient $(word 1, $(subst ., , $*)) \
 		--diagnosis $(word 1,$^) \
 		--relapse $(word 2,$^) \

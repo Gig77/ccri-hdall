@@ -17,7 +17,7 @@ if (is.na(opt$control)) stop("control coverage file not specified")
 if (is.na(opt$output)) stop("output file not specified")
 
 # for test purposes
-#opt <- data.frame(patient="1020540_dia", tumor="../reseq/cnv/segmented_coverage/1020540_Diagnosis.segmented-coverage.tsv", normal="../reseq/cnv/segmented_coverage/1020540_Remission.segmented-coverage.tsv", circos="~/hdall/results/cnv/circos/1020540_dia.cnv.circos.tsv", stringsAsFactors=F)
+#opt <- data.frame(patient="1020540_dia", tumor="../reseq/cnv/segmented_coverage/1020540_Diagnosis.segmented-coverage.tsv", normal="../reseq/cnv/segmented_coverage/1020540_Remission.segmented-coverage.tsv", circos="/mnt/projects/hdall/results/cnv/circos/1020540_dia.cnv.circos.tsv", stringsAsFactors=F)
 
 t <- read.delim(opt$case, header=F, colClasses=c("factor", "integer", "numeric"))
 n <- read.delim(opt$control, header=F, colClasses=c("factor", "integer", "numeric"))

@@ -17,7 +17,7 @@ croak ("ERROR: --max-size-bp not specified\n") if (!defined $max_size_bp);
 
 # read id mapping
 my %id2sym;
-open(M, "$ENV{HOME}/hdall/results/id-mappings.tsv") or croak "ERROR: could not read id mappings\n";
+open(M, "/mnt/projects/hdall/results/id-mappings.tsv") or croak "ERROR: could not read id mappings\n";
 while(<M>)
 {
 	chomp;
@@ -25,7 +25,7 @@ while(<M>)
 	$id2sym{$id} = $sym;
 }
 close(M);
-print STDERR "INFO: ", (scalar(keys(%id2sym)), " id mappgins read from file $ENV{HOME}/hdall/results/id-mappings.tsv\n");
+print STDERR "INFO: ", (scalar(keys(%id2sym)), " id mappgins read from file /mnt/projects/hdall/results/id-mappings.tsv\n");
 
 
 # OUTPUT format

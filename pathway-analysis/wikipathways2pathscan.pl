@@ -2,7 +2,7 @@ use warnings FATAL => qw( all );
 use strict;
 use Carp;
 
-use lib "$ENV{HOME}/generic/scripts";
+use lib "/mnt/projects/generic/scripts";
 use Generic;
 use Log::Log4perl qw(:easy);
 use Getopt::Long;
@@ -16,7 +16,7 @@ croak "ERROR: --wiki-dir not specified" if (!$wikidir);
 
 # read id mapping
 my %id2sym;
-open(M, "$ENV{HOME}/hdall/results/id-mappings.tsv") or croak "ERROR: could not read id mappings\n";
+open(M, "/mnt/projects/hdall/results/id-mappings.tsv") or croak "ERROR: could not read id mappings\n";
 while(<M>)
 {
 	chomp;
@@ -24,11 +24,11 @@ while(<M>)
 	$id2sym{$id} = $sym;
 }
 close(M);
-INFO(scalar(keys(%id2sym))." id mappgins read from file $ENV{HOME}/hdall/results/id-mappings.tsv");
+INFO(scalar(keys(%id2sym))." id mappgins read from file /mnt/projects/hdall/results/id-mappings.tsv");
 
 # read biomart id mapping to get entrez ids and additional uniprot ids
 my %sym2entrez;
-open(G, "$ENV{HOME}/generic/data/ensembl/gene-id-mapping.biomart-0.7.tsv") or die "ERROR: could not read gene list\n";
+open(G, "/mnt/projects/generic/data/ensembl/gene-id-mapping.biomart-0.7.tsv") or die "ERROR: could not read gene list\n";
 while(<G>)
 {
 	chomp;

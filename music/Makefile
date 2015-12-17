@@ -14,7 +14,7 @@ rel-af20-del: ucsc-genes.hg19.roi rel-af20-del/rem_rel.maf rel-af20-del/gene_mrs
 
 ucsc-genes.hg19.roi: /mnt/projects/hdall/results/id-mappings.tsv /mnt/projects/hdall/results/ucsc-genes.hg19.bed /mnt/projects/hdall/scripts/music/make-roi.pl
 	~/tools/lh3-sort/sort -k 1,1N -k 2,2n /mnt/projects/hdall/results/ucsc-genes.hg19.bed > /mnt/projects/hdall/results/ucsc-genes.hg19.sorted.bed    # sort UCSC bed file
-	~/tools/bedtools-2.17.0/bin/bedtools merge -s -nms -n -i /mnt/projects/hdall/results/ucsc-genes.hg19.sorted.bed | ~/tools/lh3-sort/sort -k 1,1N -k 2,2n > /mnt/projects/hdall/results/ucsc-genes.hg19.sorted.merged.bed   # merge overlapping exons using bedtools
+	/data_synology/software/bedtools-2.17.0/bin/bedtools merge -s -nms -n -i /mnt/projects/hdall/results/ucsc-genes.hg19.sorted.bed | ~/tools/lh3-sort/sort -k 1,1N -k 2,2n > /mnt/projects/hdall/results/ucsc-genes.hg19.sorted.merged.bed   # merge overlapping exons using bedtools
 
 	# postprocess ROI (map back to gene symbols, re-map some IDs, 1-based start coordinate, cut back coordinates exceeding chromosome length)
 	cat /mnt/projects/hdall/results/ucsc-genes.hg19.sorted.merged.bed | perl /mnt/projects/hdall/scripts/music/make-roi.pl > ucsc-genes.hg19.roi.part

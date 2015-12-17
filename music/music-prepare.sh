@@ -22,7 +22,7 @@ mv ensembl_67_cds_ncrna_and_splice_sites_hg19 ensembl_67_cds_ncrna_and_splice_si
 ~/tools/lh3-sort/sort -k 1,1N -k 2,2n /mnt/projects/hdall/results/ucsc-genes.hg19.bed > /mnt/projects/hdall/results/ucsc-genes.hg19.sorted.bed
 
 # merge overlapping exons using bedtools
-~/tools/bedtools-2.17.0/bin/bedtools merge -s -nms -n -i /mnt/projects/hdall/results/ucsc-genes.hg19.sorted.bed | ~/tools/lh3-sort/sort -k 1,1N -k 2,2n > /mnt/projects/hdall/results/ucsc-genes.hg19.sorted.merged.bed
+/data_synology/software/bedtools-2.17.0/bin/bedtools merge -s -nms -n -i /mnt/projects/hdall/results/ucsc-genes.hg19.sorted.bed | ~/tools/lh3-sort/sort -k 1,1N -k 2,2n > /mnt/projects/hdall/results/ucsc-genes.hg19.sorted.merged.bed
 
 # postprocess ROI (map back to gene symbols, 1-based start coordinate, cut back coordinates exceeding chromosome length)
 cat /mnt/projects/hdall/results/ucsc-genes.hg19.sorted.merged.bed | perl ~/git/hdall/music/ucsc-exon-to-gene-symbol.pl > /mnt/projects/hdall/results/music/ucsc-genes.hg19.roi

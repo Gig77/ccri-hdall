@@ -1,7 +1,7 @@
 use warnings FATAL => qw( all );
 use strict;
 
-use lib "$ENV{HOME}/generic/scripts";
+use lib "/mnt/projects/generic/scripts";
 use Generic;
 use Log::Log4perl qw(:easy);
 use Data::Dumper;
@@ -13,7 +13,7 @@ $| = 1; # turn on autoflush
 
 # read id mapping
 my %id2sym;
-open(M, "$ENV{HOME}/hdall/results/id-mappings.tsv") or croak "ERROR: could not read id mappings\n";
+open(M, "/mnt/projects/hdall/results/id-mappings.tsv") or croak "ERROR: could not read id mappings\n";
 while(<M>)
 {
 	chomp;
@@ -21,11 +21,11 @@ while(<M>)
 	$id2sym{$id} = $sym;
 }
 close(M);
-INFO(scalar(keys(%id2sym))." id mappgins read from file $ENV{HOME}/hdall/results/id-mappings.tsv");
+INFO(scalar(keys(%id2sym))." id mappgins read from file /mnt/projects/hdall/results/id-mappings.tsv");
 
 # read gene description
 my %sym2info;
-open(G,"$ENV{HOME}/generic/data/hg19/hg19.kgXref.txt") or die "could not open file $ENV{HOME}/generic/data/hg19/hg19.kgXref.txt";
+open(G,"/mnt/projects/generic/data/hg19/hg19.kgXref.txt") or die "could not open file /mnt/projects/generic/data/hg19/hg19.kgXref.txt";
 while(<G>)
 {
 	chomp;
@@ -35,10 +35,10 @@ while(<G>)
 	$sym2info{$sym}{'description'} = $description;	
 }
 close(G);
-INFO(scalar(keys(%sym2info))." gene descriptions read from file $ENV{HOME}/generic/data/hg19/hg19.kgXref.txt");
+INFO(scalar(keys(%sym2info))." gene descriptions read from file /mnt/projects/generic/data/hg19/hg19.kgXref.txt");
 
 # read cosmic
-my $cosmic_file = "$ENV{HOME}/generic/data/cosmic/v65/cancer_gene_census.tsv"; 
+my $cosmic_file = "/mnt/projects/generic/data/cosmic/v65/cancer_gene_census.tsv"; 
 my %cosmic;
 open(C, $cosmic_file) or die "could not open file $cosmic_file\n";
 <C>; # skip header
@@ -58,7 +58,7 @@ close(C);
 INFO(scalar(keys(%cosmic))." cancer census genes read from file $cosmic_file");
 
 my (%canonical, %sym2size);
-open(G,"$ENV{HOME}/generic/data/hg19/hg19.knownCanonical.txt") or die "could not open file $ENV{HOME}/generic/data/hg19/hg19.knownCanonical.txt";
+open(G,"/mnt/projects/generic/data/hg19/hg19.knownCanonical.txt") or die "could not open file /mnt/projects/generic/data/hg19/hg19.knownCanonical.txt";
 while(<G>)
 {
 	chomp;
@@ -74,10 +74,10 @@ while(<G>)
 	$sym2size{$geneSymbol} = $size;
 }
 close(G);
-INFO(scalar(keys(%canonical))." canonical genes read from file $ENV{HOME}/generic/data/hg19/hg19.knownCanonical.txt");
+INFO(scalar(keys(%canonical))." canonical genes read from file /mnt/projects/generic/data/hg19/hg19.knownCanonical.txt");
 
 my $lines = 0;
-open(G,"$ENV{HOME}/generic/data/hg19/hg19.knownGene.txt") or die "could not open file $ENV{HOME}/generic/data/hg19/hg19.knownGene.txt";
+open(G,"/mnt/projects/generic/data/hg19/hg19.knownGene.txt") or die "could not open file /mnt/projects/generic/data/hg19/hg19.knownGene.txt";
 while(<G>)
 {
 	chomp;
@@ -128,7 +128,7 @@ while(<G>)
 	}
 }
 close(G);
-INFO("$lines genes read from file $ENV{HOME}/generic/data/hg19/hg19.knownGene.txt");
+INFO("$lines genes read from file /mnt/projects/generic/data/hg19/hg19.knownGene.txt");
 
 # TABLE: filtered-variants
 my %genes;

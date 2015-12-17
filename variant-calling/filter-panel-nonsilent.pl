@@ -5,7 +5,7 @@ use Carp;
 
 # read panel genes
 my %pg;
-open(PANEL, "$ENV{HOME}/hdall/results/panel-genes.tsv") or die "could not read panel gene file\n";
+open(PANEL, "/mnt/projects/hdall/results/panel-genes.tsv") or die "could not read panel gene file\n";
 while(<PANEL>)
 {
 	chomp;

@@ -3,7 +3,7 @@ use strict;
 
 # read id mapping
 my %id2sym;
-open(M, "$ENV{HOME}/hdall/results/id-mappings.tsv") or die "ERROR: could not read id mappings\n";
+open(M, "/mnt/projects/hdall/results/id-mappings.tsv") or die "ERROR: could not read id mappings\n";
 while(<M>)
 {
 	chomp;
@@ -13,7 +13,7 @@ while(<M>)
 close(M);
 
 my (%canonical, %sym2size);
-open(G,"$ENV{HOME}/generic/data/hg19/hg19.knownCanonical.txt") or die "could not open file $ENV{HOME}/generic/data/hg19/hg19.knownCanonical.txt";
+open(G,"/mnt/projects/generic/data/hg19/hg19.knownCanonical.txt") or die "could not open file /mnt/projects/generic/data/hg19/hg19.knownCanonical.txt";
 while(<G>)
 {
 	chomp;
@@ -29,7 +29,7 @@ while(<G>)
 close(G);
 
 my %sym2info;
-open(G,"$ENV{HOME}/generic/data/hg19/hg19.knownGene.txt") or die "could not open file $ENV{HOME}/generic/data/hg19/hg19.knownGene.txt";
+open(G,"/mnt/projects/generic/data/hg19/hg19.knownGene.txt") or die "could not open file /mnt/projects/generic/data/hg19/hg19.knownGene.txt";
 while(<G>)
 {
 	chomp;

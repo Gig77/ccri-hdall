@@ -2,7 +2,7 @@ use warnings FATAL => qw( all );
 use strict;
 use Carp;
 
-use lib "$ENV{HOME}/generic/scripts";
+use lib "/mnt/projects/generic/scripts";
 use Generic;
 use Log::Log4perl qw(:easy);
 use Vcf;
@@ -166,7 +166,7 @@ close(GENES);
 
 # read id mapping
 my %id2sym;
-open(M, "$ENV{HOME}/hdall/results/id-mappings.tsv") or croak "ERROR: could not read id mappings\n";
+open(M, "/mnt/projects/hdall/results/id-mappings.tsv") or croak "ERROR: could not read id mappings\n";
 while(<M>)
 {
 	chomp;
@@ -176,7 +176,7 @@ while(<M>)
 close(M);
 
 my (%canonical, %sym2size);
-open(G,"$ENV{HOME}/generic/data/hg19/hg19.knownCanonical.txt") or die "could not open file $ENV{HOME}/generic/data/hg19/hg19.knownCanonical.txt";
+open(G,"/mnt/projects/generic/data/hg19/hg19.knownCanonical.txt") or die "could not open file /mnt/projects/generic/data/hg19/hg19.knownCanonical.txt";
 while(<G>)
 {
 	chomp;
@@ -195,7 +195,7 @@ close(G);
 
 # next kgXref
 my %refseq2ucsc;
-open(G,"$ENV{HOME}/generic/data/hg19/hg19.kgXref.txt") or die "could not open file $ENV{HOME}/generic/data/hg19/hg19.kgXref.txt";
+open(G,"/mnt/projects/generic/data/hg19/hg19.kgXref.txt") or die "could not open file /mnt/projects/generic/data/hg19/hg19.kgXref.txt";
 while(<G>)
 {
 	chomp;

@@ -1,14 +1,14 @@
 use warnings FATAL => qw( all );
 use strict;
 
-use lib "$ENV{HOME}/generic/scripts";
+use lib "/mnt/projects/generic/scripts";
 use Generic;
 use Log::Log4perl qw(:easy);
 use Carp;
 
 # read id mapping
 my %id2sym;
-open(M, "$ENV{HOME}/hdall/results/id-mappings.tsv") or croak "ERROR: could not read id mappings\n";
+open(M, "/mnt/projects/hdall/results/id-mappings.tsv") or croak "ERROR: could not read id mappings\n";
 while(<M>)
 {
 	chomp;
@@ -16,10 +16,10 @@ while(<M>)
 	$id2sym{$id} = $sym;
 }
 close(M);
-INFO(scalar(keys(%id2sym))." id mappgins read from file $ENV{HOME}/hdall/results/id-mappings.tsv");
+INFO(scalar(keys(%id2sym))." id mappgins read from file /mnt/projects/hdall/results/id-mappings.tsv");
 
 my (%canonical);
-open(G,"$ENV{HOME}/generic/data/hg19/hg19.knownCanonical.txt") or die "could not open file $ENV{HOME}/generic/data/hg19/hg19.knownCanonical.txt";
+open(G,"/mnt/projects/generic/data/hg19/hg19.knownCanonical.txt") or die "could not open file /mnt/projects/generic/data/hg19/hg19.knownCanonical.txt";
 while(<G>)
 {
 	chomp;
@@ -29,11 +29,11 @@ while(<G>)
 	$canonical{$geneSymbol} = $transcript;
 }
 close(G);
-INFO(scalar(keys(%canonical))." canonical genes read from file $ENV{HOME}/generic/data/hg19/hg19.knownCanonical.txt");
+INFO(scalar(keys(%canonical))." canonical genes read from file /mnt/projects/generic/data/hg19/hg19.knownCanonical.txt");
 
 my %sym2size;
 my $lines = 0;
-open(G,"$ENV{HOME}/generic/data/hg19/hg19.knownGene.txt") or die "could not open file $ENV{HOME}/generic/data/hg19/hg19.knownGene.txt";
+open(G,"/mnt/projects/generic/data/hg19/hg19.knownGene.txt") or die "could not open file /mnt/projects/generic/data/hg19/hg19.knownGene.txt";
 while(<G>)
 {
 	chomp;
@@ -65,7 +65,7 @@ while(<G>)
 	}
 }
 close(G);
-INFO("$lines genes read from file $ENV{HOME}/generic/data/hg19/hg19.knownGene.txt");
+INFO("$lines genes read from file /mnt/projects/generic/data/hg19/hg19.knownGene.txt");
 
 my $percentil_size = keys(%sym2size) / 100;
 my @sorted = sort {$sym2size{$b} <=> $sym2size{$a}} (keys(%sym2size));

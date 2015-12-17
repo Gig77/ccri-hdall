@@ -3,7 +3,7 @@ use warnings FATAL => qw( all );
 
 # read id mapping
 my %id2sym;
-open(M, "$ENV{HOME}/hdall/results/id-mappings.tsv") or die "ERROR: could not read id mappings\n";
+open(M, "/mnt/projects/hdall/results/id-mappings.tsv") or die "ERROR: could not read id mappings\n";
 while(<M>)
 {
 	chomp;
@@ -16,7 +16,7 @@ close(M);
 my %uniprot2refseq;
 my %uniprot2ucsc;
 my %uniprot2hugo;
-open(G,"$ENV{HOME}/generic/data/hg19/hg19.kgXref.txt") or die "ERROR: could not open file $ENV{HOME}/generic/data/hg19/hg19.kgXref.txt";
+open(G,"/mnt/projects/generic/data/hg19/hg19.kgXref.txt") or die "ERROR: could not open file /mnt/projects/generic/data/hg19/hg19.kgXref.txt";
 while(<G>)
 {
 	chomp;
@@ -40,7 +40,7 @@ close(G);
 
 # read pfam domain descriptions
 my %pfamid2name;
-open(D, "$ENV{HOME}/generic/data/pfam-27.0/pfamA.txt") || die "ERROR: reading file $ENV{HOME}/generic/data/pfam-27.0/pfamA.txt";
+open(D, "/mnt/projects/generic/data/pfam-27.0/pfamA.txt") || die "ERROR: reading file /mnt/projects/generic/data/pfam-27.0/pfamA.txt";
 while(<D>)
 {
 	chomp;
@@ -49,7 +49,7 @@ while(<D>)
 }
 close(D);
 
-open(D, "gunzip -c $ENV{HOME}/generic/data/pfam-27.0/Pfam-A.regions.tsv.gz |") || die "can't open pipe to $ENV{HOME}/generic/data/pfam-27.0/Pfam-A.regions.tsv.gz";
+open(D, "gunzip -c /mnt/projects/generic/data/pfam-27.0/Pfam-A.regions.tsv.gz |") || die "can't open pipe to /mnt/projects/generic/data/pfam-27.0/Pfam-A.regions.tsv.gz";
 while(<D>)
 {
 	chomp;

@@ -4,7 +4,7 @@ use strict;
 my %pathways;
 
 # read pathways
-open(G,"$ENV{HOME}/hdall/data/vogelstein_2013/1235122TablesS1-4.tsv") or die "could not open file $ENV{HOME}/hdall/data/vogelstein_2013/1235122TablesS1-4.tsv";
+open(G,"/mnt/projects/hdall/data/vogelstein_2013/1235122TablesS1-4.tsv") or die "could not open file /mnt/projects/hdall/data/vogelstein_2013/1235122TablesS1-4.tsv";
 <G>; # skip header
 while(<G>)
 {

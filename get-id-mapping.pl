@@ -88,7 +88,7 @@ foreach (my ($k, $v) = each(%remap))
 }
 
 # next kgXref
-open(G,"$ENV{HOME}/generic/data/hg19/hg19.kgXref.txt") or die "could not open file $ENV{HOME}/generic/data/hg19/hg19.kgXref.txt";
+open(G,"/mnt/projects/generic/data/hg19/hg19.kgXref.txt") or die "could not open file /mnt/projects/generic/data/hg19/hg19.kgXref.txt";
 while(<G>)
 {
 	chomp;
@@ -101,7 +101,7 @@ close(G);
 
 # read biomart id mapping to get previous symbols
 my %approved_symbols;
-open(G, "$ENV{HOME}/generic/data/ensembl/gene-id-mapping.biomart-0.7.tsv") or die "ERROR: could not read gene list\n";
+open(G, "/mnt/projects/generic/data/ensembl/gene-id-mapping.biomart-0.7.tsv") or die "ERROR: could not read gene list\n";
 while(<G>)
 {
 	chomp;

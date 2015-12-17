@@ -4,7 +4,7 @@ use Carp;
 
 # read id mapping
 my %id2sym;
-open(M, "$ENV{HOME}/hdall/results/id-mappings.tsv") or croak "ERROR: could not read id mappings\n";
+open(M, "/mnt/projects/hdall/results/id-mappings.tsv") or croak "ERROR: could not read id mappings\n";
 while(<M>)
 {
 	chomp;
@@ -12,11 +12,11 @@ while(<M>)
 	$id2sym{$id} = $sym;
 }
 close(M);
-print STDERR "".(scalar(keys(%id2sym))." id mappgins read from file $ENV{HOME}/hdall/results/id-mappings.tsv\n");
+print STDERR "".(scalar(keys(%id2sym))." id mappgins read from file /mnt/projects/hdall/results/id-mappings.tsv\n");
 
 # read biomart id mapping to get previous symbols
 my (%ncbi2hugo, %ens2hugo);
-open(G, "$ENV{HOME}/generic/data/ensembl/gene-id-mapping.biomart-0.7.tsv") or die "ERROR: could not read gene list\n";
+open(G, "/mnt/projects/generic/data/ensembl/gene-id-mapping.biomart-0.7.tsv") or die "ERROR: could not read gene list\n";
 while(<G>)
 {
 	chomp;
@@ -30,7 +30,7 @@ while(<G>)
 }
 close(G);
 
-open(P, "$ENV{HOME}/hdall/results/music/pathscan/pathways-kegg.jerry.ensembl.tsv") or die "ERROR: could not read KEGG input file\n";
+open(P, "/mnt/projects/hdall/results/music/pathscan/pathways-kegg.jerry.ensembl.tsv") or die "ERROR: could not read KEGG input file\n";
 while(<P>)
 {
 	chomp;

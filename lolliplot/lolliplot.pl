@@ -1,8 +1,8 @@
 use strict;
 use warnings FATAL => qw( all );
 
-use lib "$ENV{HOME}/hdall/scripts/lolliplot";
-use lib "$ENV{HOME}/generic/scripts";
+use lib "/mnt/projects/hdall/scripts/lolliplot";
+use lib "/mnt/projects/generic/scripts";
 
 use Carp;
 use Generic;
@@ -35,7 +35,7 @@ if ($patients_list)
 
 # ucsc/HUGO mapping
 my %id2sym;
-open(M, "$ENV{HOME}/hdall/results/id-mappings.tsv") or croak "ERROR: could not read id mappings\n";
+open(M, "/mnt/projects/hdall/results/id-mappings.tsv") or croak "ERROR: could not read id mappings\n";
 while(<M>)
 {
 	chomp;
@@ -43,12 +43,12 @@ while(<M>)
 	$id2sym{$id} = $sym;
 }
 close(M);
-INFO(scalar(keys(%id2sym))." id mappgins read from file $ENV{HOME}/hdall/results/id-mappings.tsv");
+INFO(scalar(keys(%id2sym))." id mappgins read from file /mnt/projects/hdall/results/id-mappings.tsv");
 
 # refseq/ucsc mapping
 my %transcripts;
 my %refseq2ucsc;
-open(G,"$ENV{HOME}/generic/data/hg19/hg19.kgXref.txt") or die "ERROR: could not open file $ENV{HOME}/generic/data/hg19/hg19.kgXref.txt";
+open(G,"/mnt/projects/generic/data/hg19/hg19.kgXref.txt") or die "ERROR: could not open file /mnt/projects/generic/data/hg19/hg19.kgXref.txt";
 while(<G>)
 {
 	chomp;
@@ -68,7 +68,7 @@ while(<G>)
 close(G);
 
 my $lines = 0;
-open(G,"$ENV{HOME}/generic/data/hg19/hg19.knownGene.txt") or die "could not open file $ENV{HOME}/generic/data/hg19/hg19.knownGene.txt";
+open(G,"/mnt/projects/generic/data/hg19/hg19.knownGene.txt") or die "could not open file /mnt/projects/generic/data/hg19/hg19.knownGene.txt";
 while(<G>)
 {
 	chomp;
@@ -114,9 +114,9 @@ while(<G>)
 	$lines++;
 }
 close(G);
-INFO("$lines genes read from file $ENV{HOME}/generic/data/hg19/hg19.knownGene.txt");
+INFO("$lines genes read from file /mnt/projects/generic/data/hg19/hg19.knownGene.txt");
 
-open(D,"$ENV{HOME}/hdall/results/lolliplot/pfam-regions.filtered.tsv") or die "could not open file $ENV{HOME}/hdall/results/lolliplot/pfam-regions.filtered.tsv";
+open(D,"/mnt/projects/hdall/results/lolliplot/pfam-regions.filtered.tsv") or die "could not open file /mnt/projects/hdall/results/lolliplot/pfam-regions.filtered.tsv";
 my %domains;
 while(<D>)
 {
@@ -135,7 +135,7 @@ while(<D>)
 	$lines++;
 }
 close(D);
-INFO("$lines domain annotations read from file $ENV{HOME}/hdall/results/lolliplot/pfam-regions.filtered.tsv");
+INFO("$lines domain annotations read from file /mnt/projects/hdall/results/lolliplot/pfam-regions.filtered.tsv");
 
 # read variants
 # TABLE: filtered-variants

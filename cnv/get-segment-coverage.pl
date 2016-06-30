@@ -7,24 +7,27 @@ my %diploid_chr = (
 #	"92D" => "chr3"
 );
 
-my ($sample, $bin_size);
+my ($sample, $bin_size, $chr_size_file, $add_chr);
 GetOptions
 (
 	"sample=s" => \$sample,
-	"bin-size=i" => \$bin_size
+	"bin-size=i" => \$bin_size,
+	"chr-sizes=s" => \$chr_size_file,
+	"add-chr" => \$add_chr,
 );
 die "ERROR: --bin-size not specified" if (!$bin_size);
 die "ERROR: --sample not specified" if (!$sample);
+die "ERROR: --chr-sizes not specified" if (!$chr_size_file);
 
 print STDERR "Diploid chromosome for sample $sample: ".$diploid_chr{$sample}."\n" if (defined $diploid_chr{$sample});
 
 # read chromosome sizes
 my %chr_size;
-open(IN, "/mnt/projects/generic/data/hg19/ucsc.hg19.chrom.sizes") or die "could not open ucsc.hg19.chrom.sizes\n";
+open(IN, $chr_size_file) or die "could not open $chr_size_file\n";
 while(<IN>)
 {
 	my ($chr, $size) = split("\t");
-	next if ($chr !~ /^chr[\dXY]/);
+	next if ($chr !~ /^(chr)?[\dXY]/);
 	$chr_size{$chr} = $size;
 }
 close(IN);
@@ -37,7 +40,7 @@ while(<>)
     next if /^$/;
 
 	my ($chr, $pos, $cov) = split /\t/;
-	$chr = "chr$chr" if ($chr !~ /^chr/);
+	$chr = "chr$chr" if ($chr !~ /^chr/ and $add_chr);
 
 	my $bin = int($pos/$bin_size);
 	$bins{"$chr:$bin"} += $cov;

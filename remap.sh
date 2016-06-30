@@ -1,4 +1,4 @@
- cd /data/christian/hdall/results/
+ cd /mnt/projects/hdall/results/
 
  cat 2013-05-29-roi-remap/music/rel/gene_covgs/1021247_rel.covg | perl /mnt/projects/hdall/scripts/remap.pl > current/music/rel/gene_covgs/1021247_rel.covg &
  cat 2013-05-29-roi-remap/music/rel/gene_covgs/314_rel.covg | perl /mnt/projects/hdall/scripts/remap.pl > current/music/rel/gene_covgs/314_rel.covg &

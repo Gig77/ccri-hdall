@@ -38,7 +38,7 @@ gc/%.coverage.bed: /mnt/projects/hdall/data/bam/%.merged.duplicate_marked.realig
 		> $@.part
 	mv $@.part $@
 
-%.coverage.panel.tsv: /data/christian/hdall/data/current/bam/%.merged.duplicate_marked.realigned.recalibrated.bam /data/christian/generic/data/current/illumina/truseq_exome_targeted_regions.hg19.bed.chr 
+%.coverage.panel.tsv: /mnt/projects/hdall/data/current/bam/%.merged.duplicate_marked.realigned.recalibrated.bam /data/christian/generic/data/current/illumina/truseq_exome_targeted_regions.hg19.bed.chr 
 	~/tools/samtools-0.1.19/samtools depth \
 		-Q 1 \
 		-b /mnt/projects/hdall/data/reseq/enriched_regions.bed \
@@ -48,7 +48,7 @@ gc/%.coverage.bed: /mnt/projects/hdall/data/bam/%.merged.duplicate_marked.realig
 		> $@.part
 	mv $@.part $@
 
-%.coverage.exome.tsv: /data/christian/hdall/data/current/bam/%.merged.duplicate_marked.realigned.recalibrated.bam /data/christian/generic/data/current/illumina/truseq_exome_targeted_regions.hg19.bed.chr
+%.coverage.exome.tsv: /mnt/projects/hdall/data/current/bam/%.merged.duplicate_marked.realigned.recalibrated.bam /data/christian/generic/data/current/illumina/truseq_exome_targeted_regions.hg19.bed.chr
 	~/tools/samtools-0.1.19/samtools depth \
 		-Q 1 \
 		-b /data/christian/generic/data/current/illumina/truseq_exome_targeted_regions.hg19.bed.chr \
@@ -68,7 +68,7 @@ gc/%.coverage.bed: /mnt/projects/hdall/data/bam/%.merged.duplicate_marked.realig
 		> $@.part
 	mv $@.part $@
 
-%.coverage.mito.tsv: /data/christian/hdall/data/current/bam/%.merged.duplicate_marked.realigned.recalibrated.bam
+%.coverage.mito.tsv: /mnt/projects/hdall/data/current/bam/%.merged.duplicate_marked.realigned.recalibrated.bam
 	~/tools/samtools-0.1.19/samtools depth \
 		-Q 1 \
 		-r chrM \
@@ -102,13 +102,13 @@ cov-plot.%.panel.pdf: %_dia.coverage.panel.tsv %_rel.coverage.panel.tsv %_rem.co
 	
 ../reseq/cnv/segmented_coverage/%.segmented-coverage.tsv: /mnt/projects/hdall/data/reseq/bam/%.duplicate_marked.realigned.recalibrated.bam /mnt/projects/hdall/scripts/cnv/get-segment-coverage.pl
 	~/tools/samtools-0.1.19/samtools depth -Q 1 $< \
-		| perl /mnt/projects/hdall/scripts/cnv/get-segment-coverage.pl --sample $* --bin-size 250000 \
+		| perl /mnt/projects/hdall/scripts/cnv/get-segment-coverage.pl --sample $* --bin-size 250000 --chr-sizes /mnt/projects/generic/data/hg19/ucsc.hg19.chrom.sizes --add-chr \
 		> $@.part
 	mv $@.part $@
 
 segmented_coverage/%.segmented-coverage.tsv: /mnt/projects/hdall/data/bam/%.merged.duplicate_marked.realigned.recalibrated.bam /mnt/projects/hdall/scripts/cnv/get-segment-coverage.pl
 	~/tools/samtools-0.1.19/samtools depth -Q 1 $< \
-		| perl /mnt/projects/hdall/scripts/cnv/get-segment-coverage.pl --sample $* --bin-size 250000 \
+		| perl /mnt/projects/hdall/scripts/cnv/get-segment-coverage.pl --sample $* --bin-size 250000 --chr-sizes /mnt/projects/generic/data/hg19/ucsc.hg19.chrom.sizes --add-chr \
 		> $@.part
 	mv $@.part $@
 

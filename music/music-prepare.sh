@@ -62,15 +62,15 @@ cat /mnt/projects/hdall/results/filtered_variants/Y_rem_dia.snp.filtered.vcf | p
 
 # run music bmr calc-wig-covg
 # needs to be run locally, because music is currently not installed on suse 
-genome music bmr calc-wig-covg --wig-list /mnt/suse/data/christian/hdall/results/current/music/dia/wig-list.tsv --output-dir /mnt/suse/data/christian/hdall/results/current/music/dia/ --reference-sequence /mnt/suse/data/christian/hdall/data/current/hg19/ucsc.hg19.nochr.fasta --roi-file /mnt/suse/data/christian/hdall/results/current/music/ucsc-genes.hg19.roi
-genome music bmr calc-wig-covg --wig-list /mnt/suse/data/christian/hdall/results/current/music/rel/wig-list.tsv --output-dir /mnt/suse/data/christian/hdall/results/current/music/rel/ --reference-sequence /mnt/suse/data/christian/hdall/data/current/hg19/ucsc.hg19.nochr.fasta --roi-file /mnt/suse/data/christian/hdall/results/current/music/ucsc-genes.hg19.roi
+genome music bmr calc-wig-covg --wig-list /mnt/projects/hdall/results/current/music/dia/wig-list.tsv --output-dir /mnt/projects/hdall/results/current/music/dia/ --reference-sequence /mnt/projects/hdall/data/current/hg19/ucsc.hg19.nochr.fasta --roi-file /mnt/projects/hdall/results/current/music/ucsc-genes.hg19.roi
+genome music bmr calc-wig-covg --wig-list /mnt/projects/hdall/results/current/music/rel/wig-list.tsv --output-dir /mnt/projects/hdall/results/current/music/rel/ --reference-sequence /mnt/projects/hdall/data/current/hg19/ucsc.hg19.nochr.fasta --roi-file /mnt/projects/hdall/results/current/music/ucsc-genes.hg19.roi
 
 # run music bmr calc-bmr
-genome music bmr calc-bmr --bam-list /mnt/suse/data/christian/hdall/results/current/music/dia/wig-list.tsv --maf-file /mnt/suse/data/christian/hdall/results/current/music/dia/rem_dia.maf --output-dir /mnt/suse/data/christian/hdall/results/current/music/dia/ --reference-sequence /mnt/suse/data/christian/hdall/data/current/hg19/ucsc.hg19.nochr.fasta --roi-file /mnt/suse/data/christian/hdall/results/current/music/ucsc-genes.hg19.roi
+genome music bmr calc-bmr --bam-list /mnt/projects/hdall/results/current/music/dia/wig-list.tsv --maf-file /mnt/projects/hdall/results/current/music/dia/rem_dia.maf --output-dir /mnt/projects/hdall/results/current/music/dia/ --reference-sequence /mnt/projects/hdall/data/current/hg19/ucsc.hg19.nochr.fasta --roi-file /mnt/projects/hdall/results/current/music/ucsc-genes.hg19.roi
 
 # run music smg
-genome music smg --gene-mr-file /mnt/suse/data/christian/hdall/results/current/music/dia/gene_mrs --output-file /mnt/suse/data/christian/hdall/results/current/music/dia/smg.tsv
+genome music smg --gene-mr-file /mnt/projects/hdall/results/current/music/dia/gene_mrs --output-file /mnt/projects/hdall/results/current/music/dia/smg.tsv
 
 # run music path-scan
-genome music path-scan --bam-list /mnt/suse/data/christian/hdall/results/current/music/dia/wig-list.tsv --gene-covg-dir /mnt/suse/data/christian/hdall/results/current/music/dia/gene_covgs/ --maf-file /mnt/suse/data/christian/hdall/results/current/music/dia/rem_dia.maf --output-file /mnt/suse/data/christian/hdall/results/current/music/dia/sm_pathways.tsv --pathway-file /mnt/suse/data/christian/hdall/results/current/music/pathways-david-complete.tsv
+genome music path-scan --bam-list /mnt/projects/hdall/results/current/music/dia/wig-list.tsv --gene-covg-dir /mnt/projects/hdall/results/current/music/dia/gene_covgs/ --maf-file /mnt/projects/hdall/results/current/music/dia/rem_dia.maf --output-file /mnt/projects/hdall/results/current/music/dia/sm_pathways.tsv --pathway-file /mnt/projects/hdall/results/current/music/pathways-david-complete.tsv
 perl /mnt/projects/hdall/scripts/pathway-analysis/annotate-pathscan-result.pl --sm-pathways /mnt/projects/hdall/results/music/dia/sm_pathways.tsv --sm-pathways-detail /mnt/projects/hdall/results/music/dia/sm_pathways.tsv_detailed > /mnt/projects/hdall/results/music/dia/sm_pathways.annotated.tsv

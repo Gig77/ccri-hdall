@@ -134,30 +134,30 @@ $schema->importDefinitions('/mnt/projects/hdall/results/ega-submission/schemas/S
 #$schema->printIndex();
 #warn $schema->template('PERL', 'SAMPLE_SET');
 
-my $sampleSet = { "seq_SAMPLE" => [] };
+my $sampleSet = { seq_SAMPLE => [] };
 foreach my $sample_alias (keys(%samples)) {	
 
 	my %sample;
-	$sample{"SAMPLE"}{"alias"} = $sample_alias;
-	$sample{"SAMPLE"}{"center_name"} = "CCRI";
-	$sample{"SAMPLE"}{"TITLE"} = $samples{$sample_alias}{TITLE};
-	$sample{"SAMPLE"}{"DESCRIPTION"} = $samples{$sample_alias}{DESCRIPTION};
+	$sample{SAMPLE}{alias} = $sample_alias;
+	$sample{SAMPLE}{center_name} = "CCRI";
+	$sample{SAMPLE}{TITLE} = $samples{$sample_alias}{TITLE};
+	$sample{SAMPLE}{DESCRIPTION} = $samples{$sample_alias}{DESCRIPTION};
 	
-	$sample{"SAMPLE"}{"SAMPLE_NAME"} = { 
+	$sample{SAMPLE}{SAMPLE_NAME} = { 
 		TAXON_ID  => $samples{$sample_alias}{SUBJECT}{TAXON_ID}, 
 		SCIENTIFIC_NAME => $samples{$sample_alias}{SUBJECT}{SCIENTIFIC_NAME}, 
 		COMMON_NAME => $samples{$sample_alias}{SUBJECT}{COMMON_NAME}
 	};
 	 
-	my $sampleAttributes = { "seq_SAMPLE_ATTRIBUTE" => [] };
-	push($sampleAttributes->{"seq_SAMPLE_ATTRIBUTE"}, { SAMPLE_ATTRIBUTE => { TAG => "subject_id", VALUE => $samples{$sample_alias}{SUBJECT}{ID} }}); 
-	push($sampleAttributes->{"seq_SAMPLE_ATTRIBUTE"}, { SAMPLE_ATTRIBUTE => { TAG => "phenotype", VALUE => $samples{$sample_alias}{PHENOTYPE} }}); 
-	push($sampleAttributes->{"seq_SAMPLE_ATTRIBUTE"}, { SAMPLE_ATTRIBUTE => { TAG => "gender", VALUE => $samples{$sample_alias}{SUBJECT}{GENDER} }}); 
-	push($sampleAttributes->{"seq_SAMPLE_ATTRIBUTE"}, { SAMPLE_ATTRIBUTE => { TAG => "cohort", VALUE => $samples{$sample_alias}{SUBJECT}{COHORT} }}); 
-	push($sampleAttributes->{"seq_SAMPLE_ATTRIBUTE"}, { SAMPLE_ATTRIBUTE => { TAG => "age_at_diagnosis_years", VALUE => $samples{$sample_alias}{SUBJECT}{GENDER} }}); 
-	$sample{"SAMPLE"}{"SAMPLE_ATTRIBUTES"} = $sampleAttributes;
+	my $sampleAttributes = { seq_SAMPLE_ATTRIBUTE => [] };
+	push($sampleAttributes->{seq_SAMPLE_ATTRIBUTE}, { SAMPLE_ATTRIBUTE => { TAG => "subject_id", VALUE => $samples{$sample_alias}{SUBJECT}{ID} }}); 
+	push($sampleAttributes->{seq_SAMPLE_ATTRIBUTE}, { SAMPLE_ATTRIBUTE => { TAG => "phenotype", VALUE => $samples{$sample_alias}{PHENOTYPE} }}); 
+	push($sampleAttributes->{seq_SAMPLE_ATTRIBUTE}, { SAMPLE_ATTRIBUTE => { TAG => "gender", VALUE => $samples{$sample_alias}{SUBJECT}{GENDER} }}); 
+	push($sampleAttributes->{seq_SAMPLE_ATTRIBUTE}, { SAMPLE_ATTRIBUTE => { TAG => "cohort", VALUE => $samples{$sample_alias}{SUBJECT}{COHORT} }}); 
+	push($sampleAttributes->{seq_SAMPLE_ATTRIBUTE}, { SAMPLE_ATTRIBUTE => { TAG => "age_at_diagnosis_years", VALUE => $samples{$sample_alias}{SUBJECT}{GENDER} }}); 
+	$sample{SAMPLE}{SAMPLE_ATTRIBUTES} = $sampleAttributes;
 		
-	push($sampleSet->{"seq_SAMPLE"}, \%sample); 
+	push($sampleSet->{seq_SAMPLE}, \%sample); 
 }
 close(SAMPLES);
 
@@ -188,17 +188,17 @@ $schema->importDefinitions('/mnt/projects/hdall/results/ega-submission/schemas/S
 #$schema->printIndex();
 #warn $schema->template('PERL', 'EXPERIMENT_SET');
 
-my $experimentSet = { "EXPERIMENT" => [] };
+my $experimentSet = { EXPERIMENT => [] };
 foreach my $analysis_id (keys(%analyses)) {	
 	
 	my %experiment;
-	$experiment{"alias"} = $analysis_id;
-	$experiment{"center_name"} = "CCRI";
-	$experiment{"broker_name"} = "EGA";
-	$experiment{"accession"} = "";
-	$experiment{"TITLE"} = $analyses{$analysis_id}{EXPERIMENT}{TITLE};
-	$experiment{"STUDY_REF"} = { accession => $analyses{$analysis_id}{EXPERIMENT}{STUDY} };
-	$experiment{"DESIGN"} = { 
+	$experiment{alias} = $analysis_id;
+	$experiment{center_name} = "CCRI";
+	$experiment{broker_name} = "EGA";
+	$experiment{accession} = "";
+	$experiment{TITLE} = $analyses{$analysis_id}{EXPERIMENT}{TITLE};
+	$experiment{STUDY_REF} = { accession => $analyses{$analysis_id}{EXPERIMENT}{STUDY} };
+	$experiment{DESIGN} = { 
 		DESIGN_DESCRIPTION => $analyses{$analysis_id}{EXPERIMENT}{DESCRIPTION},
 		SAMPLE_DESCRIPTOR => { refname => $analyses{$analysis_id}{SAMPLE}{ID} },
 		LIBRARY_DESCRIPTOR =>  {
@@ -208,12 +208,12 @@ foreach my $analysis_id (keys(%analyses)) {
 			LIBRARY_LAYOUT => { PAIRED => {  }}
 		}
 	};
-	$experiment{"PLATFORM"} = {
+	$experiment{PLATFORM} = {
 		ILLUMINA => { INSTRUMENT_MODEL => $analyses{$analysis_id}{EXPERIMENT}{INSTRUMENT_MODEL} }
 	}; 
-	$experiment{"PROCESSING"} = { };
+	$experiment{PROCESSING} = { };
 	
-	push($experimentSet->{"EXPERIMENT"}, \%experiment); 		
+	push($experimentSet->{EXPERIMENT}, \%experiment); 		
 }
 
 #print Dumper($experimentSet);
@@ -241,22 +241,22 @@ foreach my $analysis_id (keys(%analyses)) {
 
 $schema = XML::Compile::Schema->new("/mnt/projects/hdall/results/ega-submission/schemas/SRA.run.xsd");
 $schema->importDefinitions('/mnt/projects/hdall/results/ega-submission/schemas/SRA.common.xsd');
-$schema->printIndex();
-print $schema->template('PERL', 'RUN_SET');
+#$schema->printIndex();
+#print $schema->template('PERL', 'RUN_SET');
 
 my $runSet = { "RUN" => [] };
 foreach my $analysis_id (keys(%analyses)) {	
 	
 	my %run;
-	$run{"alias"} = $analysis_id;
-	$run{"center_name"} = "CCRI";
-	$run{"run_center"} = "CeMM";
-	$run{"run_date"} = "2008-07-02T10:00:00";
-	$run{"EXPERIMENT_REF"} = { refname => $analysis_id };
+	$run{alias} = $analysis_id;
+	$run{center_name} = "CCRI";
+	$run{run_center} = "CeMM";
+	$run{run_date} = "2008-07-02T10:00:00";
+	$run{EXPERIMENT_REF} = { refname => $analysis_id };
 	$run{RUN_TYPE}{REFERENCE_ALIGNMENT}{ASSEMBLY}{STANDARD} = { refname => "hg19" };
 	$run{DATA_BLOCK}{FILES}{FILE} = { filename => $analyses{$analysis_id}{FILENAME}, filetype => "bam", checksum_method => "MD5", checksum => "[NA]" }; 
 	
-	push($runSet->{"RUN"}, \%run); 		
+	push($runSet->{RUN}, \%run); 		
 }
 
 #print Dumper($runSet);
